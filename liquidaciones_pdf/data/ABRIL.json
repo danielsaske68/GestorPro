@@ -1,0 +1,37 @@
+{
+  "base": "2147.06",
+  "transferencia": "2597.94",
+  "material": [
+    "7.43",
+    "177.23",
+    "40.36"
+  ],
+  "combustible": [
+    "45.45"
+  ],
+  "fijos": [
+    [
+      "5/8/2026 ME ABONA",
+      "900.00"
+    ],
+    [
+      "14/6/2026 ME ABONA",
+      "1399.03"
+    ],
+    [
+      "Gastos Feb, Marz, Abril",
+      "959.00"
+    ],
+    [
+      "Gastos pecera",
+      "167.29"
+    ]
+  ],
+  "ajustes": [
+    [
+      "Mes anterior",
+      "1658.13"
+    ]
+  ],
+  "extras": []
+}

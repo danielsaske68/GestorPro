@@ -1,0 +1,27 @@
+{
+  "base": "830.39",
+  "transferencia": "925.21",
+  "material": [
+    "34.68"
+  ],
+  "combustible": [
+    "45.45"
+  ],
+  "fijos": [
+    [
+      "4/25/2026 me da",
+      "400 "
+    ]
+  ],
+  "ajustes": [
+    [
+      "Mes anterior",
+      "988.80"
+    ],
+    [
+      "Cuidacasa",
+      "473.10"
+    ]
+  ],
+  "extras": []
+}
