@@ -32,7 +32,6 @@ class GestorPro(ctk.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         
-        # ... (resto de tu código de botones del menú)
         # ==========================
         # MENÚ IZQUIERDO
         # ==========================
@@ -94,13 +93,11 @@ class GestorPro(ctk.CTk):
         )
         self.boton_cloud.pack(fill="x", padx=15, pady=5)
 
-
         ctk.CTkButton(
             self.menu,
             text="🏠 Ejecutar HomeServe",
             command=self.ejecutar_homeserve
         ).pack(fill="x", padx=15, pady=5)
-
 
         ctk.CTkButton(
             self.menu,
@@ -184,8 +181,6 @@ class GestorPro(ctk.CTk):
                 self.after(1000, actualizar_reloj_loop)
         actualizar_reloj_loop()
         
-        # ... resto de tu código de inicio
-
         # --- CONTENIDO CENTRAL ---
         center_frame = ctk.CTkFrame(self.frame_actual, fg_color="transparent")
         center_frame.place(relx=0.52, rely=0.50, anchor="center")
@@ -205,6 +200,24 @@ class GestorPro(ctk.CTk):
             text_color="white",
             justify="center"
         ).pack(pady=5)
+
+        # --- ETIQUETA DE VERSIÓN (Abajo del todo a la derecha en la pantalla de inicio) ---
+        version_local = "1.0.0"
+        try:
+            version_path = os.path.join(BASE_DIR, "version.json")
+            if os.path.exists(version_path):
+                with open(version_path, "r", encoding="utf-8") as f:
+                    version_local = json.load(f).get("version", "1.0.0")
+        except:
+            pass
+
+        lbl_version = ctk.CTkLabel(
+            self.frame_actual,
+            text=f"v{version_local}",
+            font=("Arial", 12),
+            text_color="gray60"
+        )
+        lbl_version.place(relx=0.95, rely=0.92, anchor="se")
 
     def abrir_lector_codigos(self):
         self.pantalla_completa()
@@ -246,7 +259,6 @@ class GestorPro(ctk.CTk):
         )
 
     def ejecutar_homeserve(self):
-
         ventana = ctk.CTkToplevel(self)
         ventana.title("HomeServe")
         ventana.geometry("320x350")
@@ -293,17 +305,12 @@ class GestorPro(ctk.CTk):
             ).start()
 
         def ejecutar_bot():
-
             ventana.withdraw()
-
             self.iconify()
-
             import modules.homeserve as bot
 
             def ejecutar():
-
                 bot.iniciar_homeserve()
-
                 self.after(0, self.deiconify)
                 self.after(0, ventana.deiconify)
 
@@ -337,13 +344,9 @@ class GestorPro(ctk.CTk):
             import modules.homeserve as bot
             bot.BOT_PAUSADO = True
 
-
-
         def continuar_bot():
             import modules.homeserve as bot
             bot.BOT_PAUSADO = False
-
-
 
         def detener_bot():
             import modules.homeserve as bot
@@ -356,14 +359,12 @@ class GestorPro(ctk.CTk):
             height=35
         ).pack(fill="x", padx=25, pady=5)
 
-
         ctk.CTkButton(
             ventana,
             text="▶ Continuar BOT",
             command=continuar_bot,
             height=35
         ).pack(fill="x", padx=25, pady=5)
-
 
         ctk.CTkButton(
             ventana,
