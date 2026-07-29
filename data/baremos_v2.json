@@ -117,15 +117,18 @@
         "precio_max": 85.0,
         "precio_recomendado": 70.0,
         "aprendizaje": {
-            "usos": 9,
+            "usos": 15,
             "palabras_aprendidas": [
                 "latiguil",
                 "latiguillo",
                 "latigiyo",
-                "latigillo"
+                "latigillo",
+                "latiguillos"
             ],
-            "frases_aprendidas": [],
-            "ultima_fecha": "28/07/2026"
+            "frases_aprendidas": [
+                "manguitos flexibles de agua"
+            ],
+            "ultima_fecha": "29/07/2026"
         }
     },
     {

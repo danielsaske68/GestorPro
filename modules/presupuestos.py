@@ -7,7 +7,6 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
-
 import os
 def ruta_app(carpeta, archivo=None):
     base = os.path.dirname(
@@ -2026,13 +2025,26 @@ Precio recomendado:
         )
 
     def abrir_carpeta_pdf(self):
-        ruta = os.path.realpath(CARPETA_PRESUPUESTOS)
-        if os.name == 'nt':  # Windows
-            subprocess.run(['explorer', ruta])
-        elif sys.platform == 'darwin':  # macOS
-            subprocess.run(['open', ruta])
-        else:  # Linux
-            subprocess.run(['xdg-open', ruta])
+        """Crea la carpeta 'presupuestos_pdf' en la raíz del proyecto si no existe y la abre."""
+        # 1. Obtener la ruta del directorio raíz (donde se ejecuta la app)
+        # Usamos os.getcwd() para asegurar que apunte a la carpeta base del ejecutable/script
+        ruta_raiz = os.getcwd() 
+        carpeta_pdf = os.path.join(ruta_raiz, "presupuestos_pdf")
+
+        # 2. Si la carpeta no existe, la crea automáticamente
+        if not os.path.exists(carpeta_pdf):
+            os.makedirs(carpeta_pdf, exist_ok=True)
+
+        # 3. Abrir la carpeta en el explorador de archivos
+        try:
+            if os.name == 'nt':  # Windows
+                os.startfile(carpeta_pdf)
+            elif sys.platform == 'darwin':  # macOS
+                subprocess.run(['open', carpeta_pdf])
+            else:  # Linux
+                subprocess.run(['xdg-open', carpeta_pdf])
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo abrir la carpeta:\n{e}")
 
     def generar_pdf_presupuesto(self):
         numero = datetime.now().strftime("%Y%m%d-%H%M%S") 

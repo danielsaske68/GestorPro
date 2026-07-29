@@ -3,6 +3,7 @@ from tkinter import messagebox
 import customtkinter as ctk
 from tkcalendar import DateEntry
 import os
+import sys
 import json
 import subprocess
 import locale
@@ -721,83 +722,64 @@ class LiquidacionesFrame(ctk.CTkFrame):
     def generar_pdf(self):
         try:
             datos = self.obtener_datos()
-            
-            # --- BÚSQUEDA ROBUSTA EN MÚLTIPLES NIVELES Y FORMATOS ---
-            script_dir = os.path.dirname(os.path.abspath(__file__))
+
+            # --- 1. OBTENER RUTA BASE REAL (Compatible con PyInstaller / .exe) ---
+            if getattr(sys, 'frozen', False):
+                base_dir = os.path.dirname(sys.executable)
+            else:
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+
             cwd_dir = os.getcwd()
-            parent_dir = os.path.dirname(script_dir)
-            
-            # Formatos posibles de imagen
+            parent_dir = os.path.dirname(base_dir)
+
+            # --- 2. BÚSQUEDA ROBUSTA DEL LOGO ---
             nombres_archivo = ["logo.png", "logo.PNG", "logo.jpg", "logo.jpeg", "LOGO.PNG"]
-            
-            # Carpetas posibles donde puede estar la carpeta 'assets'
             rutas_a_probar = [
-                script_dir,
+                base_dir,
                 cwd_dir,
                 parent_dir,
                 r"C:\Users\Admin\Desktop\Pruebas"
             ]
-            
+
             ruta_logo = None
             for carpeta in rutas_a_probar:
                 for nombre in nombres_archivo:
-                    posible_ruta = os.path.join(carpeta, "assets", nombre)
-                    if os.path.exists(posible_ruta):
-                        ruta_logo = posible_ruta
+                    # Prueba dentro de la carpeta 'assets'
+                    posible_ruta_assets = os.path.join(carpeta, "assets", nombre)
+                    if os.path.exists(posible_ruta_assets):
+                        ruta_logo = posible_ruta_assets
+                        break
+                    # Prueba directamente en la raíz por si acaso
+                    posible_ruta_raiz = os.path.join(carpeta, nombre)
+                    if os.path.exists(posible_ruta_raiz):
+                        ruta_logo = posible_ruta_raiz
                         break
                 if ruta_logo:
                     break
 
-            mes = self.mes_seleccionado.get().upper()
-            filename = os.path.join(self.CARPETA_PDF, f"Liquidacion_{mes}.pdf")
-            elements = []; styles = getSampleStyleSheet()
-
-            # Insertar logo o mostrar aviso en pantalla si no se encuentra
-            if ruta_logo and os.path.exists(ruta_logo):
-                img_logo = RLImage(ruta_logo, width=120, height=120)
-                img_logo.hAlign = 'CENTER'
-                elements.append(img_logo)
-                elements.append(Spacer(1, 10))
-            else:
-                messagebox.showwarning(
-                    "Logo no encontrado", 
-                    f"No se encontró 'logo.png'.\n\nPython buscó en:\n{os.path.join(script_dir, 'assets')}"
-                )
-
-            estilo_titulo = ParagraphStyle('TituloPersonalizado', parent=styles['Title'],
-                                           fontSize=20, textColor=colors.black,
-                                           alignment=1, spaceAfter=20)
-            elements.append(Paragraph(f"INFORME DE LIQUIDACIÓN - {mes}", estilo_titulo))
-
-            # --- RUTA 100% AUTOMÁTICA Y PORTÁTIL ---
-            # Detecta la carpeta donde está guardado este archivo ejecutable/script
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            
-            # Busca automáticamente el logo dentro de la carpeta 'assets'
-            ruta_logo = None
-            for nombre in ["logo.png", "logo.PNG", "logo.jpg", "logo.jpeg", "LOGO.PNG"]:
-                posible_ruta = os.path.join(script_dir, "assets", nombre)
-                if os.path.exists(posible_ruta):
-                    ruta_logo = posible_ruta
-                    break
-
-            # Asegura la creación de la carpeta de PDFs relativa al proyecto
-            carpeta_pdf = getattr(self, 'CARPETA_PDF', os.path.join(script_dir, "liquidaciones_pdf"))
+            # --- 3. CONFIGURACIÓN DE CARPETA Y DOCUMENTO ---
+            carpeta_pdf = getattr(self, 'CARPETA_PDF', os.path.join(base_dir, "liquidaciones_pdf"))
             os.makedirs(carpeta_pdf, exist_ok=True)
 
             mes = self.mes_seleccionado.get().upper()
             filename = os.path.join(carpeta_pdf, f"Liquidacion_{mes}.pdf")
-            
+
             elements = []
             styles = getSampleStyleSheet()
 
-            # Logo optimizado (80x80) para que todo quepa en 1 página
+            # --- 4. INSERTAR LOGO EN EL PDF ---
             if ruta_logo and os.path.exists(ruta_logo):
                 img_logo = RLImage(ruta_logo, width=80, height=80)
                 img_logo.hAlign = 'CENTER'
                 elements.append(img_logo)
                 elements.append(Spacer(1, 6))
+            else:
+                messagebox.showwarning(
+                    "Logo no encontrado",
+                    f"No se encontró el logo.\nBuscado en: {os.path.join(base_dir, 'assets')}"
+                )
 
+            # Título del Informe
             estilo_titulo = ParagraphStyle(
                 'TituloPersonalizado', parent=styles['Title'],
                 fontSize=18, textColor=colors.black,
@@ -805,6 +787,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
             )
             elements.append(Paragraph(f"INFORME DE LIQUIDACIÓN - {mes}", estilo_titulo))
 
+            # Estilo reutilizable de tablas
             def aplicar_estilo_tabla(t):
                 t.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#282828")),
@@ -816,48 +799,68 @@ class LiquidacionesFrame(ctk.CTkFrame):
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                     ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
                     ('TOPPADDING', (0, 0), (-1, 0), 8),
-                ])); return t
+                ]))
+                return t
 
+            # --- TABLA RESUMEN ---
             bs = datos["base"]; tr = datos["transferencia"]
             tot_fijos = datos["total_fijos"]; tot_ajustes = datos["total_ajustes"]
             restando_gastos = datos["restando"]
             iva_calc = datos["iva"]; irpf_calc = datos["irpf"]
             recibo_final = datos["recibo"]
 
-            data_res = [["CONCEPTO", "VALOR", "RESUMEN", "VALOR"],
-                        ["BASE IMP.", f"{bs:.2f} €", "REST. GASTOS", f"{restando_gastos:.2f} €"],
-                        ["IVA (21%)", f"{iva_calc:.2f} €", "IRPF (20%)", f"{irpf_calc:.2f} €"],
-                        ["TOTAL FACT.", f"{bs + iva_calc:.2f} €", "IVA + IRPF", f"{iva_calc + irpf_calc:.2f} €"],
-                        ["TRANSFER.", f"{tr:.2f} €", "RECIBO FIN.", f"{recibo_final:.2f} €"]]
+            data_res = [
+                ["CONCEPTO", "VALOR", "RESUMEN", "VALOR"],
+                ["BASE IMP.", f"{bs:.2f} €", "REST. GASTOS", f"{restando_gastos:.2f} €"],
+                ["IVA (21%)", f"{iva_calc:.2f} €", "IRPF (20%)", f"{irpf_calc:.2f} €"],
+                ["TOTAL FACT.", f"{bs + iva_calc:.2f} €", "IVA + IRPF", f"{iva_calc + irpf_calc:.2f} €"],
+                ["TRANSFER.", f"{tr:.2f} €", "RECIBO FIN.", f"{recibo_final:.2f} €"]
+            ]
             t_res = aplicar_estilo_tabla(Table(data_res, colWidths=[90, 80, 90, 80]))
-            t_res.setStyle(TableStyle([('BACKGROUND', (2, 4), (3, 4), colors.yellow),
-                                       ('TEXTCOLOR', (2, 4), (3, 4), colors.black)]))
-            elements.append(t_res); elements.append(Spacer(1, 20))
+            t_res.setStyle(TableStyle([
+                ('BACKGROUND', (2, 4), (3, 4), colors.yellow),
+                ('TEXTCOLOR', (2, 4), (3, 4), colors.black)
+            ]))
+            elements.append(t_res)
+            elements.append(Spacer(1, 20))
 
+            # --- TABLA DESGLOSE DE GASTOS ---
             elements.append(Paragraph("DESGLOSE DE GASTOS", styles["Heading2"]))
             datos_desglose = [["TIPO", "DESCRIPCIÓN", "IMPORTE"]]
             tot_mat = 0; tot_comb = 0
+
             for w in self.cont_mat.winfo_children():
                 if len(w.winfo_children()) > 0:
                     val = self.numero(w.winfo_children()[0])
-                    datos_desglose.append(["MATERIAL", "Gasto", f"{val:.2f} €"]); tot_mat += val
+                    datos_desglose.append(["MATERIAL", "Gasto", f"{val:.2f} €"])
+                    tot_mat += val
+
             for w in self.cont_comb.winfo_children():
                 if len(w.winfo_children()) > 0:
                     val = self.numero(w.winfo_children()[0])
-                    datos_desglose.append(["COMBUSTIBLE", "Ticket", f"{val:.2f} €"]); tot_comb += (val / 2)
+                    datos_desglose.append(["COMBUSTIBLE", "Ticket", f"{val:.2f} €"])
+                    tot_comb += (val / 2)
+
             datos_desglose.append(["", "TOTAL MATERIALES", f"{tot_mat:.2f} €"])
             datos_desglose.append(["", "50% COMBUSTIBLE", f"{tot_comb:.2f} €"])
             datos_desglose.append(["", "TOTAL DEDUCIBLE", f"{tot_mat + tot_comb:.2f} €"])
             t_desglose = aplicar_estilo_tabla(Table(datos_desglose, colWidths=[100, 150, 100]))
-            t_desglose.setStyle(TableStyle([('BACKGROUND', (1, -1), (2, -1), colors.HexColor("#00FFFF")),
-                                            ('TEXTCOLOR', (1, -1), (2, -1), colors.black)]))
-            elements.append(t_desglose); elements.append(Spacer(1, 20))
+            t_desglose.setStyle(TableStyle([
+                ('BACKGROUND', (1, -1), (2, -1), colors.HexColor("#00FFFF")),
+                ('TEXTCOLOR', (1, -1), (2, -1), colors.black)
+            ]))
+            elements.append(t_desglose)
+            elements.append(Spacer(1, 20))
 
+            # --- TABLA GASTOS FIJOS ---
             elements.append(Paragraph("GASTOS FIJOS", styles["Heading2"]))
-            datos_fijos = [["CONCEPTO", "IMPORTE"]]; total_fijos = 0
+            datos_fijos = [["CONCEPTO", "IMPORTE"]]
+            total_fijos = 0
             for gasto in datos["gastos_fijos"]:
-                datos_fijos.append([gasto["nombre"], f'{gasto["importe"]:.2f} €']); total_fijos += gasto["importe"]
+                datos_fijos.append([gasto["nombre"], f'{gasto["importe"]:.2f} €'])
+                total_fijos += gasto["importe"]
             datos_fijos.append(["TOTAL GASTOS FIJOS", f"{total_fijos:.2f} €"])
+
             t_fijos = Table(datos_fijos, colWidths=[200, 100])
             t_fijos.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#282828")),
@@ -867,15 +870,19 @@ class LiquidacionesFrame(ctk.CTkFrame):
                 ('ALIGN', (0, 1), (0, -2), 'LEFT'),
                 ('BACKGROUND', (0, -1), (-1, -1), colors.red),
                 ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]))
-            elements.append(t_fijos); elements.append(Spacer(1, 20))
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black)
+            ]))
+            elements.append(t_fijos)
+            elements.append(Spacer(1, 20))
 
+            # --- TABLA AJUSTES MES ANTERIOR ---
             elements.append(Paragraph("AJUSTES MES ANTERIOR", styles["Heading2"]))
             datos_ajuste = [["CONCEPTO", "IMPORTE"]]
             total_ajustes = sum(self.numero(w.winfo_children()[1]) for w in self.cont_ajustes.winfo_children())
             for ajuste in datos["ajustes"]:
                 datos_ajuste.append([ajuste["nombre"], f'{ajuste["importe"]:.2f} €'])
             datos_ajuste.append(["TOTAL AJUSTES", f"{total_ajustes:.2f} €"])
+
             t_ajuste = Table(datos_ajuste, colWidths=[200, 100])
             t_ajuste.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#282828")),
@@ -886,17 +893,25 @@ class LiquidacionesFrame(ctk.CTkFrame):
                 ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
                 ('ALIGN', (0, -1), (0, -1), 'LEFT'),
                 ('ALIGN', (1, -1), (1, -1), 'CENTER'),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]))
-            elements.append(t_ajuste); elements.append(Spacer(1, 20))
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black)
+            ]))
+            elements.append(t_ajuste)
+            elements.append(Spacer(1, 20))
 
+            # --- TABLA EXTRAS ---
             elements.append(Paragraph("EXTRAS TF / EFECTIVO", styles["Heading2"]))
-            datos_ext = [["FECHA", "TIPO", "NETO", "TOTAL"]]; total_extras = 0
+            datos_ext = [["FECHA", "TIPO", "NETO", "TOTAL"]]
+            total_extras = 0
             for extra in datos["extras"]:
-                datos_ext.append([extra["fecha"],
-                                  "TF" if extra["tipo"] == "Bizum" else extra["tipo"],
-                                  f'{extra["neto"]:.2f} €', f'{extra["restante"]:.2f} €'])
+                datos_ext.append([
+                    extra["fecha"],
+                    "TF" if extra["tipo"] == "Bizum" else extra["tipo"],
+                    f'{extra["neto"]:.2f} €',
+                    f'{extra["restante"]:.2f} €'
+                ])
                 total_extras += extra["restante"]
             datos_ext.append(["TOTAL NETO", "", "", f"{total_extras:.2f} €"])
+
             t_ext = Table(datos_ext, colWidths=[80, 80, 80, 80])
             t_ext.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#282828")),
@@ -904,12 +919,16 @@ class LiquidacionesFrame(ctk.CTkFrame):
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
                 ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor("#90EE90")),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]))
-            elements.append(t_ext); elements.append(Spacer(1, 20))
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black)
+            ]))
+            elements.append(t_ext)
+            elements.append(Spacer(1, 20))
 
+            # --- RESULTADO FINAL (€ MIO) ---
             resultado_mio = tr - (iva_calc + irpf_calc) - total_fijos + total_extras + total_ajustes
             texto_final = f"€ MIO: {resultado_mio:.2f}"
             elements.append(Spacer(1, 10))
+
             t_mio = Table([[texto_final]], colWidths=[450])
             t_mio.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, -1), colors.darkgreen),
@@ -920,14 +939,20 @@ class LiquidacionesFrame(ctk.CTkFrame):
                 ('FONTSIZE', (0, 0), (-1, -1), 22),
                 ('TOPPADDING', (0, 0), (-1, -1), 15),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
             elements.append(t_mio)
 
-            doc = SimpleDocTemplate(filename, pagesize=A4, topMargin=20,
-                                    leftMargin=40, rightMargin=40)
+            # --- CONSTRUIR PDF ---
+            doc = SimpleDocTemplate(
+                filename, pagesize=A4, topMargin=20,
+                leftMargin=40, rightMargin=40
+            )
             doc.build(elements)
-            # guarda snapshot al generar
+
+            # Guardar snapshot
             self._guardar_mes(mes)
-            messagebox.showinfo("Éxito", "PDF generado correctamente.")
+            messagebox.showinfo("Éxito", f"PDF generado correctamente en:\n{filename}")
+
         except Exception as e:
-            messagebox.showerror("Error", f"Error al generar: {e}")
+            messagebox.showerror("Error", f"Error al generar el PDF: {e}")

@@ -1,144 +1,103 @@
-import customtkinter as ctk
-from PIL import Image
-import time
-import json
-import sys
 import os
+import sys
+import time
+import threading
+import subprocess
+from PIL import Image
+import customtkinter as ctk
+from tkinter import messagebox
 
-# --- AJUSTE DE RUTA PARA SCRIPT O .EXE ---
+# ==========================================
+# CONFIGURACIÓN DE RUTAS BASE Y MÓDULOS
+# ==========================================
 if getattr(sys, 'frozen', False):
     BASE_DIR = os.path.dirname(sys.executable)
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from modules.liquidaciones import LiquidacionesFrame
-from tkinter import messagebox
-import threading
-import subprocess
+# Aseguramos que Python encuentre la raíz y la carpeta 'modules'
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
-from cloud.railway_app import iniciar_servidor
-from cloud.railway_app import loop
-from cloud.railway_app import monitor_webhook
+# ==========================================
+# IMPORTACIONES DE TUS MÓDULOS
+# ==========================================
+import modules.homeserve as bot
+from modules.liquidaciones import LiquidacionesFrame
+from modules.servidor_local import ServidorLocalFrame
+from cloud.railway_app import volver_a_railway
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
+
 
 class GestorPro(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("GESTOR PRO")
-        # Tamaño inicial pequeño
-        self.geometry("400x500") 
+        self.geometry("400x500")
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        
-        # ... (resto de tu código de botones del menú)
+
         # ==========================
         # MENÚ IZQUIERDO
         # ==========================
         self.menu = ctk.CTkFrame(self, width=220, corner_radius=0)
         self.menu.grid(row=0, column=0, sticky="ns")
+
+        # Cargar Logo de assets
         try:
-            RUTA_LOGO = os.path.join(
-                BASE_DIR,
-                "assets",
-                "logo.png"
-            )
+            RUTA_LOGO = os.path.join(BASE_DIR, "assets", "logo.png")
             logo = ctk.CTkImage(
                 light_image=Image.open(RUTA_LOGO),
                 dark_image=Image.open(RUTA_LOGO),
                 size=(120, 120)
             )
-
+            ctk.CTkLabel(self.menu, image=logo, text="").pack(pady=20)
+        except Exception:
             ctk.CTkLabel(
-                self.menu,
-                image=logo,
-                text=""
-            ).pack(pady=20)
-
-        except:
-            ctk.CTkLabel(
-                self.menu,
-                text="GESTOR PRO",
+                self.menu, 
+                text="GESTOR PRO", 
                 font=("Arial", 24, "bold")
             ).pack(pady=30)
 
-        ctk.CTkButton(
-            self.menu,
-            text="🏠 Inicio",
-            command=self.inicio
-        ).pack(fill="x", padx=15, pady=5)
+        # Botones del Menú
+        ctk.CTkButton(self.menu, text="🏠 Inicio", command=self.inicio).pack(fill="x", padx=15, pady=5)
+        ctk.CTkButton(self.menu, text="💰 Liquidaciones", command=self.abrir_liquidaciones).pack(fill="x", padx=15, pady=5)
+        ctk.CTkButton(self.menu, text="🛠 Lector de códigos", command=self.abrir_lector_codigos).pack(fill="x", padx=15, pady=5)
+        ctk.CTkButton(self.menu, text="📝 Presupuestos", command=self.abrir_presupuestos).pack(fill="x", padx=15, pady=5)
 
-        ctk.CTkButton(
-            self.menu,
-            text="💰 Liquidaciones",
-            command=self.abrir_liquidaciones
-        ).pack(fill="x", padx=15, pady=5)
-
-        ctk.CTkButton(
-            self.menu,
-            text="🛠 Lector de códigos", 
-            command=self.abrir_lector_codigos
-        ).pack(fill="x", padx=15, pady=5)
-
-        ctk.CTkButton(
-            self.menu,
-            text="📝 Presupuestos",
-            command=self.abrir_presupuestos
-        ).pack(fill="x", padx=15, pady=5)
-
-        self.boton_cloud = ctk.CTkButton(
-            self.menu,
-            text="☁️ Servidor Local",
-            command=self.iniciar_cloud
-        )
+        self.boton_cloud = ctk.CTkButton(self.menu, text="☁️ Servidor Local", command=self.iniciar_cloud)
         self.boton_cloud.pack(fill="x", padx=15, pady=5)
 
-
-        ctk.CTkButton(
-            self.menu,
-            text="🏠 Ejecutar HomeServe",
-            command=self.ejecutar_homeserve
-        ).pack(fill="x", padx=15, pady=5)
-
-
-        ctk.CTkButton(
-            self.menu,
-            text="🔄 Actualizar Gestor PRO",
-            command=self.abrir_actualizador
-        ).pack(
-            fill="x",
-            padx=15,
-            pady=5
-        )
-
-        ctk.CTkButton(
-            self.menu,
-            text="❌ Salir",
-            command=self.destroy
-        ).pack(side="bottom", fill="x", padx=15, pady=20)
+        ctk.CTkButton(self.menu, text="🏠 Ejecutar HomeServe", command=self.ejecutar_homeserve).pack(fill="x", padx=15, pady=5)
+        ctk.CTkButton(self.menu, text="🔄 Actualizar Gestor PRO", command=self.abrir_actualizador).pack(fill="x", padx=15, pady=5)
+        ctk.CTkButton(self.menu, text="❌ Salir", command=self.destroy).pack(side="bottom", fill="x", padx=15, pady=20)
 
         # ==========================
-        # PANEL DERECHO
+        # PANEL DERECHO (CONTENIDO)
         # ==========================
         self.contenido = ctk.CTkFrame(self, corner_radius=0)
         self.contenido.grid(row=0, column=1, sticky="nsew")
         self.frame_actual = None
         self.inicio()
 
-    # ==========================
-    # NUEVAS FUNCIONES DE CONTROL
-    # ==========================
+    def restaurar_interfaz(self):
+        """Método de instancia para restaurar la ventana de Gestor PRO limpia"""
+        try:
+            self.deiconify()
+            self.state('normal')
+            self.focus_force()
+        except Exception as e:
+            print(f"Error al restaurar interfaz: {e}")
+
     def pantalla_pequena(self):
         self.state('normal')
         self.geometry("400x500")
-        
+
     def pantalla_completa(self):
         self.state('zoomed')
 
-    # ==========================
-    # CAMBIAR MÓDULO
-    # ==========================
     def limpiar(self):
         if self.frame_actual is not None:
             self.frame_actual.destroy()
@@ -152,64 +111,42 @@ class GestorPro(ctk.CTk):
         else:
             return "¡Buenas noches!"
 
-    def abrir_actualizador(self):
-        from modules.actualizador import ActualizadorFrame
-        self.pantalla_completa()
-        self.limpiar()
-        self.frame_actual = ActualizadorFrame(
-            self.contenido
-        )
-        self.frame_actual.pack(
-            fill="both",
-            expand=True
-        )
-
     def inicio(self):
         self.pantalla_pequena()
         self.limpiar()
         self.frame_actual = ctk.CTkFrame(self.contenido, fg_color="transparent")
         self.frame_actual.pack(fill="both", expand=True)
 
-        # --- RELOJ ---
         lbl_hora = ctk.CTkLabel(self.frame_actual, text="", font=("Arial", 26, "bold"), text_color="#ffffff")
         lbl_hora.place(relx=0.95, rely=0.05, anchor="ne")
         lbl_fecha = ctk.CTkLabel(self.frame_actual, text="", font=("Arial", 14), text_color="#aaaaaa")
         lbl_fecha.place(relx=0.95, rely=0.13, anchor="ne")
-        
+
         def actualizar_reloj_loop():
-            # VERIFICACIÓN DE SEGURIDAD
-            if lbl_hora.winfo_exists(): 
+            if lbl_hora.winfo_exists():
                 lbl_hora.configure(text=time.strftime("%H:%M:%S"))
                 lbl_fecha.configure(text=time.strftime("%d/%m/%Y"))
                 self.after(1000, actualizar_reloj_loop)
-        actualizar_reloj_loop()
-        
-        # ... resto de tu código de inicio
 
-        # --- CONTENIDO CENTRAL ---
+        actualizar_reloj_loop()
+
         center_frame = ctk.CTkFrame(self.frame_actual, fg_color="transparent")
         center_frame.place(relx=0.52, rely=0.50, anchor="center")
         ctk.CTkLabel(center_frame, text=self.obtener_saludo(), font=("Arial", 16, "italic"), text_color="gray").pack(pady=5)
-        
-        ctk.CTkLabel(
-            center_frame,
-            text="GESTOR PRO",
-            font=("Arial", 32, "bold"), 
-            text_color=("#0056b3", "#3b8ed0")
-        ).pack(pady=5)
+        ctk.CTkLabel(center_frame, text="GESTOR PRO", font=("Arial", 32, "bold"), text_color=("#0056b3", "#3b8ed0")).pack(pady=5)
+        ctk.CTkLabel(center_frame, text="Selecciona un módulo\npara comenzar.", font=("Arial", 14), text_color="white", justify="center").pack(pady=5)
 
-        ctk.CTkLabel(
-            center_frame,
-            text="Selecciona un módulo\npara comenzar.",
-            font=("Arial", 14),
-            text_color="white",
-            justify="center"
-        ).pack(pady=5)
-
-    def abrir_lector_codigos(self):
+    def abrir_actualizador(self):
+        from modules.actualizador import ActualizadorFrame
         self.pantalla_completa()
         self.limpiar()
-        from modules.Lector_de_codigos import Lector_de_codigos 
+        self.frame_actual = ActualizadorFrame(self.contenido)
+        self.frame_actual.pack(fill="both", expand=True)
+
+    def abrir_lector_codigos(self):
+        from modules.Lector_de_codigos import Lector_de_codigos
+        self.pantalla_completa()
+        self.limpiar()
         self.frame_actual = Lector_de_codigos(self.contenido)
         self.frame_actual.pack(fill="both", expand=True)
 
@@ -220,158 +157,130 @@ class GestorPro(ctk.CTk):
         self.frame_actual.pack(fill="both", expand=True)
 
     def abrir_presupuestos(self):
+        from modules.presupuestos import AppPresupuestos
         self.pantalla_completa()
         self.limpiar()
-        from modules.presupuestos import AppPresupuestos 
         self.frame_actual = AppPresupuestos(self.contenido)
         self.frame_actual.pack(fill="both", expand=True)
 
     def iniciar_cloud(self):
         self.pantalla_completa()
         self.limpiar()
-        from modules.servidor_local import ServidorLocalFrame
-        self.frame_actual=ServidorLocalFrame(
-            self.contenido
-        )
-        self.frame_actual.pack(
-            fill="both",
-            expand=True
-        )
+        self.frame_actual = ServidorLocalFrame(self.contenido)
+        self.frame_actual.pack(fill="both", expand=True)
 
     def ir_a_railway(self):
-        volver_a_railway()
-        messagebox.showinfo(
-            "Railway",
-            "El bot vuelve a funcionar desde Railway."
-        )
+        try:
+            volver_a_railway()
+            messagebox.showinfo("Railway", "El bot vuelve a funcionar desde Railway.")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo conectar con Railway: {e}")
 
     def ejecutar_homeserve(self):
-
         ventana = ctk.CTkToplevel(self)
         ventana.title("HomeServe")
-        ventana.geometry("320x350")
+        ventana.geometry("340x540")
         ventana.resizable(False, False)
         ventana.grab_set()
 
-        ctk.CTkLabel(
-            ventana,
-            text="HomeServe",
-            font=("Arial", 22, "bold")
-        ).pack(pady=(20, 10))
+        ctk.CTkLabel(ventana, text="HomeServe", font=("Arial", 20, "bold")).pack(pady=(15, 5))
+        ctk.CTkLabel(ventana, text="¿Qué deseas hacer?", font=("Arial", 13)).pack(pady=(0, 10))
 
-        ctk.CTkLabel(
-            ventana,
-            text="¿Qué deseas hacer?",
-            font=("Arial", 14)
-        ).pack(pady=(0, 20))
+        app_main = self
+
+        def cerrar_adb():
+            """Cierra los procesos en segundo plano de ADB para evitar que queden colgados"""
+            BASE_HOME = os.path.join(BASE_DIR, "Homeserve")
+            ADB_EXE = os.path.join(BASE_HOME, "adb.exe")
+            try:
+                if os.path.exists(ADB_EXE):
+                    subprocess.run([ADB_EXE, "kill-server"], creationflags=subprocess.CREATE_NO_WINDOW)
+                else:
+                    subprocess.run(["adb", "kill-server"], creationflags=subprocess.CREATE_NO_WINDOW)
+            except Exception:
+                pass
 
         def abrir_scrcpy():
             ventana.destroy()
-            self.iconify()
+            app_main.iconify()
+            BASE_HOME = os.path.join(BASE_DIR, "Homeserve")
+            SCRCPY = os.path.join(BASE_HOME, "scrcpy.exe")
+            
+            try:
+                proceso = subprocess.Popen(SCRCPY)
 
-            BASE_HOME = os.path.join(
-                BASE_DIR,
-                "Homeserve"
-            )
+                def esperar():
+                    proceso.wait()
+                    cerrar_adb()  # Limpia los procesos ADB al cerrar la ventana de scrcpy
+                    app_main.after(0, lambda: app_main.restaurar_interfaz())
 
-            SCRCPY = os.path.join(
-                BASE_HOME,
-                "scrcpy.exe"
-            )
-            proceso = subprocess.Popen(SCRCPY)
-
-            def esperar():
-                proceso.wait()
-                self.after(
-                    0,
-                    self.deiconify
-                )
-
-            threading.Thread(
-                target=esperar,
-                daemon=True
-            ).start()
+                threading.Thread(target=esperar, daemon=True).start()
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir scrcpy: {e}")
+                app_main.restaurar_interfaz()
 
         def ejecutar_bot():
-
             ventana.withdraw()
-
-            self.iconify()
-
-            import modules.homeserve as bot
+            app_main.iconify()
 
             def ejecutar():
+                import ctypes
 
-                bot.iniciar_homeserve()
+                # 1. Creamos la ventana de consola limpia
+                try:
+                    ctypes.windll.kernel32.AllocConsole()
+                    sys.stdout = open("CONOUT$", "w", encoding="utf-8")
+                    sys.stderr = open("CONOUT$", "w", encoding="utf-8")
+                    print("==================================================", flush=True)
+                    print("        CONSOLA DE LOGS - BOT HOMESERVE", flush=True)
+                    print("==================================================", flush=True)
+                except Exception:
+                    pass
 
-                self.after(0, self.deiconify)
-                self.after(0, ventana.deiconify)
+                try:
+                    # 2. Ejecutamos el bot
+                    bot.iniciar_homeserve()
+                except Exception as err:
+                    print(f"\n[!] Bot finalizado/detenido: {err}", flush=True)
+                finally:
+                    # 3. Forzamos el cierre y ocultación inmediata de la consola
+                    try:
+                        # Obtenemos el identificador de la ventana de consola actual
+                        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+                        if hwnd != 0:
+                            # Ocultamos la ventana en pantalla inmediatamente
+                            ctypes.windll.user32.ShowWindow(hwnd, 0)  # 0 = SW_HIDE
+                        
+                        sys.stdout.close()
+                        sys.stderr.close()
+                        sys.stdout = sys.__stdout__
+                        sys.stderr = sys.__stderr__
+                        ctypes.windll.kernel32.FreeConsole()
+                    except Exception:
+                        pass
+                    
+                    cerrar_adb()  # Limpia los procesos ADB
+                    app_main.after(0, lambda: app_main.restaurar_interfaz())
+                    app_main.after(0, lambda: ventana.deiconify() if ventana.winfo_exists() else None)
 
-            threading.Thread(
-                target=ejecutar,
-                daemon=True
-            ).start()
-
-        ctk.CTkButton(
-            ventana,
-            text="📱 Abrir scrcpy",
-            command=abrir_scrcpy,
-            height=40
-        ).pack(fill="x", padx=25, pady=5)
-
-        ctk.CTkButton(
-            ventana,
-            text="🤖 Ejecutar BOT",
-            command=ejecutar_bot,
-            height=40
-        ).pack(fill="x", padx=25, pady=5)
-
-        ctk.CTkButton(
-            ventana,
-            text="Cancelar",
-            fg_color="gray40",
-            command=ventana.destroy
-        ).pack(fill="x", padx=25, pady=(15,10))
+            threading.Thread(target=ejecutar, daemon=True).start()
 
         def pausar_bot():
-            import modules.homeserve as bot
             bot.BOT_PAUSADO = True
 
-
-
         def continuar_bot():
-            import modules.homeserve as bot
             bot.BOT_PAUSADO = False
 
-
-
         def detener_bot():
-            import modules.homeserve as bot
             bot.BOT_DETENIDO = True
 
-        ctk.CTkButton(
-            ventana,
-            text="⏸ Pausar BOT",
-            command=pausar_bot,
-            height=35
-        ).pack(fill="x", padx=25, pady=5)
+        ctk.CTkButton(ventana, text="📱 Abrir scrcpy", command=abrir_scrcpy, height=35).pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="🤖 Ejecutar BOT", command=ejecutar_bot, height=35).pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="⏸ Pausar BOT", command=pausar_bot, height=35).pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="▶ Continuar BOT", command=continuar_bot, height=35).pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="⛔ Detener BOT", command=detener_bot, height=35, fg_color="red").pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="Cancelar", fg_color="gray40", command=ventana.destroy, height=35).pack(fill="x", padx=25, pady=(15, 10))
 
-
-        ctk.CTkButton(
-            ventana,
-            text="▶ Continuar BOT",
-            command=continuar_bot,
-            height=35
-        ).pack(fill="x", padx=25, pady=5)
-
-
-        ctk.CTkButton(
-            ventana,
-            text="⛔ Detener BOT",
-            command=detener_bot,
-            height=35,
-            fg_color="red"
-        ).pack(fill="x", padx=25, pady=5)
 
 if __name__ == "__main__":
     app = GestorPro()
