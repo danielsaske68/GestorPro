@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import json
 import threading
 import subprocess
 from PIL import Image
@@ -20,6 +21,22 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 # ==========================================
+# LECTURA DINÁMICA DE VERSIÓN DESDE VERSION.JSON
+# ==========================================
+def obtener_version():
+    ruta_version = os.path.join(BASE_DIR, "version.json")
+    try:
+        if os.path.exists(ruta_version):
+            with open(ruta_version, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("version", "v1.0.0")
+    except Exception as e:
+        print(f"Error al leer version.json: {e}")
+    return "v1.0.0"
+
+VERSION = obtener_version()
+
+# ==========================================
 # IMPORTACIONES DE TUS MÓDULOS
 # ==========================================
 import modules.homeserve as bot
@@ -34,7 +51,8 @@ ctk.set_default_color_theme("blue")
 class GestorPro(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("GESTOR PRO")
+        # 📍 Título de la pestaña/ventana con la versión leída del JSON
+        self.title(f"GESTOR PRO {VERSION}")
         self.geometry("400x500")
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -136,6 +154,15 @@ class GestorPro(ctk.CTk):
         ctk.CTkLabel(center_frame, text="GESTOR PRO", font=("Arial", 32, "bold"), text_color=("#0056b3", "#3b8ed0")).pack(pady=5)
         ctk.CTkLabel(center_frame, text="Selecciona un módulo\npara comenzar.", font=("Arial", 14), text_color="white", justify="center").pack(pady=5)
 
+        # 📍 Número de versión limpio abajo a la derecha
+        lbl_version = ctk.CTkLabel(
+            self.frame_actual,
+            text=f"v{VERSION}" if not VERSION.startswith("v") else VERSION,
+            font=("Arial", 11),
+            text_color="gray50"
+        )
+        lbl_version.place(relx=1.0, rely=1.0, anchor="se", x=-15, y=-10)
+
     def abrir_actualizador(self):
         from modules.actualizador import ActualizadorFrame
         self.pantalla_completa()
@@ -179,7 +206,7 @@ class GestorPro(ctk.CTk):
     def ejecutar_homeserve(self):
         ventana = ctk.CTkToplevel(self)
         ventana.title("HomeServe")
-        ventana.geometry("340x540")
+        ventana.geometry("340x580")
         ventana.resizable(False, False)
         ventana.grab_set()
 
@@ -218,6 +245,48 @@ class GestorPro(ctk.CTk):
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo abrir scrcpy: {e}")
                 app_main.restaurar_interfaz()
+
+        def ingresar_servicios():
+            """Abre una subventana para escribir/pegar servicios y guardarlos en servicios.txt"""
+            BASE_HOME = os.path.join(BASE_DIR, "Homeserve")
+            ruta_servicios = os.path.join(BASE_HOME, "servicios.txt")
+            
+            v_servicios = ctk.CTkToplevel(ventana)
+            v_servicios.title("Ingresar Servicios")
+            v_servicios.geometry("320x420")
+            v_servicios.resizable(False, False)
+            v_servicios.grab_set()
+
+            ctk.CTkLabel(v_servicios, text="Lista de Servicios", font=("Arial", 16, "bold")).pack(pady=(12, 2))
+            ctk.CTkLabel(v_servicios, text="Ingresa un servicio por línea:", font=("Arial", 11), text_color="gray70").pack(pady=(0, 8))
+
+            txt_servicios = ctk.CTkTextbox(v_servicios, width=280, height=270, font=("Consolas", 12))
+            txt_servicios.pack(padx=15, pady=5)
+
+            # Si el archivo existe, cargamos su contenido
+            if os.path.exists(ruta_servicios):
+                try:
+                    with open(ruta_servicios, "r", encoding="utf-8") as f:
+                        contenido = f.read()
+                        txt_servicios.insert("1.0", contenido)
+                except Exception as e:
+                    print(f"Error al leer servicios.txt: {e}")
+
+            def guardar():
+                texto_raw = txt_servicios.get("1.0", "end-1c")
+                lineas = [linea.strip() for linea in texto_raw.splitlines() if linea.strip()]
+                
+                try:
+                    os.makedirs(BASE_HOME, exist_ok=True)
+                    with open(ruta_servicios, "w", encoding="utf-8") as f:
+                        f.write("\n".join(lineas) + ("\n" if lineas else ""))
+                    
+                    messagebox.showinfo("Éxito", f"Se han guardado {len(lineas)} servicio(s) correctamente.")
+                    v_servicios.destroy()
+                except Exception as e:
+                    messagebox.showerror("Error", f"No se pudo guardar el archivo: {e}")
+
+            ctk.CTkButton(v_servicios, text="💾 Guardar Servicios", command=guardar, height=35, fg_color="#2b8a3e", hover_color="#237032").pack(pady=12)
 
         def ejecutar_bot():
             ventana.withdraw()
@@ -274,12 +343,19 @@ class GestorPro(ctk.CTk):
         def detener_bot():
             bot.BOT_DETENIDO = True
 
+        # --- OPCIONES SUPERIORES ---
         ctk.CTkButton(ventana, text="📱 Abrir scrcpy", command=abrir_scrcpy, height=35).pack(fill="x", padx=25, pady=4)
-        ctk.CTkButton(ventana, text="🤖 Ejecutar BOT", command=ejecutar_bot, height=35).pack(fill="x", padx=25, pady=4)
-        ctk.CTkButton(ventana, text="⏸ Pausar BOT", command=pausar_bot, height=35).pack(fill="x", padx=25, pady=4)
-        ctk.CTkButton(ventana, text="▶ Continuar BOT", command=continuar_bot, height=35).pack(fill="x", padx=25, pady=4)
-        ctk.CTkButton(ventana, text="⛔ Detener BOT", command=detener_bot, height=35, fg_color="red").pack(fill="x", padx=25, pady=4)
-        ctk.CTkButton(ventana, text="Cancelar", fg_color="gray40", command=ventana.destroy, height=35).pack(fill="x", padx=25, pady=(15, 10))
+        ctk.CTkButton(ventana, text="📝 Ingresar servicios", command=ingresar_servicios, height=35, fg_color="#1f6aa5").pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="🤖 Ejecutar BOT", command=ejecutar_bot, height=35, fg_color="#2b8a3e", hover_color="#237032").pack(fill="x", padx=25, pady=4)
+
+        # --- SEPARADOR VISUAL Y ACCIONES DE CONTROL ---
+        ctk.CTkFrame(ventana, height=2, fg_color="gray30").pack(fill="x", padx=25, pady=10)
+
+        ctk.CTkButton(ventana, text="⏸ Pausar BOT", command=pausar_bot, height=35, fg_color="gray30", hover_color="gray40").pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="▶ Continuar BOT", command=continuar_bot, height=35, fg_color="gray30", hover_color="gray40").pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="⛔ Detener BOT", command=detener_bot, height=35, fg_color="#c92a2a", hover_color="#a61e1e").pack(fill="x", padx=25, pady=4)
+
+        ctk.CTkButton(ventana, text="Cancelar", fg_color="gray20", hover_color="gray30", command=ventana.destroy, height=35).pack(fill="x", padx=25, pady=(15, 10))
 
 
 if __name__ == "__main__":

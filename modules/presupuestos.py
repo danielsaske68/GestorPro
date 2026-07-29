@@ -1213,25 +1213,27 @@ USOS
                                 palabra
                             )
             # aprendizaje previo
-            aprendizaje=item.get(
-                "aprendizaje",
-                {}
-            )
-            palabras_aprendidas = (
-                aprendizaje.get(
-                    "palabras_aprendidas",
-                    []
-                )
-                +
-                aprendizaje.get(
-                    "frases_aprendidas",
-                    []
-                )
-            )
+            aprendizaje = item.get("aprendizaje", {})
+            
+            # 1. Palabras aprendidas (palabras sueltas)
             for palabra in aprendizaje.get("palabras_aprendidas", []):
-                if palabra in palabras_usuario:
+                if palabra.lower() in palabras_usuario:
                     puntos += 8
                     palabras_detectadas.append(palabra)
+
+            # 2. Frases aprendidas (frases completas como "conexion flexible de agua")
+            for frase in aprendizaje.get("frases_aprendidas", []):
+                frase_clean = frase.lower().strip()
+                # Comprobamos si la frase completa está dentro del texto buscado
+                if frase_clean and frase_clean in texto:
+                    puntos += 25  # Le damos puntuación alta por coincidir la frase aprendida
+                    palabras_detectadas.append(frase_clean)
+                else:
+                    # Si no coincide la frase entera, sumamos puntos por cada palabra de esa frase
+                    for pal in frase_clean.split():
+                        if pal in palabras_usuario and len(pal) > 2:  # ignorar palabras muy cortas como 'de', 'el'
+                            puntos += 4
+                            palabras_detectadas.append(pal)
             if puntos>0:
                 resultados.append({
                     "item":item,
@@ -1258,132 +1260,98 @@ USOS
         return mejor
 
     def mostrar_sugerencia_precio(self, resultado):
+        # 📍 1. Capturamos EL TEXTO ORIGINAL justo al entrar a la función
+        texto_original = self.txt_desc.get("1.0", "end-1c").strip()
+
         sugerencia = resultado["item"]
         porcentaje = resultado["porcentaje"]
         precio = sugerencia.get(
             "precio_recomendado",
             sugerencia.get(
                 "precio_sugerido",
-                (
-                    sugerencia["precio_min"]+
-                    sugerencia["precio_max"]
-                )/2
+                (sugerencia["precio_min"] + sugerencia["precio_max"]) / 2
             )
         )
+
         respuesta = messagebox.askyesno(
             "🤖 Inteligencia Gestor Pro",
-f"""
-Coincidencia:
-{porcentaje}%
-Trabajo:
-{sugerencia['nombre']}
-Categoría:
-{sugerencia.get('categoria','')}
-Precio mínimo:
-{sugerencia['precio_min']} €
-Precio máximo:
-{sugerencia['precio_max']} €
-Precio recomendado:
-{precio} €
-¿Es este trabajo?
-"""
+    f"""
+    Coincidencia:
+    {porcentaje}%
+    Trabajo:
+    {sugerencia['nombre']}
+    Categoría:
+    {sugerencia.get('categoria','')}
+    Precio mínimo:
+    {sugerencia['precio_min']} €
+    Precio máximo:
+    {sugerencia['precio_max']} €
+    Precio recomendado:
+    {precio} €
+    ¿Es este trabajo?
+    """
         )
+
         if respuesta:
+            # 👈 CAMBIO 1: También le pasamos el texto original al aprender el "Sí" directo
             self.aprender_confirmacion(
                 sugerencia,
-                resultado["detectadas"]
+                [texto_original] + resultado.get("detectadas", [])
             )
-            self.txt_desc.delete(
-                "1.0",
-                "end"
-            )
-            self.txt_desc.insert(
-                "1.0",
-                sugerencia["nombre"]
-            )
-            self.txt_precio.delete(
-                0,
-                "end"
-            )
-            self.txt_precio.insert(
-                0,
-                str(precio)
-            )
+            self.txt_desc.delete("1.0", "end")
+            self.txt_desc.insert("1.0", sugerencia["nombre"])
+
+            self.txt_precio.delete(0, "end")
+            self.txt_precio.insert(0, str(precio))
+
             self.comprobar_campos_item()
             return True
+
+        # -------------------------------------------------------------------
         # SI DICE QUE NO
+        # -------------------------------------------------------------------
         nueva_descripcion = ctk.CTkInputDialog(
             text="No parece correcto.\nEscribe el trabajo correcto:",
             title="Corregir trabajo"
         ).get_input()
+
         if nueva_descripcion:
-
-            texto_original = self.txt_desc.get(
-                "1.0",
-                "end-1c"
-            ).strip()
-
-            self.txt_desc.delete(
-                "1.0",
-                "end"
-            )
-            self.txt_desc.insert(
-                "1.0",
-                nueva_descripcion
-            )
-            # volver a analizar la corrección
-            resultado_nuevo = self.buscar_precio_baremo(
-                nueva_descripcion
-            )
+            # Volver a analizar la corrección
+            resultado_nuevo = self.buscar_precio_baremo(nueva_descripcion)
 
             if resultado_nuevo:
+                trabajo = resultado_nuevo["item"]
+                precio_corr = trabajo.get(
+                    "precio_recomendado",
+                    (trabajo["precio_min"] + trabajo["precio_max"]) / 2
+                )
+
                 aceptar = messagebox.askyesno(
                     "Corrección encontrada",
-                    f"""
-        He encontrado este trabajo:
-        {resultado_nuevo['item']['nombre']}
-        Precio recomendado:
-        {resultado_nuevo['item'].get(
-            'precio_recomendado',
-            0
-        )} €
+    f"""
+    He encontrado este trabajo:
+    {trabajo['nombre']}
+    Precio recomendado:
+    {precio_corr} €
 
-        ¿Es este?
-        """
+    ¿Es este?
+    """
                 )
                 if aceptar:
-                    trabajo = resultado_nuevo["item"]
-                    precio = trabajo.get(
-                        "precio_recomendado",
-                        (
-                            trabajo["precio_min"]
-                            +
-                            trabajo["precio_max"]
-                        ) / 2
-                    )
-                    self.txt_desc.delete(
-                        "1.0",
-                        "end"
-                    )
-                    self.txt_desc.insert(
-                        "1.0",
-                        trabajo["nombre"]
-                    )
-                    self.txt_precio.delete(
-                        0,
-                        "end"
-                    )
-                    self.txt_precio.insert(
-                        0,
-                        str(precio)
-                    )
+                    self.txt_desc.delete("1.0", "end")
+                    self.txt_desc.insert("1.0", trabajo["nombre"])
+
+                    self.txt_precio.delete(0, "end")
+                    self.txt_precio.insert(0, str(precio_corr))
+
+                    # Guardamos el texto original erróneo + la búsqueda corregida
                     self.aprender_confirmacion(
                         trabajo,
-                        [
-                            texto_original,
-                            nueva_descripcion
-                        ]
+                        [texto_original, nueva_descripcion]
                     )
+                    self.comprobar_campos_item()
+                    return True # 👈 CAMBIO 2: Retornamos True porque se completó con éxito la corrección
+
         self.comprobar_campos_item()
         return False
 
