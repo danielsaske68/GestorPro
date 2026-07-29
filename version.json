@@ -1,3 +1,5 @@
 {
-  "version": "1.0.1"
+    "version": "1.0.0",
+    "fecha": "21/07/2026",
+    "descripcion": "Primera versión estable de Gestor PRO"
 }
