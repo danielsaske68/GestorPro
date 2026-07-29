@@ -87,7 +87,15 @@ class ActualizadorFrame(ctk.CTkFrame):
             if response.status_code != 200:
                 raise Exception(f"No se pudo conectar (Código HTTP {response.status_code})")
             
-            remote_data = response.json()
+            # Limpiamos posibles caracteres invisibles o de control
+            contenido_texto = response.text.strip()
+            try:
+                # Usamos strict=False para permitir caracteres de control en el string
+                remote_data = json.loads(contenido_texto, strict=False)
+            except Exception:
+                # Si aun así falla, extraemos el texto directamente
+                remote_data = json.loads(response.content.decode('utf-8-sig'), strict=False)
+
             remote_version = remote_data.get("version", "1.0.0")
             self.escribir(f"📍 Versión en el servidor: {remote_version}")
 
