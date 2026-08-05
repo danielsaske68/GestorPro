@@ -46,6 +46,8 @@ HIDDEN_IMPORTS = [
     "reportlab",
     "reportlab.graphics.barcode",
     "sqlite3",
+    "fitz",
+    "frontend",
 ]
 
 # Paquetes con archivos internos (temas, iconos, imágenes) que necesitan

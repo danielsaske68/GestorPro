@@ -1,0 +1,21 @@
+git init
+git add .
+git commit -m "Versión inicial de GestorPro"
+git remote add origin https://github.com/danielsaske68/GestorPro.git
+git branch -M main
+git push -u origin main
+
+
+
+git push -u origin main --force
+
+git pull origin main --allow-unrelated-histories
+
+
+
+git add .
+git commit -m "Descripción de lo que actualizaste"
+git push origin main
+
+
+python build.py

@@ -84,6 +84,9 @@ class GestorPro(ctk.CTk):
         ctk.CTkButton(self.menu, text="💰 Liquidaciones", command=self.abrir_liquidaciones).pack(fill="x", padx=15, pady=5)
         ctk.CTkButton(self.menu, text="🛠 Lector de códigos", command=self.abrir_lector_codigos).pack(fill="x", padx=15, pady=5)
         ctk.CTkButton(self.menu, text="📝 Presupuestos", command=self.abrir_presupuestos).pack(fill="x", padx=15, pady=5)
+        
+        # 📍 PEGA ESTA LÍNEA NUEVA AQUÍ:
+        ctk.CTkButton(self.menu, text="📑 Verificador de Pagos", command=self.abrir_verificador_pagos).pack(fill="x", padx=15, pady=5)
 
         self.boton_cloud = ctk.CTkButton(self.menu, text="☁️ Servidor Local", command=self.iniciar_cloud)
         self.boton_cloud.pack(fill="x", padx=15, pady=5)
@@ -175,6 +178,13 @@ class GestorPro(ctk.CTk):
         self.pantalla_completa()
         self.limpiar()
         self.frame_actual = Lector_de_codigos(self.contenido)
+        self.frame_actual.pack(fill="both", expand=True)
+
+    def abrir_verificador_pagos(self):
+        from modules.VerificadorPagos import VerificadorPagosFrame
+        self.pantalla_completa()
+        self.limpiar()
+        self.frame_actual = VerificadorPagosFrame(self.contenido)
         self.frame_actual.pack(fill="both", expand=True)
 
     def abrir_liquidaciones(self):
