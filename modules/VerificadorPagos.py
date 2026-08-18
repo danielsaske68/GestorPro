@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import re
 from datetime import datetime
 import fitz  # PyMuPDF: pip install PyMuPDF
 import customtkinter as ctk
@@ -68,7 +69,7 @@ class VerificadorPagosFrame(ctk.CTkFrame):
         self.txt_resultados = ctk.CTkTextbox(cuerpo_frame, font=("Consolas", 12))
         self.txt_resultados.grid(row=1, column=1, sticky="nsew", padx=(15, 0), pady=5)
         
-        self.placeholder_resultados = "Resultado una vez termine ya"
+        self.placeholder_resultados = "Resultado invisible una vez termine ya"
         self.txt_resultados.insert("1.0", self.placeholder_resultados)
         self.txt_resultados.configure(text_color="gray", state="disabled")
 
@@ -93,7 +94,7 @@ class VerificadorPagosFrame(ctk.CTkFrame):
     def on_focus_in_codigos(self, event):
         if self.es_placeholder_activo:
             self.txt_codigos.delete("1.0", "end")
-            self.txt_codigos.configure(text_color=("black", "white")) # Se adapta a modo claro/oscuro de CTk
+            self.txt_codigos.configure(text_color=("black", "white"))
             self.es_placeholder_activo = False
 
     def on_focus_out_codigos(self, event):
@@ -131,22 +132,68 @@ class VerificadorPagosFrame(ctk.CTkFrame):
 
         try:
             doc = fitz.open(self.ruta_pdf_seleccionado)
-            texto_pdf = ""
-            for pagina in doc:
-                texto_pdf += pagina.get_text()
-
+            
             pagados = []
             no_pagados = []
+            suma_total_cobrar = 0.0
 
             for codigo in lista_codigos:
-                if codigo in texto_pdf:
-                    pagados.append(codigo)
+                encontrado = False
+                datos_extraidos = {}
+                
+                for pagina in doc:
+                    texto_pagina = pagina.get_text()
+                    if codigo in texto_pagina:
+                        encontrado = True
+                        lineas = texto_pagina.split('\n')
+                        for i, linea in enumerate(lineas):
+                            if codigo in linea:
+                                inicio_contexto = max(0, i - 2)
+                                fin_contexto = min(len(lineas), i + 12)
+                                bloque_contexto = " ".join(lineas[inicio_contexto:fin_contexto])
+                                
+                                nums = re.findall(r'\d+[.,]\d{2}', bloque_contexto)
+                                
+                                if len(nums) >= 3:
+                                    if "Contado" in bloque_contexto or "No Contado" in bloque_contexto:
+                                        if len(nums) >= 4:
+                                            datos_extraidos["imp_cobrado"] = nums[0]
+                                            datos_extraidos["baremo"] = nums[1]
+                                            datos_extraidos["base"] = nums[2]
+                                            datos_extraidos["total"] = nums[3]
+                                        else:
+                                            datos_extraidos["imp_cobrado"] = "0,00"
+                                            datos_extraidos["baremo"] = nums[0]
+                                            datos_extraidos["base"] = nums[1]
+                                            datos_extraidos["total"] = nums[2]
+                                    else:
+                                        datos_extraidos["imp_cobrado"] = "N/A"
+                                        datos_extraidos["baremo"] = nums[0]
+                                        datos_extraidos["base"] = nums[1]
+                                        datos_extraidos["total"] = nums[2]
+                                else:
+                                    datos_extraidos["imp_cobrado"] = "N/A"
+                                    datos_extraidos["baremo"] = "0,00"
+                                    datos_extraidos["base"] = "0,00"
+                                    datos_extraidos["total"] = "0,00"
+                                    
+                                # Acumular el total a cobrar convirtiéndolo a float (reemplazando coma por punto)
+                                val_total_str = datos_extraidos.get("total", "0,00").replace(".", "").replace(",", ".")
+                                try:
+                                    suma_total_cobrar += float(val_total_str)
+                                except ValueError:
+                                    pass
+                                break
+                        break
+                
+                if encontrado:
+                    pagados.append({"codigo": codigo, "datos": datos_extraidos})
                 else:
                     no_pagados.append(codigo)
 
             os.makedirs(CARPETA_RESULTADOS, exist_ok=True)
 
-            # Generación de nomenclatura correlativa por fecha (ej: 05/Agost_001)
+            # Nomenclatura correlativa por fecha (ej: 05/Agost_001)
             fecha_actual = datetime.now()
             meses_es = {
                 1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun",
@@ -156,7 +203,6 @@ class VerificadorPagosFrame(ctk.CTkFrame):
             mes_str = meses_es.get(fecha_actual.month, fecha_actual.strftime("%b"))
             prefijo_fecha = f"{dia_str}_{mes_str}"
 
-            # Buscar cuántos archivos existen hoy para calcular el correlativo (001, 002...)
             archivos_existentes = os.listdir(CARPETA_RESULTADOS)
             contador = 1
             for archivo_ex in archivos_existentes:
@@ -174,23 +220,46 @@ class VerificadorPagosFrame(ctk.CTkFrame):
                 
                 f.write(f"--- [✔] PAGADOS ({len(pagados)}) ---\n")
                 if pagados:
-                    for cod in pagados:
-                        f.write(f"  {cod}\n")
+                    for item in pagados:
+                        f.write(f"  • Código: {item['codigo']}\n")
+                        f.write(f"    - Importe cobrado al cliente: {item['datos'].get('imp_cobrado', 'N/A')}\n")
+                        f.write(f"    - Baremo de referencia:       {item['datos'].get('baremo', 'N/A')}\n")
+                        f.write(f"    - Base imponible:             {item['datos'].get('base', 'N/A')}\n")
+                        f.write(f"    - Total a cobrar:             {item['datos'].get('total', 'N/A')}\n\n")
+                    
+                    # Formatear la suma total de vuelta al formato con coma decimal
+                    suma_formateada = f"{suma_total_cobrar:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                    f.write(f"==================================================\n")
+                    f.write(f"  SUMA TOTAL DE TOTALES A COBRAR: {suma_formateada}\n")
+                    f.write(f"==================================================\n\n")
                 else:
-                    f.write("  (Ninguno)\n")
-                
-                f.write("\n")
+                    f.write("  (Ninguno)\n\n")
                 
                 f.write(f"--- [❌] AÚN NO PAGADOS ({len(no_pagados)}) ---\n")
                 if no_pagados:
                     for cod in no_pagados:
-                        f.write(f"  {cod}\n")
+                        f.write(f"  • {cod}\n")
                 else:
                     f.write("  (Ninguno)\n")
 
-            # Mostrar resumen visual en pantalla habilitando temporalmente el textbox
-            texto_pantalla = f"=== [✔] PAGADOS ({len(pagados)}) ===\n" + ("\n".join(pagados) if pagados else "(Ninguno)")
-            texto_pantalla += f"\n\n=== [❌] AÚN NO PAGADOS ({len(no_pagados)}) ===\n" + ("\n".join(no_pagados) if no_pagados else "(Ninguno)")
+            # Construir texto para mostrar en pantalla de la app
+            texto_pantalla = f"=== [✔] PAGADOS ({len(pagados)}) ===\n"
+            if pagados:
+                for item in pagados:
+                    texto_pantalla += f"• Código: {item['codigo']}\n"
+                    texto_pantalla += f"  Imp. Cobrado Cliente: {item['datos'].get('imp_cobrado', 'N/A')}\n"
+                    texto_pantalla += f"  Baremo Referencia:    {item['datos'].get('baremo', 'N/A')}\n"
+                    texto_pantalla += f"  Base Imponible:       {item['datos'].get('base', 'N/A')}\n"
+                    texto_pantalla += f"  Total a Cobrar:       {item['datos'].get('total', 'N/A')}\n\n"
+                
+                suma_formateada = f"{suma_total_cobrar:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                texto_pantalla += f"--------------------------------------------------\n"
+                texto_pantalla += f"SUMA TOTAL DE TOTALES A COBRAR: {suma_formateada}\n"
+                texto_pantalla += f"--------------------------------------------------\n\n"
+            else:
+                texto_pantalla += "(Ninguno)\n\n"
+
+            texto_pantalla += f"=== [❌] AÚN NO PAGADOS ({len(no_pagados)}) ===\n" + ("\n".join([f"• {c}" for c in no_pagados]) if no_pagados else "(Ninguno)")
             texto_pantalla += f"\n\n[✔] Archivo TXT guardado:\n{nombre_archivo_salida}"
 
             self.txt_resultados.configure(state="normal")
@@ -198,7 +267,6 @@ class VerificadorPagosFrame(ctk.CTkFrame):
             self.txt_resultados.insert("1.0", texto_pantalla)
             self.txt_resultados.configure(text_color=("black", "white"))
             
-            # Habilitar botón para abrir la carpeta interna
             self.btn_abrir_carpeta.configure(state="normal", fg_color="#1f6aa5", hover_color="#144875")
             
             messagebox.showinfo("Éxito", f"Verificación completada. Guardado como: {nombre_archivo_salida}")
