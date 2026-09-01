@@ -1,0 +1,2015 @@
+[
+    {
+        "categoria": "Fontaneria basica",
+        "nombre": "Servicio mínimo desplazamiento y diagnóstico básico",
+        "alias": [
+            "visita",
+            "desplazamiento",
+            "mirar fuga",
+            "revisión",
+            "diagnóstico",
+            "salida",
+            "presupuesto",
+            "presupuestos"
+        ],
+        "buscar": [],
+        "precio_min": 30.0,
+        "precio_max": 60.0,
+        "precio_recomendado": 45.0,
+        "aprendizaje": {
+            "usos": 18,
+            "palabras_aprendidas": [
+                "desplazamiento",
+                "diagnóstico",
+                "mínimo",
+                "servicio",
+                "básico"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Cambiar grifo lavabo bidé o fregadero",
+        "alias": [
+            "cambiar grifo",
+            "cambiar grifos",
+            "sustitucion grifo",
+            "grifo lavabo",
+            "grifo bidé",
+            "grifo cocina",
+            "fregadero",
+            "monomando",
+            "sustituir grifo",
+            "sustituir grifos"
+        ],
+        "precio_min": 90,
+        "precio_max": 140,
+        "precio_recomendado": 115,
+        "aprendizaje": {
+            "usos": 3,
+            "palabras_aprendidas": [
+                "grif",
+                "grifo",
+                "bidé",
+                "cambiar",
+                "cambiar grifo",
+                "fregadero",
+                "grifo lavabo",
+                "lavabo"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": "",
+            "palabras_nuevas": [
+                "grifo cocina",
+                "cambiar grifo",
+                "cambiar",
+                "grifo"
+            ]
+        }
+    },
+    {
+        "categoria": "Sanitarios",
+        "nombre": "Cambiar mecanismo completo de cisterna común",
+        "alias": [
+            "cambiar cisterna completa",
+            "cambiar mecanismos wc",
+            "cambiar mecanismos cisterna",
+            "sustituir cisterna completa",
+            "sustituir mecanismos wc",
+            "sustituir mecanismos cisterna",
+            "sustitucion cisterna completa",
+            "sustitucion mecanismos wc",
+            "sustitucion mecanismos cisterna",
+            "cambiar mecanismos vater",
+            "sustitucion mecanismos vater",
+            "sustituir  mecanismos vater",
+            "cisterna completa",
+            "mecanismos wc",
+            "mecanismos cisterna",
+            "mecanismos vater",
+            "cambio de mecanismos",
+            "sustitucion de mecanismos"
+        ],
+        "precio_min": 110,
+        "precio_max": 150,
+        "precio_recomendado": 130,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Pequeños componentes",
+        "nombre": "Sustitución de latiguillo estándar",
+        "alias": [
+            "latiguillo",
+            "manguera lavabo",
+            "manguera wc",
+            "cambiar latiguillo",
+            "flexible"
+        ],
+        "buscar": [],
+        "precio_min": 55.0,
+        "precio_max": 85.0,
+        "precio_recomendado": 70.0,
+        "aprendizaje": {
+            "usos": 21,
+            "palabras_aprendidas": [
+                "latiguil",
+                "latiguillo",
+                "latigiyo",
+                "latigillo",
+                "latiguillos",
+                "agua",
+                "flexible",
+                "conexion",
+                "de"
+            ],
+            "frases_aprendidas": [
+                "conexion flexible de agua",
+                "conexion flexible agua",
+                "sustitucion de latiguillos"
+            ],
+            "ultima_fecha": "01/09/2026"
+        }
+    },
+    {
+        "categoria": "Pequeños componentes",
+        "nombre": "Sustitución válvula técnica plato de ducha",
+        "alias": [
+            "sustituir valvula de ducha",
+            "sustituir sifon de ducha",
+            "cambiar valvula de ducha",
+            "cambiar sifon de ducha",
+            "sustitucion valvula de ducha",
+            "sustitucion sifon de ducha",
+            "sustituir valvula de plato",
+            "sustituir sifon de plato",
+            "cambiar valvula de plato",
+            "cambiar sifon de plato",
+            "sustitucion valvula de plato",
+            "sustitucion sifon de plato",
+            "válvula ducha",
+            "desagüe ducha",
+            "plato ducha pierde",
+            "cambiar válvula"
+        ],
+        "precio_min": 95,
+        "precio_max": 160,
+        "precio_recomendado": 127,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Sanitarios",
+        "nombre": "Instalar o sustituir inodoro estándar (fijación y retirada)",
+        "alias": [
+            "cambiar vater",
+            "instalar vater",
+            "sustituir vater",
+            "sustitucion vater",
+            "cambiar wc",
+            "instalar wc",
+            "sustituir wc",
+            "sustitucion wc",
+            "cambiar inodoro",
+            "instalar inodoro",
+            "sustituir inodoro",
+            "sustitucion inodoro",
+            "cambiar sanitario",
+            "instalar sanitario",
+            "sustituir sanitario",
+            "sustitucion sanitario"
+        ],
+        "precio_min": 150,
+        "precio_max": 240,
+        "precio_recomendado": 195,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Sanitarios",
+        "nombre": "Fijación y sellado perimetral de inodoro suelto / plato de ducha / bañera",
+        "alias": [
+            "sellado contorno plato",
+            "sellado contorno bañera",
+            "sellado contorno vater",
+            "silicona",
+            "aplicado de silicona",
+            "wc suelto",
+            "wc se mueve",
+            "sellar wc",
+            "fijar inodoro"
+        ],
+        "precio_min": 75,
+        "precio_max": 110,
+        "precio_recomendado": 90,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Desagües",
+        "nombre": "Sustitución de sifón de lavabo o bidé",
+        "alias": [
+            "sifon lavabo",
+            "sustitucion sifon de lavabo",
+            "cambiar sifon de lavabo",
+            "cambiar desague de lavabo",
+            "sustituir sifon de lavabo",
+            "sustitucion sifon de bide",
+            "cambiar sifon de bide",
+            "cambiar desague de bide",
+            "fuga debajo lavabo",
+            "olor lavabo"
+        ],
+        "precio_min": 75,
+        "precio_max": 115,
+        "precio_recomendado": 95,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Desagües",
+        "nombre": "Sustitución de sifón de cocina",
+        "alias": [
+            "sifon cocina",
+            "sustituir sifon de cocina",
+            "cambiar sifon de cocina",
+            "fuga fregadero",
+            "cambiar desague cocina"
+        ],
+        "precio_min": 85,
+        "precio_max": 135,
+        "precio_recomendado": 110,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Duchas",
+        "nombre": "Sustitución de válvula técnica de plato de ducha",
+        "alias": [
+            "valvula ducha",
+            "desague ducha",
+            "fuga plato ducha"
+        ],
+        "precio_min": 95,
+        "precio_max": 160,
+        "precio_recomendado": 125,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Duchas",
+        "nombre": "Desmontaje, picado periférico inicial y desescombro de plato de ducha",
+        "alias": [
+            "quitar plato ducha",
+            "levantar plato",
+            "desmontar ducha",
+            "romper plato"
+        ],
+        "precio_min": 120,
+        "precio_max": 220,
+        "precio_recomendado": 170,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Operaciones inducidas",
+        "nombre": "Desmontaje y montaje de bidé o lavabo con pedestal",
+        "alias": [
+            "quitar lavabo",
+            "desmotantar lavabo",
+            "quitar bide",
+            "desmontar bide",
+            "desmontar sanitario",
+            "quitar wc",
+            "retirar lavabo",
+            "retirar bide",
+            "retirar sanitario",
+            "retirar wc"
+        ],
+        "precio_min": 65,
+        "precio_max": 110,
+        "precio_recomendado": 85,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Operaciones inducidas",
+        "nombre": "Desmontaje y montaje de grifo monomando bloqueado",
+        "alias": [
+            "grifo bloqueado",
+            "grifo duro",
+            "grifo oxidado"
+        ],
+        "precio_min": 45,
+        "precio_max": 75,
+        "precio_recomendado": 60,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Operaciones inducidas",
+        "nombre": "Retirada de mampara de ducha o bañera",
+        "alias": [
+            "quitar mampara",
+            "retirar mampara",
+            "desmontar mampara"
+        ],
+        "precio_min": 80,
+        "precio_max": 140,
+        "precio_recomendado": 110,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Extras",
+        "nombre": "Extra por grifo gripado con herramienta o soplete",
+        "alias": [
+            "tuerca de grifo atascada",
+            "anclaje de grifo atascado",
+            "cortar grifo",
+            "cortar anclaje de grifo"
+        ],
+        "precio_min": 30,
+        "precio_max": 50,
+        "precio_recomendado": 40,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Extras",
+        "nombre": "Sustitución de tornillos podridos en inodoro o bidé",
+        "alias": [
+            "tornillos wc",
+            "tornillos bide",
+            "sustitucion tornillo wc",
+            "sustitucion anclajes wc",
+            "sustitucion tornillo vater",
+            "sustitucion anclajes vater",
+            "cambiar tornillo wc",
+            "cambiar anclajes wc",
+            "cambiar tornillo vater",
+            "cambiar anclajes vater",
+            "sustitucion tornillo bide",
+            "sustitucion anclajes bide",
+            "cambiar tornillo bide",
+            "cambiar anclajes bide",
+            "tornillos oxidados",
+            "fijacion podrida"
+        ],
+        "precio_min": 25,
+        "precio_max": 45,
+        "precio_recomendado": 35,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Reparacion tuberias",
+        "nombre": "Reparación en tubería de Cobre, Multicapa o PPR hasta 1 metro",
+        "alias": [
+            "arreglar tuberia",
+            "reparacion tuberia",
+            "fuga agua pared",
+            "reparacion tramo de tuberia",
+            "fuga de agua potable",
+            "reparacion de tuberia",
+            "soldadura en tubo de cobre"
+        ],
+        "precio_min": 150,
+        "precio_max": 210,
+        "precio_recomendado": 180,
+        "aprendizaje": {
+            "usos": 2,
+            "palabras_aprendidas": [
+                "de",
+                "cobre",
+                "ppr"
+            ],
+            "frases_aprendidas": [
+                "sustitucion de ppr a multicapa"
+            ],
+            "ultima_fecha": "22/07/2026"
+        }
+    },
+    {
+        "categoria": "Reparacion tuberias",
+        "nombre": "Reparación de emergencia en tubería de plomo o hierro antiguo",
+        "alias": [
+            "tuberia plomo",
+            "tuberia hierro",
+            "tuberia vieja",
+            "fuga antigua",
+            "rotura tuberia"
+        ],
+        "precio_min": 190,
+        "precio_max": 270,
+        "precio_recomendado": 240,
+        "aprendizaje": {
+            "usos": 1,
+            "palabras_aprendidas": [
+                "plomo"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": "21/07/2026"
+        }
+    },
+    {
+        "categoria": "Desagues",
+        "nombre": "Reparación de tubería de desagüe PVC interior cocina o baño",
+        "alias": [
+            "tubo pvc roto",
+            "fuga desague",
+            "tubo de desague cocina",
+            "tubo de desague baño",
+            "fuga tubo pvc",
+            "pvc roto"
+        ],
+        "precio_min": 110,
+        "precio_max": 170,
+        "precio_recomendado": 140,
+        "aprendizaje": {
+            "usos": 17,
+            "palabras_aprendidas": [
+                "tubo",
+                "desagüe",
+                "de",
+                "cocina",
+                "pvc",
+                "interior",
+                "o",
+                "baño",
+                "reparación",
+                "tubería"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "WC y evacuacion",
+        "nombre": "Sustitución de manguetón de evacuación de WC",
+        "alias": [
+            "manguiton wc",
+            "mangueton",
+            "salida wc",
+            "tubo wc roto",
+            "mangueta",
+            "codo union wc",
+            "conexion wc",
+            "fuga wc"
+        ],
+        "precio_min": 130,
+        "precio_max": 190,
+        "precio_recomendado": 160,
+        "aprendizaje": {
+            "usos": 11,
+            "palabras_aprendidas": [
+                "wc",
+                "conexion",
+                "de",
+                "mangueton"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": "05/08/2026"
+        }
+    },
+    {
+        "categoria": "Bajantes",
+        "nombre": "Sustitución de injerto o tramo vertical de bajante general PVC",
+        "alias": [
+            "bajante",
+            "bajante rota",
+            "tubo comunidad",
+            "bajante pvc",
+            "fuga bajante"
+        ],
+        "precio_min": 220,
+        "precio_max": 380,
+        "precio_recomendado": 300,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "GEBO",
+        "nombre": "Colocación de acoplamiento rápido GEBO en tubería de hierro o acero",
+        "alias": [
+            "gebo hierro",
+            "union gebo",
+            "reparar hierro",
+            "abrazadera gebo",
+            "tubo acero"
+        ],
+        "precio_min": 95,
+        "precio_max": 145,
+        "precio_recomendado": 120,
+        "aprendizaje": {
+            "usos": 1,
+            "palabras_aprendidas": [
+                "gebo"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": "22/07/2026"
+        }
+    },
+    {
+        "categoria": "GEBO",
+        "nombre": "Colocación de acoplamiento rápido GEBO en tubería de cobre o plomo",
+        "alias": [
+            "gebo cobre",
+            "gebo plomo",
+            "union rapida",
+            "reparacion cobre"
+        ],
+        "precio_min": 85,
+        "precio_max": 130,
+        "precio_recomendado": 105,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Llaves de paso",
+        "nombre": "Sustitución de llave de escuadra estándar cromada",
+        "alias": [
+            "llave escuadra",
+            "llave lavabo",
+            "llave paso baño",
+            "cambiar llave"
+        ],
+        "precio_min": 60,
+        "precio_max": 90,
+        "precio_recomendado": 75,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Llaves de paso",
+        "nombre": "Extracción de rosca rota de llave de escuadra dentro de pared",
+        "alias": [
+            "rosca rota",
+            "llave rota pared",
+            "sacar rosca",
+            "rosca atascada"
+        ],
+        "precio_min": 90,
+        "precio_max": 130,
+        "precio_recomendado": 110,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Desatascos",
+        "nombre": "Desatasco con máquina de agua a presión (alta presión / definitivo)",
+        "alias": [
+            "desatasco maquina",
+            "agua presion",
+            "maquina de aire",
+            "camion cuba",
+            "atasco fuerte",
+            "atasco tuberia",
+            "limpiar tuberia presion",
+            "atasco comunidad"
+        ],
+        "precio_min": 150,
+        "precio_max": 220,
+        "precio_recomendado": 185,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Desatascos",
+        "nombre": "Desatasco doméstico simple con muelle mecánico o cable portátil",
+        "alias": [
+            "Manual",
+            "Desatasco Manual",
+            "desatasco con cable",
+            "desatasco con guia",
+            "atasco wc",
+            "wc atascado",
+            "fregadero atascado",
+            "lavabo atascado",
+            "no traga agua",
+            "tuberia atascada",
+            "desatasco guaya"
+        ],
+        "precio_min": 95,
+        "precio_max": 130,
+        "precio_recomendado": 110,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Localizacion fugas",
+        "nombre": "Localización técnica de fugas ocultas con geófono o gas traza",
+        "alias": [
+            "buscar fuga",
+            "fuga oculta",
+            "geofono",
+            "fuga pared",
+            "fuga invisible",
+            "detectar fuga"
+        ],
+        "precio_min": 180,
+        "precio_max": 300,
+        "precio_recomendado": 240,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Inspeccion tecnica",
+        "nombre": "Inspección de tuberías y desagües con cámara de TV",
+        "alias": [
+            "camara tuberia",
+            "camara tv",
+            "ver tuberia",
+            "inspeccion desague",
+            "revisar tuberia"
+        ],
+        "precio_min": 90,
+        "precio_max": 150,
+        "precio_recomendado": 120,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Suplementos",
+        "nombre": "Suplemento urgencia diaria (Lunes a Viernes 8:00-20:00)",
+        "alias": [
+            "urgencia",
+            "urgente",
+            "venir rapido",
+            "asistencia inmediata",
+            "hoy"
+        ],
+        "precio_min": 70,
+        "precio_max": 100,
+        "precio_recomendado": 85,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Suplementos",
+        "nombre": "Suplemento urgencia nocturna (20:00-8:00)",
+        "alias": [
+            "noche",
+            "urgencia noche",
+            "emergencia noche",
+            "fuera horario"
+        ],
+        "precio_min": 120,
+        "precio_max": 180,
+        "precio_recomendado": 150,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Suplementos",
+        "nombre": "Suplemento fines de semana y festivos 24 horas",
+        "alias": [
+            "fin de semana",
+            "urgencia de fin de semana",
+            "sabado",
+            "domingo",
+            "festivo",
+            "fin semana",
+            "24 horas",
+            "urgencia festivo",
+            "urgencia fin de semana"
+        ],
+        "precio_min": 140,
+        "precio_max": 200,
+        "precio_recomendado": 170,
+        "aprendizaje": {
+            "usos": 2,
+            "palabras_aprendidas": [
+                "festivo",
+                "de",
+                "urgencia",
+                "semana"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Suplementos",
+        "nombre": "Tarifa por alta demanda o disponibilidad crítica",
+        "alias": [
+            "mucha demanda",
+            "fuera de zona",
+            "disponibilidad",
+            "servicio especial",
+            "temporada alta"
+        ],
+        "precio_min": 90,
+        "precio_max": 150,
+        "precio_recomendado": 120,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Cisternas WC",
+        "nombre": "Sustitución mecanismo de carga cisterna simple (boya entrada agua)",
+        "alias": [
+            "cambiar boya wc",
+            "mecanismo carga wc",
+            "cisterna no carga",
+            "entra agua cisterna",
+            "flotador cisterna",
+            "válvula entrada wc",
+            "sustitucion mecanismo de carga"
+        ],
+        "precio_min": 75,
+        "precio_max": 130,
+        "precio_recomendado": 100,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Cisternas WC",
+        "nombre": "Sustitución mecanismo de descarga cisterna simple",
+        "alias": [
+            "descarga wc",
+            "sustitucion mecanismo de descarga",
+            "mecanismo descarga",
+            "campana cisterna",
+            "válvula descarga",
+            "agua corriendo wc"
+        ],
+        "precio_min": 80,
+        "precio_max": 140,
+        "precio_recomendado": 110,
+        "aprendizaje": {
+            "usos": 1,
+            "palabras_aprendidas": [
+                "descarga"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Cisternas WC",
+        "nombre": "Sustitución mecanismo carga y descarga cisterna completa simple",
+        "alias": [
+            "mecanismo completo wc",
+            "cambiar todo mecanismo",
+            "cisterna completa"
+        ],
+        "precio_min": 110,
+        "precio_max": 160,
+        "precio_recomendado": 135,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Cisternas WC",
+        "nombre": "Sustitución mecanismo descarga doble pulsador cisterna",
+        "alias": [
+            "doble descarga",
+            "botón doble wc",
+            "descarga doble",
+            "cisterna doble"
+        ],
+        "precio_min": 100,
+        "precio_max": 170,
+        "precio_recomendado": 135,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Cisternas WC",
+        "nombre": "Sustitución mecanismo cisterna empotrada tipo Geberit o similar",
+        "alias": [
+            "cisterna empotrada",
+            "geberit",
+            "Mecanismo geberit",
+            "wc empotrado",
+            "botón pared wc",
+            "mecanismo interior"
+        ],
+        "precio_min": 160,
+        "precio_max": 280,
+        "precio_recomendado": 220,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Termos electricos",
+        "nombre": "Sustitución termo eléctrico hasta 50 litros",
+        "alias": [
+            "cambiar termo",
+            "termo roto",
+            "poner termo nuevo",
+            "agua caliente"
+        ],
+        "precio_min": 180,
+        "precio_max": 320,
+        "precio_recomendado": 250,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Termos electricos",
+        "nombre": "Sustitución termo eléctrico 80 litros",
+        "alias": [
+            "termo 80 litros",
+            "cambiar termo grande",
+            "termo familia"
+        ],
+        "precio_min": 220,
+        "precio_max": 400,
+        "precio_recomendado": 300,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Termos electricos",
+        "nombre": "Cambio válvula seguridad termo eléctrico",
+        "alias": [
+            "válvula termo",
+            "gotea termo",
+            "pierde agua termo"
+        ],
+        "precio_min": 60,
+        "precio_max": 120,
+        "precio_recomendado": 90,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Osmosis",
+        "nombre": "Instalación equipo ósmosis doméstica bajo fregadero",
+        "alias": [
+            "poner osmosis",
+            "instalar osmosis",
+            "filtro agua cocina"
+        ],
+        "precio_min": 120,
+        "precio_max": 220,
+        "precio_recomendado": 160,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Osmosis",
+        "nombre": "Cambio filtros equipo ósmosis",
+        "alias": [
+            "cambiar filtros",
+            "filtros osmosis",
+            "mantenimiento osmosis"
+        ],
+        "precio_min": 50,
+        "precio_max": 100,
+        "precio_recomendado": 75,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Llaves generales",
+        "nombre": "Sustitución llave general entrada vivienda",
+        "alias": [
+            "llave general",
+            "Sustitucion llave General",
+            "cambiar llave General",
+            "cortar agua vivienda"
+        ],
+        "precio_min": 100,
+        "precio_max": 200,
+        "precio_recomendado": 150,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Llaves generales",
+        "nombre": "Sustitución llave de contador de agua",
+        "alias": [
+            "llave contador",
+            "llave batería",
+            "contador agua"
+        ],
+        "precio_min": 120,
+        "precio_max": 150,
+        "precio_recomendado": 130,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Tuberia multicapa",
+        "nombre": "Reparación unión multicapa con racor o accesorio prensado",
+        "alias": [
+            "racor multicapa",
+            "unión multicapa",
+            "empalme multicapa",
+            "fuga unión tubo"
+        ],
+        "precio_min": 80,
+        "precio_max": 140,
+        "precio_recomendado": 110,
+        "aprendizaje": {
+            "usos": 2,
+            "palabras_aprendidas": [
+                "multicapa",
+                "unión",
+                "accesorio",
+                "racor",
+                "o",
+                "unión multicapa",
+                "con",
+                "reparación",
+                "prensado"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Tuberia multicapa",
+        "nombre": "Cambio de instalación antigua de cobre a multicapa hasta punto de consumo",
+        "alias": [
+            "cambiar cobre por multicapa",
+            "Sustitucion tuberia cobre por multicapa",
+            "sustitucion de tramo de cobre",
+            "Cambiar tramo de cobre",
+            "Cambiar tubo de cobre",
+            "renovar tubería baño",
+            "renovar instalación cocina",
+            "sustituir tramo de tuberia de cobre",
+            "cambiar tramo de tuberia de cobre",
+            "sustitucion tramo de tuberia de cobre"
+        ],
+        "precio_min": 250,
+        "precio_max": 500,
+        "precio_recomendado": 350,
+        "aprendizaje": {
+            "usos": 19,
+            "palabras_aprendidas": [
+                "renovar instalación cocina",
+                "renovar",
+                "instalación",
+                "de",
+                "tuberia",
+                "sustitucion tramo de tuberia de cobre",
+                "sustitucion",
+                "tramo",
+                "cobre",
+                "multicapa",
+                "a",
+                "cambio",
+                "cambiar",
+                "hasta",
+                "punto",
+                "antigua",
+                "consumo"
+            ],
+            "frases_aprendidas": [
+                "sustitucion de latiguillo",
+                "sustitucion de tuberia de multicapa",
+                "sustitucion de tramo de tuberia",
+                "cambio de instalación antigua de cobre a multicapa hasta punto de consumo"
+            ],
+            "ultima_fecha": "01/09/2026"
+        }
+    },
+    {
+        "categoria": "Comunidades",
+        "nombre": "Reparación fuga en bajante general comunitaria PVC",
+        "alias": [
+            "bajante rota",
+            "fuga bajante",
+            "tubo comunidad",
+            "agua vecino",
+            "bajante edificio"
+        ],
+        "precio_min": 180,
+        "precio_max": 400,
+        "precio_recomendado": 280,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Comunidades",
+        "nombre": "Sustitución tramo de bajante comunitaria hasta 2 metros",
+        "alias": [
+            "cambiar bajante",
+            "trozo bajante",
+            "bajante pvc nueva"
+        ],
+        "precio_min": 300,
+        "precio_max": 600,
+        "precio_recomendado": 450,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Comunidades",
+        "nombre": "Reparación fuga en montante general de agua edificio",
+        "alias": [
+            "montante agua",
+            "tubería comunidad",
+            "subida agua edificio",
+            "fuga columna"
+        ],
+        "precio_min": 250,
+        "precio_max": 600,
+        "precio_recomendado": 400,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Comunidades",
+        "nombre": "Sustitución llave de paso general comunidad",
+        "alias": [
+            "llave general comunidad",
+            "llave cuarto contadores",
+            "corte general edificio"
+        ],
+        "precio_min": 180,
+        "precio_max": 350,
+        "precio_recomendado": 250,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Comunidades",
+        "nombre": "Reparación fuga en batería de contadores de agua",
+        "alias": [
+            "batería contadores",
+            "fuga contador comunidad",
+            "cuarto contadores"
+        ],
+        "precio_min": 150,
+        "precio_max": 350,
+        "precio_recomendado": 240,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Comunidades",
+        "nombre": "Sustitución válvula o llave en cuarto de contadores",
+        "alias": [
+            "llave contador",
+            "válvula batería",
+            "llave comunidad"
+        ],
+        "precio_min": 80,
+        "precio_max": 180,
+        "precio_recomendado": 130,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Comunidades",
+        "nombre": "Reparación arqueta comunitaria de desagüe",
+        "alias": [
+            "arqueta rota",
+            "atasco comunidad",
+            "desagüe comunidad",
+            "registro saneamiento"
+        ],
+        "precio_min": 180,
+        "precio_max": 450,
+        "precio_recomendado": 300,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Comunidades",
+        "nombre": "Desatasco bajante comunidad con máquina profesional",
+        "alias": [
+            "bajante atascada",
+            "atasco comunidad",
+            "tubería general atascada",
+            "desatasco edificio"
+        ],
+        "buscar": [],
+        "precio_min": 180.0,
+        "precio_max": 450.0,
+        "precio_recomendado": 300.0,
+        "aprendizaje": {
+            "usos": 1,
+            "palabras_aprendidas": [
+                "atasco comunidad",
+                "desatasco",
+                "comunidad"
+            ],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Latiguillos y Conexiones",
+        "nombre": "Sustitución de latiguillo estándar (WC, lavabo, bidet)",
+        "alias": [
+            "cambiar latiguillo",
+            "latiguillo wc",
+            "latiguillo lavabo",
+            "fuga latiguillo"
+        ],
+        "precio_min": 55,
+        "precio_max": 85,
+        "precio_recomendado": 70,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Latiguillos y Conexiones",
+        "nombre": "Sustitución de pareja de latiguillos de grifería (desmontaje y montaje)",
+        "alias": [
+            "latiguillos grifo",
+            "pareja latiguillos",
+            "cambiar latiguillos cocina",
+            "desmontar y montar latiguillos"
+        ],
+        "precio_min": 70,
+        "precio_max": 100,
+        "precio_recomendado": 85,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Latiguillos y Conexiones",
+        "nombre": "Sustitución de latiguillos de gran caudal para termo o calentador",
+        "alias": [
+            "latiguillo termo",
+            "latiguillo calentador",
+            "flexibles termo"
+        ],
+        "precio_min": 75,
+        "precio_max": 110,
+        "precio_recomendado": 90,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Termos y Calentadores",
+        "nombre": "Sustitución de termo eléctrico de 100L a 150L",
+        "alias": [
+            "termo 100 litros",
+            "termo 150 litros",
+            "cambiar termo grande"
+        ],
+        "precio_min": 260,
+        "precio_max": 450,
+        "precio_recomendado": 340,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Termos y Calentadores",
+        "nombre": "Instalación de válvula reductora de presión en termo",
+        "alias": [
+            "reductora presion termo",
+            "valvula presion termo",
+            "poner reductora termo"
+        ],
+        "precio_min": 70,
+        "precio_max": 120,
+        "precio_recomendado": 90,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Termos y Calentadores",
+        "nombre": "Mantenimiento de termo y cambio de ánodo de magnesio",
+        "alias": [
+            "anodo termo",
+            "cambiar anodo",
+            "mantenimiento termo"
+        ],
+        "precio_min": 65,
+        "precio_max": 110,
+        "precio_recomendado": 85,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Termos y Calentadores",
+        "nombre": "Sustitución de calentador de gas (atmosférico / estanco)",
+        "alias": [
+            "cambiar calentador gas",
+            "instalacion calentador",
+            "sustituir calentador gas"
+        ],
+        "precio_min": 250,
+        "precio_max": 420,
+        "precio_recomendado": 320,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Tratamiento de Agua",
+        "nombre": "Instalación de equipo de ósmosis inversa bajo fregadero",
+        "alias": [
+            "instalacion osmosis",
+            "poner osmosis",
+            "filtro agua cocina"
+        ],
+        "precio_min": 110,
+        "precio_max": 180,
+        "precio_recomendado": 140,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Tratamiento de Agua",
+        "nombre": "Mantenimiento y cambio de filtros de ósmosis",
+        "alias": [
+            "cambio filtros osmosis",
+            "mantenimiento osmosis",
+            "revisar osmosis"
+        ],
+        "precio_min": 60,
+        "precio_max": 110,
+        "precio_recomendado": 80,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Tratamiento de Agua",
+        "nombre": "Instalación de descalcificador doméstico en acometida",
+        "alias": [
+            "poner descalcificador",
+            "instalacion descalcificador"
+        ],
+        "precio_min": 280,
+        "precio_max": 500,
+        "precio_recomendado": 380,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Acometidas y Válvulas",
+        "nombre": "Sustitución de llave de paso general de vivienda",
+        "alias": [
+            "llave general",
+            "llave corte casa",
+            "cambiar llave general"
+        ],
+        "precio_min": 95,
+        "precio_max": 170,
+        "precio_recomendado": 130,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Acometidas y Válvulas",
+        "nombre": "Instalación de válvula antirretorno en red general",
+        "alias": [
+            "valvula antirretorno",
+            "antirretorno fontaneria"
+        ],
+        "precio_min": 80,
+        "precio_max": 140,
+        "precio_recomendado": 105,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Acometidas y Válvulas",
+        "nombre": "Montaje / adecuación de puente de contador",
+        "alias": [
+            "puente contador",
+            "bateria contadores"
+        ],
+        "precio_min": 120,
+        "precio_max": 220,
+        "precio_recomendado": 160,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Purgado y puesta a punto de red de radiadores",
+        "alias": [
+            "purgar radiadores",
+            "puesta a punto radiadores"
+        ],
+        "precio_min": 60,
+        "precio_max": 110,
+        "precio_recomendado": 80,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Sustitución de detentor o llave de radiador",
+        "alias": [
+            "llave radiador",
+            "detentor radiador"
+        ],
+        "precio_min": 50,
+        "precio_max": 90,
+        "precio_recomendado": 70,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Instalación o sustitución de radiador de agua",
+        "alias": [
+            "cambiar radiador",
+            "colocar radiador"
+        ],
+        "precio_min": 90,
+        "precio_max": 160,
+        "precio_recomendado": 120,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Sanitarios y Duchas",
+        "nombre": "Sustitución de columna de ducha o rociador hidromasaje",
+        "alias": [
+            "columna ducha",
+            "cambiar columna ducha"
+        ],
+        "precio_min": 85,
+        "precio_max": 150,
+        "precio_recomendado": 115,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Sanitarios y Duchas",
+        "nombre": "Instalación de mampara de ducha",
+        "alias": [
+            "colocar mampara",
+            "instalar mampara"
+        ],
+        "precio_min": 130,
+        "precio_max": 220,
+        "precio_recomendado": 175,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Sanitarios y Duchas",
+        "nombre": "Mano de obra fontanería: cambio de bañera por plato de ducha",
+        "alias": [
+            "cambio bañera por ducha",
+            "quitar bañera poner ducha"
+        ],
+        "precio_min": 350,
+        "precio_max": 650,
+        "precio_recomendado": 480,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Albañilería y Picados",
+        "nombre": "Apertura de roza o picado puntual en pared (hasta 1 metro)",
+        "alias": [
+            "picar pared",
+            "hacer roza",
+            "abrir pared fuga"
+        ],
+        "precio_min": 50,
+        "precio_max": 90,
+        "precio_recomendado": 70,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Albañilería y Picados",
+        "nombre": "Picado de suelo o solera para paso de tubería/desagüe",
+        "alias": [
+            "picar suelo",
+            "roza en suelo"
+        ],
+        "precio_min": 80,
+        "precio_max": 150,
+        "precio_recomendado": 115,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Sustitución de cartucho cerámico monomando",
+        "alias": [
+            "cartucho grifo",
+            "cartucho monomando",
+            "grifo gotea",
+            "grifo pierde",
+            "cambiar cartucho"
+        ],
+        "buscar": [],
+        "precio_min": 65,
+        "precio_max": 95,
+        "precio_recomendado": 80,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Sustitución aireador de grifo",
+        "alias": [
+            "aireador",
+            "perlizador",
+            "grifo salpica",
+            "cambiar aireador"
+        ],
+        "buscar": [],
+        "precio_min": 35,
+        "precio_max": 55,
+        "precio_recomendado": 45,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Sustitución flexo de ducha",
+        "alias": [
+            "flexo ducha",
+            "manguera ducha",
+            "cambiar flexo"
+        ],
+        "buscar": [],
+        "precio_min": 45,
+        "precio_max": 70,
+        "precio_recomendado": 55,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Sustitución mango de ducha",
+        "alias": [
+            "telefono ducha",
+            "alcachofa ducha",
+            "mango ducha"
+        ],
+        "buscar": [],
+        "precio_min": 40,
+        "precio_max": 65,
+        "precio_recomendado": 50,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Instalación barra de ducha",
+        "alias": [
+            "barra ducha",
+            "soporte ducha",
+            "instalar barra"
+        ],
+        "buscar": [],
+        "precio_min": 60,
+        "precio_max": 95,
+        "precio_recomendado": 75,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Cambio inversor de grifo baño",
+        "alias": [
+            "inversor ducha",
+            "desviador",
+            "selector ducha"
+        ],
+        "buscar": [],
+        "precio_min": 70,
+        "precio_max": 110,
+        "precio_recomendado": 90,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Cambio excéntricas de grifo mural",
+        "alias": [
+            "excéntricas",
+            "racores grifo",
+            "grifo mural"
+        ],
+        "buscar": [],
+        "precio_min": 55,
+        "precio_max": 95,
+        "precio_recomendado": 75,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Instalación grifo exterior jardín",
+        "alias": [
+            "grifo jardin",
+            "grifo patio",
+            "grifo exterior"
+        ],
+        "buscar": [],
+        "precio_min": 95,
+        "precio_max": 160,
+        "precio_recomendado": 125,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Instalación grifo para lavadora",
+        "alias": [
+            "grifo lavadora",
+            "toma lavadora",
+            "llave lavadora"
+        ],
+        "buscar": [],
+        "precio_min": 65,
+        "precio_max": 110,
+        "precio_recomendado": 85,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Instalación grifo para lavavajillas",
+        "alias": [
+            "grifo lavavajillas",
+            "toma lavavajillas"
+        ],
+        "buscar": [],
+        "precio_min": 65,
+        "precio_max": 110,
+        "precio_recomendado": 85,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Lavabos",
+        "nombre": "Instalación lavabo suspendido",
+        "alias": [
+            "lavabo suspendido",
+            "colgar lavabo",
+            "lavabo pared"
+        ],
+        "buscar": [],
+        "precio_min": 140,
+        "precio_max": 220,
+        "precio_recomendado": 180,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Lavabos",
+        "nombre": "Instalación lavabo sobre encimera",
+        "alias": [
+            "lavabo encimera",
+            "lavabo bol"
+        ],
+        "buscar": [],
+        "precio_min": 160,
+        "precio_max": 260,
+        "precio_recomendado": 210,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Lavabos",
+        "nombre": "Cambio válvula clic-clac lavabo",
+        "alias": [
+            "clic clac",
+            "valvula lavabo",
+            "desague lavabo"
+        ],
+        "buscar": [],
+        "precio_min": 55,
+        "precio_max": 90,
+        "precio_recomendado": 70,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Lavabos",
+        "nombre": "Sustitución desagüe completo lavabo",
+        "alias": [
+            "desague lavabo",
+            "valvula lavabo",
+            "tubo lavabo"
+        ],
+        "buscar": [],
+        "precio_min": 75,
+        "precio_max": 120,
+        "precio_recomendado": 95,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Lavabos",
+        "nombre": "Sellado lavabo con silicona sanitaria",
+        "alias": [
+            "silicona lavabo",
+            "sellar lavabo"
+        ],
+        "buscar": [],
+        "precio_min": 45,
+        "precio_max": 70,
+        "precio_recomendado": 55,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Fregaderos",
+        "nombre": "Instalación fregadero de un seno",
+        "alias": [
+            "poner fregadero",
+            "instalar fregadero"
+        ],
+        "buscar": [],
+        "precio_min": 140,
+        "precio_max": 240,
+        "precio_recomendado": 190,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Fregaderos",
+        "nombre": "Instalación fregadero dos senos",
+        "alias": [
+            "fregadero doble",
+            "dos senos"
+        ],
+        "buscar": [],
+        "precio_min": 170,
+        "precio_max": 280,
+        "precio_recomendado": 220,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Fregaderos",
+        "nombre": "Cambio válvula cesta fregadero",
+        "alias": [
+            "cesta fregadero",
+            "valvula fregadero",
+            "desague fregadero"
+        ],
+        "buscar": [],
+        "precio_min": 65,
+        "precio_max": 100,
+        "precio_recomendado": 80,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Fregaderos",
+        "nombre": "Cambio rebosadero fregadero",
+        "alias": [
+            "rebosadero",
+            "rebosadero fregadero"
+        ],
+        "buscar": [],
+        "precio_min": 55,
+        "precio_max": 85,
+        "precio_recomendado": 70,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    },
+    {
+        "categoria": "Fregaderos",
+        "nombre": "Instalación triturador de residuos",
+        "alias": [
+            "triturador",
+            "triturador fregadero",
+            "insinkerator"
+        ],
+        "buscar": [],
+        "precio_min": 170,
+        "precio_max": 290,
+        "precio_recomendado": 220,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        }
+    }
+]
