@@ -17,6 +17,37 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Cargar variables de entorno desde cloud/env.txt si existen
+# Esto evita que la app falle si se ejecuta sin exportar variables del sistema.
+def cargar_variables_entorno_local():
+    env_path = os.path.join(BASE_DIR, "cloud", "env.txt")
+    if not os.path.exists(env_path):
+        return
+    claves_permitidas = {
+        "BOT_TOKEN", "CHAT_ID", "USUARIO", "INTERVALO_SEGUNDOS", "ADMIN_USER", "ADMIN_PASS",
+        "OPENROUTER_API_KEY", "OPENROUTER_KEY", "OPENAI_API_KEY", "OPENROUTER_MODEL",
+        "GROQ_API_KEY", "GROQ_KEY", "GROQ_MODEL",
+        "BRAVE_SEARCH_API_KEY", "BRAVE_API_KEY", "SERPAPI_KEY"
+    }
+    try:
+        with open(env_path, "r", encoding="utf-8") as f:
+            for linea in f:
+                linea = linea.strip()
+                if not linea or linea.startswith("#") or "=" not in linea:
+                    continue
+                clave, valor = [parte.strip() for parte in linea.split("=", 1)]
+                if clave not in claves_permitidas:
+                    continue
+                if not clave or not valor or valor in ("******", "*****"):
+                    continue
+                if "http://" in valor.lower() or "https://" in valor.lower():
+                    continue
+                os.environ.setdefault(clave, valor)
+    except Exception:
+        pass
+
+cargar_variables_entorno_local()
+
 # Aseguramos que Python encuentre la raíz y la carpeta 'modules'
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
@@ -67,7 +98,7 @@ class GestorPro(ctk.CTk):
         # ==========================
         # MENÚ IZQUIERDO
         # ==========================
-        self.menu = ctk.CTkFrame(self, width=300, corner_radius=28, fg_color="#0b1220", border_color="#223248", border_width=1)
+        self.menu = ctk.CTkFrame(self, width=300, corner_radius=28, fg_color="#0a1320", border_color="#2d466b", border_width=1)
         self.menu.grid(row=0, column=0, sticky="ns", padx=(10, 0), pady=10)
         self.menu.grid_propagate(False)
         self.menu.grid_rowconfigure(0, weight=0)
@@ -90,7 +121,7 @@ class GestorPro(ctk.CTk):
 
         # Botones del Menú
         # Tamaño de botón ajustado para mejor encaje en pantallas pequeñas
-        menu_style = dict(height=48, corner_radius=12, fg_color="#3b6fa8", hover_color="#2a5e8a", font=("Arial", 14, "bold"), text_color="#ffffff", border_width=1, border_color="#2f5376")
+        menu_style = dict(height=52, corner_radius=14, fg_color="#2f6ea6", hover_color="#245d93", font=("Arial", 15, "bold"), text_color="#ffffff", border_width=1, border_color="#6db3ff")
         ctk.CTkButton(self.menu, text="🏠 Inicio", command=self.inicio, **menu_style).pack(fill="x", padx=12, pady=5)
         ctk.CTkButton(self.menu, text="💰 Liquidaciones", command=self.abrir_liquidaciones, **menu_style).pack(fill="x", padx=12, pady=5)
         ctk.CTkButton(self.menu, text="🛠 Lector de códigos", command=self.abrir_lector_codigos, **menu_style).pack(fill="x", padx=12, pady=5)
@@ -103,7 +134,7 @@ class GestorPro(ctk.CTk):
         ctk.CTkButton(self.menu, text="🏠 Ejecutar HomeServe", command=self.ejecutar_homeserve, **menu_style).pack(fill="x", padx=14, pady=(8, 6))
         ctk.CTkButton(self.menu, text="🔄 Actualizar Gestor PRO", command=self.abrir_actualizador, **menu_style).pack(fill="x", padx=14, pady=(8, 6))
         # Botón Salir ligeramente más compacto para armonizar con el menú
-        ctk.CTkButton(self.menu, text="❌ Salir", command=self.destroy, fg_color="#b44343", hover_color="#9b3535", height=52, corner_radius=14, font=("Arial", 15, "bold"), border_width=1, border_color="#7a2b2b").pack(side="bottom", fill="x", padx=14, pady=18)
+        ctk.CTkButton(self.menu, text="❌ Salir", command=self.destroy, fg_color="#d84a4a", hover_color="#b93b3b", height=52, corner_radius=14, font=("Arial", 15, "bold"), border_width=1, border_color="#ff9191").pack(side="bottom", fill="x", padx=14, pady=18)
 
         # ==========================
         # PANEL DERECHO (CONTENIDO)
