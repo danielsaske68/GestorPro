@@ -870,8 +870,8 @@ class AppPresupuestos(ctk.CTkFrame):
 
         ventana = ctk.CTkToplevel(self)
         ventana.title("Asistente de precios")
-        ventana.geometry("820x700")
-        ventana.minsize(760, 560)
+        ventana.geometry("920x760")
+        ventana.minsize(860, 620)
         ventana.resizable(True, True)
         ventana.grab_set()
         ventana.transient(self)
@@ -891,8 +891,8 @@ class AppPresupuestos(ctk.CTkFrame):
 
         top = ctk.CTkFrame(ventana, fg_color="#162332", corner_radius=22, border_color="#2a4669", border_width=1)
         top.pack(fill="x", padx=16, pady=(16, 8))
-        ctk.CTkLabel(top, text="Asistente consultor de precios", font=("Arial", 22, "bold"), text_color="#eaf7ff", anchor="w").pack(anchor="w", padx=18, pady=(14, 4))
-        ctk.CTkLabel(top, text="Necesito validar unos detalles para cerrar un presupuesto m?s realista y profesional.", font=("Arial", 11), text_color="#bfd2ea", anchor="w").pack(anchor="w", padx=18, pady=(0, 14))
+        ctk.CTkLabel(top, text="Asistente consultor de precios", font=("Arial", 24, "bold"), text_color="#eaf7ff", anchor="w").pack(anchor="w", padx=18, pady=(14, 4))
+        ctk.CTkLabel(top, text="Necesito validar unos detalles para cerrar un presupuesto más realista y profesional.", font=("Arial", 12), text_color="#bfd2ea", anchor="w").pack(anchor="w", padx=18, pady=(0, 14))
 
         body = ctk.CTkScrollableFrame(ventana, fg_color="#0f1724", corner_radius=18, border_color="#1d3144", border_width=1)
         body.pack(fill="both", expand=True, padx=16, pady=(0, 10))
@@ -912,31 +912,41 @@ class AppPresupuestos(ctk.CTkFrame):
 
         def opciones_para(pregunta):
             ql = str(pregunta).lower()
-            if any(k in ql for k in ("noche", "fin de semana", "horario", "día laborable", "jornada laboral", "disponibilidad", "fuera de horario", "dentro de la jornada")):
-                return [("Dentro de la jornada laboral", "#34d399"), ("Fuera de horario laboral", "#f59e0b"), ("Fin de semana", "#f87171"), ("Noche / madrugada", "#c084fc"), ("Foto", "#60a5fa")]
+            if any(k in ql for k in ("noche", "fin de semana", "fuera de horario", "dentro de semana", "dentro de la jornada", "día laborable", "jornada laboral", "disponibilidad", "horario")):
+                return [
+                    ("Dentro del horario laboral", "#34d399"),
+                    ("Fuera del horario laboral", "#f59e0b"),
+                    ("Dentro de semana", "#60a5fa"),
+                    ("Fin de semana", "#f87171"),
+                    ("Noche dentro de semana", "#c084fc"),
+                    ("Noche fin de semana", "#ec4899")
+                ]
             if any(k in ql for k in ("acceso", "mueble", "falso techo", "difícil", "obstáculo", "movilizar", "llegar")):
-                return [("Acceso fácil", "#60a5fa"), ("Hay que mover muebles", "#fbbf24"), ("Acceso difícil", "#f87171"), ("Hay que abrir pared / falso techo", "#fb7185"), ("Foto", "#60a5fa")]
+                return [("Acceso fácil", "#60a5fa"), ("Hay que mover muebles", "#fbbf24"), ("Acceso difícil", "#f87171"), ("Hay que abrir pared / falso techo", "#fb7185")]
             if any(k in ql for k in ("fotos", "fotograf", "imagen", "ver", "video", "vídeo")):
                 return [("Sí, hay fotos", "#60a5fa"), ("Sí, hay vídeo", "#60a5fa"), ("No hay fotos", "#f87171"), ("No puedo aportar fotos", "#fbbf24")]
             if any(k in ql for k in ("urgente", "hoy", "inmediato", "ya mismo")):
-                return [("Sí, urgente", "#f87171"), ("No, puede esperar", "#60a5fa"), ("Hoy mismo", "#f59e0b"), ("Foto", "#60a5fa")]
+                return [("Sí, urgente", "#f87171"), ("No, puede esperar", "#60a5fa"), ("Hoy mismo", "#f59e0b")]
             if any(k in ql for k in ("tipo de trabajo", "qué trabajo", "trabajo exacto", "qué tipo", "tipo de incidencia")):
-                return [("Cambio de pieza", "#60a5fa"), ("Fuga / reparación", "#f59e0b"), ("Desatasco", "#fbbf24"), ("Cambio de grifo / WC", "#f87171"), ("Foto", "#60a5fa")]
+                return [("Cambio de pieza", "#60a5fa"), ("Fuga / reparación", "#f59e0b"), ("Desatasco", "#fbbf24"), ("Cambio de grifo / WC", "#f87171")]
             if any(k in ql for k in ("material", "pieza", "latiguillo", "grifo", "wc", "inodoro", "llave de paso")):
-                return [("Sí, hace falta material", "#60a5fa"), ("No hace falta más material", "#34d399"), ("No lo sé", "#fbbf24"), ("Foto", "#60a5fa")]
-            return [("Sí", "#60a5fa"), ("No", "#f87171"), ("No lo sé", "#fbbf24"), ("Foto", "#60a5fa")]
+                return [("Sí, hace falta material", "#60a5fa"), ("No hace falta más material", "#34d399"), ("No lo sé", "#fbbf24")]
+            return [("Sí", "#60a5fa"), ("No", "#f87171"), ("No lo sé", "#fbbf24")]
 
         def crear_burbuja(texto, derecha=False, color="#1d2d42"):
             item = ctk.CTkFrame(panel, fg_color="transparent")
-            item.pack(fill="x", padx=6, pady=6)
-            bubble = ctk.CTkFrame(item, corner_radius=18, fg_color=color, border_color="#35506a", border_width=1)
+            item.pack(fill="x", padx=8, pady=6)
+            bubble = ctk.CTkFrame(item, corner_radius=16, fg_color=color, border_color="#35506a", border_width=1)
             bubble.pack(fill="x", padx=(18 if not derecha else 60, 18 if not derecha else 18))
-            ctk.CTkLabel(bubble, text=texto, justify="left", wraplength=620, font=("Arial", 11), text_color="#f8fbff", padx=14, pady=12).pack(fill="x")
+            ctk.CTkLabel(bubble, text=texto, justify="left", wraplength=620, font=("Arial", 12), text_color="#f8fbff", padx=14, pady=10).pack(fill="x")
 
         def responder(valor):
             valor_limpio = str(valor).strip()
             if hasattr(responder_custom, "entry"):
-                responder_custom.entry.delete(0, "end")
+                entry = responder_custom.entry
+                entry.delete(0, "end")
+                if valor_limpio:
+                    entry.insert(0, valor_limpio)
             if valor_limpio:
                 respuestas.append(valor_limpio)
                 try:
@@ -987,7 +997,11 @@ class AppPresupuestos(ctk.CTkFrame):
             for i in range(columnas):
                 btns.grid_columnconfigure(i, weight=1)
 
+            for i in range(3):
+                btns.grid_columnconfigure(i, weight=1)
             for i, (txt, color) in enumerate(opciones):
+                row = i // 3
+                col = i % 3
                 btn = ctk.CTkButton(
                     btns,
                     text=txt,
@@ -997,11 +1011,11 @@ class AppPresupuestos(ctk.CTkFrame):
                     border_width=2,
                     text_color="white",
                     font=("Arial", 10, "bold"),
-                    height=40,
+                    height=42,
                     corner_radius=12,
                     command=lambda v=txt: responder(v),
                 )
-                btn.grid(row=0, column=i % columnas, padx=(0 if i % columnas == 0 else 8, 0), pady=(0, 10), sticky="ew")
+                btn.grid(row=row, column=col, padx=6, pady=6, sticky="ew")
 
             entry = ctk.CTkEntry(
                 panel,
@@ -1010,8 +1024,8 @@ class AppPresupuestos(ctk.CTkFrame):
                 border_color="#4f6d8d",
                 border_width=1,
                 text_color="#f8fbff",
-                font=("Arial", 11),
-                height=42,
+                font=("Arial", 13),
+                height=46,
                 corner_radius=12,
             )
             responder_custom.entry = entry
@@ -1026,8 +1040,8 @@ class AppPresupuestos(ctk.CTkFrame):
                 border_color="#7ef0af",
                 border_width=1,
                 corner_radius=12,
-                height=44,
-                font=("Arial", 11, "bold"),
+                height=48,
+                font=("Arial", 12, "bold"),
                 command=lambda: responder_custom(),
             )
             aceptar.pack(fill="x", padx=12, pady=(0, 10))
@@ -2425,8 +2439,8 @@ USOS
     def abrir_gestor_clientes(self):
         ventana = ctk.CTkToplevel(self)
         ventana.title("Gestor de Clientes")
-        ventana.geometry("1100x720")
-        ventana.minsize(990, 640)
+        ventana.geometry("1080x650")
+        ventana.minsize(980, 560)
         ventana.configure(fg_color="#0b1117")
         ventana.grab_set()
 
@@ -2600,7 +2614,7 @@ USOS
         lista_header.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 0))
         ctk.CTkLabel(lista_header, text="Clientes", font=("Arial", 16, "bold"), text_color="#ecf6ff").pack(padx=12, pady=(8, 6), anchor="w")
 
-        scroll_lista = tk.Scrollbar(panel_lista, orient="vertical", width=10)
+        scroll_lista = tk.Scrollbar(panel_lista, orient="vertical", width=12)
         lista = tk.Listbox(
             panel_lista,
             font=("Arial", 13),
@@ -2613,8 +2627,8 @@ USOS
             borderwidth=1,
             relief="solid",
             activestyle="none",
-            width=32,
-            height=16,
+            width=34,
+            height=14,
             yscrollcommand=scroll_lista.set,
         )
         scroll_lista.config(command=lista.yview)
@@ -2624,18 +2638,14 @@ USOS
         lista.bind("<Return>", lambda e: seleccionar_cliente(cerrar_ventana=True))
         lista.bind("<Escape>", lambda e: cerrar_ventana())
 
-        for clave in campos:
-            campos[clave].bind("<Escape>", lambda e: cerrar_ventana())
-            campos[clave].bind("<Return>", lambda e: seleccionar_con_enter())
-
-        campos["nombre"].bind("<Return>", lambda e: seleccionar_con_enter())
-        campos["nombre"].focus_set()
-
         ventana.bind("<Escape>", cerrar_ventana)
 
         panel = ctk.CTkFrame(ventana, fg_color="#111a22", border_color="#3a5976", border_width=2, corner_radius=18)
         panel.grid(row=1, column=1, padx=(8, 16), pady=(0, 12), sticky="nsew")
         panel.grid_columnconfigure(0, weight=1)
+
+        form_container = ctk.CTkFrame(panel, fg_color="#111a22")
+        form_container.pack(fill="both", expand=True, padx=18, pady=16)
 
         datos = [
             ("Nombre", "nombre"),
@@ -2646,10 +2656,11 @@ USOS
         ]
 
         for texto, clave in datos:
-            ctk.CTkLabel(panel, text=texto, font=("Arial", 12, "bold"), text_color="#edf6ff").pack(anchor="w", padx=18, pady=(10, 2))
+            ctk.CTkLabel(form_container, text=texto, font=("Arial", 12, "bold"), text_color="#edf6ff").pack(anchor="w", padx=4, pady=(10, 2))
             entrada = ctk.CTkEntry(
-               panel,
-               height=36,
+               form_container,
+               width=260,
+               height=34,
                fg_color="#1b2430",
                border_color="#5f87b2",
                border_width=1,
@@ -2657,12 +2668,13 @@ USOS
                font=("Arial", 13),
                corner_radius=8,
             )
-            entrada.pack(fill="x", padx=18, pady=(0, 6))
+            entrada.pack(fill="x", padx=4, pady=(0, 6))
             entrada.bind("<Return>", guardar_cliente)
+            entrada.bind("<Escape>", cerrar_ventana)
             campos[clave] = entrada
 
         botones = ctk.CTkFrame(panel, fg_color="transparent")
-        botones.pack(fill="x", padx=18, pady=(8, 10))
+        botones.pack(fill="x", padx=18, pady=(0, 14))
         botones.grid_columnconfigure((0, 1), weight=1)
 
         buttons_style = dict(height=42, corner_radius=10, border_width=1, font=("Arial", 12, "bold"))
@@ -2671,6 +2683,7 @@ USOS
         ctk.CTkButton(botones, text="✔ Seleccionar", command=lambda: seleccionar_cliente(cerrar_ventana=True), fg_color="#2563eb", hover_color="#1d4ed8", border_color="#bfe1ff", **buttons_style).grid(row=1, column=0, padx=(0, 5), pady=6, sticky="ew")
         ctk.CTkButton(botones, text="🗑 Eliminar", command=eliminar_cliente, fg_color="#dc2626", hover_color="#b91c1c", border_color="#fecaca", **buttons_style).grid(row=1, column=1, padx=(5, 0), pady=6, sticky="ew")
 
+        campos["nombre"].focus_set()
         cargar_lista()
 
     def cargar_baremos(self):
