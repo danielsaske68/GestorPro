@@ -177,15 +177,6 @@ class AppPresupuestos(ctk.CTkFrame):
 
         self.txt_desc.bind("<Tab>", cambiar_foco)
 
-        self.lbl_ia_rango = ctk.CTkLabel(
-            self.left_frame,
-            text="IA: Mín. -- € | Recomendado -- € | Máx. -- €",
-            font=("Arial", 12, "bold"),
-            text_color="#d7f7ff",
-            anchor="w"
-        )
-        self.lbl_ia_rango.pack(anchor="w", padx=16, pady=(0, 6))
-
         self.btn_add = ctk.CTkButton(
             self.left_frame,
             text="Añadir",
@@ -251,13 +242,13 @@ class AppPresupuestos(ctk.CTkFrame):
 
         ctk.CTkButton(
             fila_adjuntos,
-            text="🧠 RAZONAR PRECIO",
+            text="🧠 RAZONAR / INVESTIGAR",
             fg_color="#2b7d59",
             hover_color="#21674b",
             height=38,
             font=("Arial", 12, "bold"),
             corner_radius=10,
-            command=self.razonar_precio
+            command=self.analizar_con_openrouter
         ).grid(row=0, column=1, padx=(4, 0), sticky="ew")
 
         # Selector de proveedor IA (Auto / Groq / OpenRouter) y etiqueta de proveedor en uso
@@ -1155,18 +1146,30 @@ class AppPresupuestos(ctk.CTkFrame):
     def mostrar_resultado_ia(self, titulo, descripcion, precio_min, precio_recomendado, precio_max):
         ventana = ctk.CTkToplevel(self)
         ventana.title("Resultado de IA")
-        ventana.geometry("620x420")
+        ventana.geometry("760x520")
         ventana.resizable(False, False)
         ventana.grab_set()
         ventana.transient(self)
         ventana.configure(fg_color="#0f1723")
 
+        try:
+            ventana.update_idletasks()
+            sw = ventana.winfo_screenwidth()
+            sh = ventana.winfo_screenheight()
+            ww = ventana.winfo_width()
+            wh = ventana.winfo_height()
+            x = int((sw - ww) / 2)
+            y = int((sh - wh) / 2)
+            ventana.geometry(f"+{x}+{y}")
+        except Exception:
+            pass
+
         frame = ctk.CTkFrame(ventana, fg_color="#111922", corner_radius=20, border_color="#29415d", border_width=1)
         frame.pack(fill="both", expand=True, padx=14, pady=14)
 
-        ctk.CTkLabel(frame, text="Resultado de presupuesto", font=("Arial", 22, "bold"), text_color="#edf7ff", anchor="w").pack(anchor="w", padx=18, pady=(18, 8))
+        ctk.CTkLabel(frame, text="Resultado de presupuesto", font=("Arial", 20, "bold"), text_color="#edf7ff", anchor="w").pack(anchor="w", padx=18, pady=(18, 8))
 
-        texto = tk.Text(frame, height=10, bg="#0b1220", fg="#edf6ff", relief="flat", borderwidth=0, padx=14, pady=12, insertbackground="#ffffff", font=("Arial", 11))
+        texto = tk.Text(frame, height=12, bg="#0b1220", fg="#edf6ff", relief="flat", borderwidth=0, padx=14, pady=12, insertbackground="#ffffff", font=("Arial", 10))
         texto.insert("1.0", f"Trabajo:\n{titulo}\n\nDescripción:\n{descripcion}\n\nPrecio mínimo: {precio_min:.2f} €\nPrecio recomendado: {precio_recomendado:.2f} €\nPrecio máximo: {precio_max:.2f} €")
         texto.configure(state="disabled")
         texto.pack(fill="both", expand=True, padx=14, pady=(0, 12))
