@@ -7,6 +7,7 @@ import base64
 import mimetypes
 import re
 import textwrap
+import time
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog, simpledialog
@@ -96,9 +97,17 @@ class AppPresupuestos(ctk.CTkFrame):
         self.cliente_seleccionado = None
         self.baremos = self.cargar_baremos()
         self.archivos_ia = []
+        self._ultima_llamada_ia = {}
         self.openrouter_model = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
         self.groq_model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-        self.ai_preferred_provider = "groq" if self._obtener_clave_groq() else "openrouter" if self._obtener_clave_openrouter() else "local"
+        self.local_ai_base_url = os.getenv("LOCAL_AI_BASE_URL", os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")).strip()
+        self.local_ai_model = os.getenv("LOCAL_AI_MODEL", os.getenv("OLLAMA_MODEL", "llama3.2:latest")).strip()
+        preferred = str(os.getenv("AI_PREFERRED_PROVIDER", "auto")).strip().lower()
+        if preferred not in {"auto", "groq", "openrouter", "local"}:
+            preferred = "auto"
+        if preferred == "auto":
+            preferred = "groq" if self._obtener_clave_groq() else "openrouter" if self._obtener_clave_openrouter() else "local" if self._local_ai_esta_configurado() else "local"
+        self.ai_preferred_provider = preferred
         self.openrouter_modelos_fallback = [
             "openrouter/auto",
             "google/gemini-2.0-flash-exp:free",
@@ -114,7 +123,7 @@ class AppPresupuestos(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
 
         # PANEL IZQUIERDO
-        self.left_frame = ctk.CTkScrollableFrame(self, corner_radius=22, fg_color="#121c28", width=380, border_color="#2a3f55", border_width=1)
+        self.left_frame = ctk.CTkScrollableFrame(self, corner_radius=22, fg_color="#121c28", width=500, border_color="#2a3f55", border_width=1)
         self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         self.left_frame.grid_columnconfigure(0, weight=1)
 
@@ -168,6 +177,15 @@ class AppPresupuestos(ctk.CTkFrame):
 
         self.txt_desc.bind("<Tab>", cambiar_foco)
 
+        self.lbl_ia_rango = ctk.CTkLabel(
+            self.left_frame,
+            text="IA: Mín. -- € | Recomendado -- € | Máx. -- €",
+            font=("Arial", 12, "bold"),
+            text_color="#d7f7ff",
+            anchor="w"
+        )
+        self.lbl_ia_rango.pack(anchor="w", padx=16, pady=(0, 6))
+
         self.btn_add = ctk.CTkButton(
             self.left_frame,
             text="Añadir",
@@ -185,7 +203,7 @@ class AppPresupuestos(ctk.CTkFrame):
         fila_acciones.pack(fill="x", padx=16, pady=(0, 6))
         fila_acciones.grid_columnconfigure((0, 1), weight=1)
 
-        ctk.CTkButton(
+        self.btn_analizar = ctk.CTkButton(
             fila_acciones,
             text="🔍 ANALIZAR",
             fg_color="#2a8cff",
@@ -194,7 +212,8 @@ class AppPresupuestos(ctk.CTkFrame):
             font=("Arial",13,"bold"),
             corner_radius=12,
             command=self.analizar_trabajo
-        ).grid(row=0, column=0, padx=(0, 4), sticky="ew")
+        )
+        self.btn_analizar.grid(row=0, column=0, padx=(0, 4), sticky="ew")
 
         ctk.CTkButton(
             fila_acciones,
@@ -232,14 +251,41 @@ class AppPresupuestos(ctk.CTkFrame):
 
         ctk.CTkButton(
             fila_adjuntos,
-            text="🤖 IA OPENROUTER",
+            text="🧠 RAZONAR PRECIO",
             fg_color="#2b7d59",
             hover_color="#21674b",
             height=38,
             font=("Arial", 12, "bold"),
             corner_radius=10,
-            command=self.analizar_con_openrouter
+            command=self.razonar_precio
         ).grid(row=0, column=1, padx=(4, 0), sticky="ew")
+
+        # Selector de proveedor IA (Auto / Groq / OpenRouter) y etiqueta de proveedor en uso
+        proveedor_frame = ctk.CTkFrame(self.left_frame, fg_color="#172633", corner_radius=12, border_color="#2f536d", border_width=1)
+        proveedor_frame.pack(fill="x", padx=16, pady=(6, 6))
+        ctk.CTkLabel(proveedor_frame, text="Proveedor IA:", font=("Arial", 12, "bold"), text_color="#edf7ff", anchor="w").grid(row=0, column=0, sticky="w", padx=(12, 8), pady=(10, 6))
+
+        self.var_proveedor = tk.StringVar(value=getattr(self, 'ai_preferred_provider', 'groq'))
+
+        def on_change_proveedor():
+            val = self.var_proveedor.get()
+            self.ai_preferred_provider = val
+            try:
+                self._guardar_preferencia_proveedor(val)
+            except Exception:
+                pass
+            if hasattr(self, 'lbl_proveedor_actual'):
+                self.lbl_proveedor_actual.configure(text=f"Proveedor preferido: {val}", text_color="#fef3c7")
+
+        opt_auto = ctk.CTkRadioButton(proveedor_frame, text="Auto", variable=self.var_proveedor, value="auto", command=on_change_proveedor, text_color="#ecf6ff", fg_color="#1f2d3d", border_color="#5ca7ff", hover_color="#2d4a69", font=("Arial", 10))
+        opt_groq = ctk.CTkRadioButton(proveedor_frame, text="Groq", variable=self.var_proveedor, value="groq", command=on_change_proveedor, text_color="#ecf6ff", fg_color="#1f2d3d", border_color="#5ca7ff", hover_color="#2d4a69", font=("Arial", 10))
+        opt_open = ctk.CTkRadioButton(proveedor_frame, text="OpenRouter", variable=self.var_proveedor, value="openrouter", command=on_change_proveedor, text_color="#ecf6ff", fg_color="#1f2d3d", border_color="#5ca7ff", hover_color="#2d4a69", font=("Arial", 10))
+        opt_auto.grid(row=0, column=1, padx=6, pady=(10, 6))
+        opt_groq.grid(row=0, column=2, padx=6, pady=(10, 6))
+        opt_open.grid(row=0, column=3, padx=(6, 12), pady=(10, 6))
+
+        self.lbl_proveedor_actual = ctk.CTkLabel(self.left_frame, text=f"Proveedor preferido: {getattr(self,'ai_preferred_provider','groq')}", font=("Arial", 10), text_color="#fef3c7")
+        self.lbl_proveedor_actual.pack(padx=16, anchor='w', pady=(0,6))
 
         # PANEL DERECHO
         self.right_frame = ctk.CTkScrollableFrame(self, corner_radius=22, fg_color="#121c28", border_color="#2a3f55", border_width=1)
@@ -251,30 +297,35 @@ class AppPresupuestos(ctk.CTkFrame):
         header_right.pack(fill="x", padx=16, pady=(18, 8))
         ctk.CTkLabel(header_right, text="📋 DESGLOSE DEL PRESUPUESTO", font=("Arial", 18, "bold"), text_color="#7ec8ff").pack(anchor="w")
 
-        tabla_panel = ctk.CTkFrame(self.right_frame, corner_radius=18, fg_color="#141f2a", border_color="#36536e", border_width=1, height=500)
+        tabla_panel = ctk.CTkFrame(self.right_frame, corner_radius=18, fg_color="#141f2a", border_color="#36536e", border_width=1, height=580)
         tabla_panel.pack(fill="x", padx=16, pady=(0, 12))
         tabla_panel.pack_propagate(False)
 
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("Treeview", background="#101820", fieldbackground="#101820", foreground="#f8fbff", font=("Arial", 10, "normal"), rowheight=150)
-        style.configure("Treeview.Heading", background="#2d7eff", foreground="#ffffff", font=("Arial", 11, "bold"), relief="flat")
-        style.map("Treeview", background=[("selected", "#2d7eff")], foreground=[("selected", "#ffffff")])
+        self.items_container = ctk.CTkScrollableFrame(tabla_panel, fg_color="#101820", corner_radius=0)
+        self.items_container.pack(fill="both", expand=True, padx=12, pady=12)
+        self.items_container.grid_columnconfigure(0, weight=1)
 
-        tabla_frame = tk.Frame(tabla_panel, bg="#111b25")
-        tabla_frame.pack(fill="both", expand=True, padx=12, pady=12)
+        self.item_rows = []
+        self.selected_item_index = None
 
-        self.tree = ttk.Treeview(tabla_frame, columns=("desc", "precio", "cant", "total"), show="headings", height=7)
-        self.tree.heading("desc", text="DESCRIPCIÓN")
-        self.tree.heading("precio", text="PRECIO")
-        self.tree.heading("cant", text="CANT.")
-        self.tree.heading("total", text="TOTAL")
+        self.header_row = tk.Frame(self.items_container, bg="#101820", height=36)
+        self.header_row.grid(row=0, column=0, sticky="ew", pady=(0, 6))
+        self.header_row.grid_columnconfigure(0, weight=7, minsize=420)
+        self.header_row.grid_columnconfigure(1, weight=3, minsize=250)
 
-        self.tree.column("desc", width=700, minwidth=700, stretch=True, anchor="w")
-        self.tree.column("precio", width=110, minwidth=110, stretch=False, anchor="center")
-        self.tree.column("cant", width=70, minwidth=70, stretch=False, anchor="center")
-        self.tree.column("total", width=120, minwidth=120, stretch=False, anchor="center")
-        self.tree.pack(fill="both", expand=True, side="left")
+        tk.Label(self.header_row, text="DESCRIPCIÓN", bg="#1d4b73", fg="#edf7ff", font=("Arial", 11, "bold"), anchor="w").grid(row=0, column=0, sticky="ew", padx=(0, 8), pady=6)
+
+        values_header = tk.Frame(self.header_row, bg="#1d4b73")
+        values_header.grid(row=0, column=1, sticky="nsew", padx=(4, 0), pady=6)
+        values_header.grid_columnconfigure(0, weight=1, minsize=70)
+        values_header.grid_columnconfigure(1, weight=1, minsize=70)
+        values_header.grid_columnconfigure(2, weight=1, minsize=70)
+
+        tk.Label(values_header, text="PRECIO", bg="#1d4b73", fg="#edf7ff", font=("Arial", 11, "bold"), anchor="center").grid(row=0, column=0, sticky="ew", padx=2)
+        tk.Label(values_header, text="CANT", bg="#1d4b73", fg="#edf7ff", font=("Arial", 11, "bold"), anchor="center").grid(row=0, column=1, sticky="ew", padx=2)
+        tk.Label(values_header, text="TOTAL", bg="#1d4b73", fg="#edf7ff", font=("Arial", 11, "bold"), anchor="center").grid(row=0, column=2, sticky="ew", padx=2)
+
+        self.tree = self.items_container
 
         btn_frame = ctk.CTkFrame(self.right_frame, fg_color="transparent")
         btn_frame.pack(pady=4, padx=16, fill="x")
@@ -343,16 +394,9 @@ class AppPresupuestos(ctk.CTkFrame):
         return "break"
 
     def enter_analizar(self,event=None):
-
-        # Si hay texto, analiza
-        texto = self.txt_desc.get(
-            "1.0",
-            "end-1c"
-        ).strip()
-
+        texto = self.txt_desc.get("1.0", "end-1c").strip()
         if texto:
             self.analizar_trabajo()
-
         return "break"
 
     def pasar_a_cantidad(self):
@@ -428,6 +472,7 @@ class AppPresupuestos(ctk.CTkFrame):
             "BOT_TOKEN", "CHAT_ID", "USUARIO", "INTERVALO_SEGUNDOS", "ADMIN_USER", "ADMIN_PASS",
             "OPENROUTER_API_KEY", "OPENROUTER_KEY", "OPENAI_API_KEY", "OPENROUTER_MODEL",
             "GROQ_API_KEY", "GROQ_KEY", "GROQ_MODEL",
+            "LOCAL_AI_BASE_URL", "LOCAL_AI_MODEL", "OLLAMA_BASE_URL", "OLLAMA_MODEL",
             "BRAVE_SEARCH_API_KEY", "BRAVE_API_KEY", "SERPAPI_KEY"
         }
         try:
@@ -440,6 +485,9 @@ class AppPresupuestos(ctk.CTkFrame):
                     if clave not in claves_permitidas:
                         continue
                     if not clave or not valor or valor in ("******", "*****"):
+                        continue
+                    if clave in {"LOCAL_AI_BASE_URL", "LOCAL_AI_MODEL", "OLLAMA_BASE_URL", "OLLAMA_MODEL"}:
+                        os.environ.setdefault(clave, valor)
                         continue
                     if "http://" in valor.lower() or "https://" in valor.lower():
                         continue
@@ -489,6 +537,33 @@ class AppPresupuestos(ctk.CTkFrame):
                 pass
         return ""
 
+    def _local_ai_esta_configurado(self):
+        cfg = self._obtener_config_local_ai()
+        return bool(cfg.get("base_url")) and bool(cfg.get("model"))
+
+    def _obtener_config_local_ai(self):
+        base_url = None
+        for nombre in ("LOCAL_AI_BASE_URL", "OLLAMA_BASE_URL"):
+            valor = os.getenv(nombre)
+            if valor and valor.strip() and valor.strip() not in ("******", "*****"):
+                base_url = valor.strip()
+                break
+        if not base_url:
+            base_url = getattr(self, "local_ai_base_url", "") or ""
+        model = None
+        for nombre in ("LOCAL_AI_MODEL", "OLLAMA_MODEL"):
+            valor = os.getenv(nombre)
+            if valor and valor.strip() and valor.strip() not in ("******", "*****"):
+                model = valor.strip()
+                break
+        if not model:
+            model = getattr(self, "local_ai_model", "") or ""
+        if not base_url:
+            base_url = "http://127.0.0.1:11434/v1"
+        if not model:
+            model = "llama3.2:latest"
+        return {"base_url": base_url, "model": model}
+
     def _obtener_clave_buscador(self):
         for clave in ("BRAVE_SEARCH_API_KEY", "BRAVE_API_KEY", "SERPAPI_KEY"):
             valor = os.getenv(clave)
@@ -509,6 +584,53 @@ class AppPresupuestos(ctk.CTkFrame):
                 pass
         return ""
 
+    def _orden_proveedores_ia(self):
+        pref = str(getattr(self, "ai_preferred_provider", "auto") or "auto").lower()
+        clave_open = self._obtener_clave_openrouter()
+        clave_groq = self._obtener_clave_groq()
+        cfg_local = self._obtener_config_local_ai() if self._local_ai_esta_configurado() else {"base_url": "", "model": ""}
+        orden = []
+
+        if pref == "groq":
+            if clave_groq:
+                orden.append(("groq", clave_groq, self.groq_model))
+            if clave_open:
+                orden.append(("openrouter", clave_open, self.openrouter_model))
+            if cfg_local.get("base_url") and cfg_local.get("model"):
+                orden.append(("local", cfg_local["base_url"], cfg_local["model"]))
+        elif pref == "openrouter":
+            if clave_open:
+                orden.append(("openrouter", clave_open, self.openrouter_model))
+            if clave_groq:
+                orden.append(("groq", clave_groq, self.groq_model))
+            if cfg_local.get("base_url") and cfg_local.get("model"):
+                orden.append(("local", cfg_local["base_url"], cfg_local["model"]))
+        elif pref == "local":
+            if cfg_local.get("base_url") and cfg_local.get("model"):
+                orden.append(("local", cfg_local["base_url"], cfg_local["model"]))
+            if clave_open:
+                orden.append(("openrouter", clave_open, self.openrouter_model))
+            if clave_groq:
+                orden.append(("groq", clave_groq, self.groq_model))
+        else:
+            if clave_groq:
+                orden.append(("groq", clave_groq, self.groq_model))
+            if clave_open:
+                orden.append(("openrouter", clave_open, self.openrouter_model))
+            if cfg_local.get("base_url") and cfg_local.get("model"):
+                orden.append(("local", cfg_local["base_url"], cfg_local["model"]))
+        return orden
+
+    def _puede_hacer_llamada_ia(self, provider, cooldown_segundos=8):
+        ahora = time.monotonic()
+        ultimo = self._ultima_llamada_ia.get(provider, 0)
+        if ultimo and (ahora - ultimo) < cooldown_segundos:
+            return False
+        return True
+
+    def _marcar_llamada_ia(self, provider, cooldown_segundos=8):
+        self._ultima_llamada_ia[provider] = time.monotonic() + cooldown_segundos
+
     def _request_groq(self, clave, model, texto):
         payload = {
             "model": model,
@@ -518,15 +640,72 @@ class AppPresupuestos(ctk.CTkFrame):
             "temperature": 0.3,
         }
         try:
-            return requests.post(
+            headers = {"Content-Type": "application/json"}
+            if clave:
+                clave_limpia = str(clave).strip()
+                headers["Authorization"] = f"Bearer {clave_limpia}" if not clave_limpia.startswith("Bearer ") else clave_limpia
+            resp = requests.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {clave}",
-                    "Content-Type": "application/json",
-                },
+                headers=headers,
                 json=payload,
                 timeout=90,
             )
+            if resp.status_code in (401, 403):
+                self._marcar_llamada_ia("groq", cooldown_segundos=30)
+            elif resp.status_code == 200:
+                self._marcar_llamada_ia("groq", cooldown_segundos=8)
+            return resp
+        except Exception:
+            return None
+
+    def _request_local_ai(self, base_url, model, texto):
+        try:
+            if not base_url or not model:
+                return None
+            endpoint = str(base_url).strip().rstrip("/")
+            if "/chat/completions" in endpoint:
+                url = endpoint
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {"role": "user", "content": self._generar_prompt_openrouter(texto)}
+                    ],
+                    "temperature": 0.3,
+                }
+            elif "/api/chat" in endpoint:
+                url = endpoint
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {"role": "user", "content": self._generar_prompt_openrouter(texto)}
+                    ],
+                    "stream": False,
+                }
+            elif "/v1" in endpoint:
+                url = endpoint + "/chat/completions"
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {"role": "user", "content": self._generar_prompt_openrouter(texto)}
+                    ],
+                    "temperature": 0.3,
+                }
+            else:
+                url = endpoint + "/api/chat"
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {"role": "user", "content": self._generar_prompt_openrouter(texto)}
+                    ],
+                    "stream": False,
+                }
+            headers = {"Content-Type": "application/json"}
+            resp = requests.post(url, headers=headers, json=payload, timeout=120)
+            if resp.status_code in (401, 403):
+                self._marcar_llamada_ia("local", cooldown_segundos=30)
+            elif resp.status_code == 200:
+                self._marcar_llamada_ia("local", cooldown_segundos=8)
+            return resp
         except Exception:
             return None
 
@@ -672,6 +851,9 @@ class AppPresupuestos(ctk.CTkFrame):
         ctk.CTkButton(btns, text="Cancelar", fg_color="#ef4444", hover_color="#d93030", border_color="#fca5a5", border_width=1, width=120, height=42, command=cancelar, font=("Arial", 11, "bold")).pack(side="right")
 
         entrada.bind("<Return>", lambda event: añadir())
+        ventana.bind("<Return>", lambda event: añadir())
+        ventana.bind("<Escape>", lambda event: cancelar())
+        entrada.bind("<Escape>", lambda event: cancelar())
 
         ventana.focus_force()
         ventana.wait_window()
@@ -755,6 +937,11 @@ class AppPresupuestos(ctk.CTkFrame):
         ctk.CTkButton(btns, text="Enviar feedback", fg_color="#22a55f", hover_color="#1c9c53", width=170, height=42, corner_radius=12, command=confirmar, font=("Arial", 11, "bold")).pack(side="right", padx=6)
         ctk.CTkButton(btns, text="Cancelar", fg_color="#ef4444", hover_color="#d93030", width=120, height=42, corner_radius=12, command=cancelar, font=("Arial", 11, "bold")).pack(side="right")
 
+        texto.bind("<Return>", lambda event: confirmar())
+        ventana.bind("<Return>", lambda event: confirmar())
+        texto.bind("<Escape>", lambda event: cancelar())
+        ventana.bind("<Escape>", lambda event: cancelar())
+
         ventana.focus_force()
         ventana.wait_window()
         if resultado["cancel"]:
@@ -778,6 +965,73 @@ class AppPresupuestos(ctk.CTkFrame):
             if not numeros:
                 return 0.0
             return float(numeros[0].replace(",", "."))
+
+    def _mostrar_rango_ia(self, minimo=None, recomendado=None, maximo=None):
+        return
+
+    def _aplicar_factores_contexto(self, precio, texto, respuestas=None):
+        if precio is None:
+            return 0.0
+        precio = float(precio)
+        if precio <= 0:
+            return 0.0
+        combinacion = " ".join([str(texto or ""), *(str(r) for r in (respuestas or []) if str(r).strip())]).lower()
+
+        # Ajustes normalizados y acumulativos, para que no se multipliquen de forma descontrolada
+        # Ejemplo: urgente + nocturno + fin de semana = subida total razonable, pero no multiplicando 1.3 x 1.2 x 1.25
+        extra = 0.0
+        reduccion = 0.0
+
+        # Horario y urgencia
+        if any(k in combinacion for k in ("urgente", "hoy mismo", "ya mismo", "inmediato", "urgencia")):
+            extra += 0.18
+        if any(k in combinacion for k in ("fuera de horario laboral", "fuera del horario laboral", "fuera horario", "fuera del horario")):
+            extra += 0.22
+        if any(k in combinacion for k in ("noche", "nocturno", "noche fin de semana", "noche dentro de semana")):
+            extra += 0.20
+        if any(k in combinacion for k in ("fin de semana", "sábado", "domingo", "weekend")):
+            extra += 0.16
+        if any(k in combinacion for k in ("dentro de semana", "dentro del horario laboral", "jornada laboral", "horario normal", "horario laboral")):
+            extra += 0.00
+
+        # Acceso, distancia, kilometraje y complejidad
+        if any(k in combinacion for k in ("acceso difícil", "acceso limitado", "hay que mover muebles", "mover muebles", "abrir pared", "falso techo", "poco acceso", "escalera", "zona complicada", "acceso complicado")):
+            extra += 0.12
+        if any(k in combinacion for k in ("muy lejos", "lejos", "desplazamiento", "kilómetros", "kilometros", "km", "recorrido extra", "kilometraje", "distancia extra")):
+            extra += 0.08
+        if any(k in combinacion for k in ("cliente especial", "pide limpieza extra", "requiere desinfección", "desinfección", "desinfectar", "desinfectante", "productos de limpieza", "prevención", "enfermedad", "incapacidad", "baja")):
+            extra += 0.10
+
+        # Materiales / piezas / trabajos extra
+        if any(k in combinacion for k in ("material extra", "latiguillo", "válvula", "valvula", "junta", "llave de paso", "llave de escuadra", "pieza nueva", "manguera", "racor", "sifón", "sifon", "brida", "válvulas", "juntas")):
+            extra += 0.12
+        if any(k in combinacion for k in ("llave de paso", "llave de escuadra")):
+            extra += 0.06
+
+        # Riesgo o limpieza especial
+        if any(k in combinacion for k in ("olor fuerte", "agua estancada", "retorno", "fuga activa", "suciedad", "mantenimiento sanitario", "higiene", "sanitario", "desinfección")):
+            extra += 0.08
+
+        # Reducción razonable para casos muy simples y con acceso fácil, sin urgencia ni materiales extra
+        if not any(k in combinacion for k in ("urgente", "hoy mismo", "ya mismo", "inmediato", "urgencia", "noche", "nocturno", "fin de semana", "sábado", "domingo", "fuera de horario", "fuera del horario", "acceso difícil", "mover muebles", "abrir pared", "falso techo", "material extra", "latiguillo", "llave de paso", "llave de escuadra", "desinfección", "desinfectar")):
+            reduccion += 0.10
+
+        factor = 1.0 + extra - reduccion
+        factor = max(0.70, min(factor, 2.20))
+        return round(precio * factor, 2)
+
+    def _razonar_precio(self, texto, respuestas=None):
+        base_local = self._precio_base_profesional(texto, "", [])
+        precio = float(base_local.get("recomendado", 0) or 0)
+        precio = self._aplicar_factores_contexto(precio, texto, respuestas)
+        if not texto:
+            return
+        self.txt_precio.delete(0, "end")
+        self.txt_precio.insert(0, f"{precio:.2f}")
+        detalle = self._descripcion_local_profesional(texto, respuestas or [])
+        self.txt_desc.delete("1.0", "end")
+        self.txt_desc.insert("1.0", detalle)
+        self.comprobar_campos_item()
 
     def _precio_base_profesional(self, texto, categoria="", trabajos=None):
         """Base de mercado realista para Valencia capital. Estima precios profesionales, no precios de desguace."""
@@ -862,16 +1116,114 @@ class AppPresupuestos(ctk.CTkFrame):
         self.lbl_adjuntos_ia.configure(text=f"{len(self.archivos_ia)} archivo(s) adjunto(s)")
         messagebox.showinfo("Adjuntos", f"Se añadieron {len(self.archivos_ia)} archivo(s) para la IA.")
 
+    def _normalizar_pregunta(self, texto):
+        if texto is None:
+            return ""
+        texto = str(texto).lower().strip()
+        texto = texto.replace("¿", "").replace("?", "").replace("¡", "").replace("!", "")
+        texto = re.sub(r"\s+", " ", texto)
+        texto = texto.strip(" .:-;,_/\\")
+        return texto
+
+    def _pregunta_duplicada(self, a, b):
+        a_n = self._normalizar_pregunta(a)
+        b_n = self._normalizar_pregunta(b)
+        if not a_n or not b_n:
+            return a_n == b_n
+        if a_n == b_n:
+            return True
+        if a_n in b_n or b_n in a_n:
+            return True
+        tokens_a = {t for t in re.findall(r"[a-záéíóúüñ]+", a_n) if len(t) > 2 and t not in {"como", "cuando", "donde", "porque", "si", "es", "hay", "necesitas", "quieres", "puedes", "trabajo", "cliente", "tienes", "sobre", "zona", "problema", "hace", "solo", "tambien", "hoy", "mismo", "fuga", "grifo", "pieza", "wc", "respuesta", "pregunta"}}
+        tokens_b = {t for t in re.findall(r"[a-záéíóúüñ]+", b_n) if len(t) > 2 and t not in {"como", "cuando", "donde", "porque", "si", "es", "hay", "necesitas", "quieres", "puedes", "trabajo", "cliente", "tienes", "sobre", "zona", "problema", "hace", "solo", "tambien", "hoy", "mismo", "fuga", "grifo", "pieza", "wc", "respuesta", "pregunta"}}
+        if not tokens_a or not tokens_b:
+            return False
+        overlap = len(tokens_a & tokens_b)
+        return overlap >= 2
+
+    def _deduplicar_preguntas(self, preguntas):
+        lista = []
+        for pregunta in preguntas or []:
+            texto = str(pregunta).strip()
+            if not texto:
+                continue
+            if any(self._pregunta_duplicada(texto, ya) for ya in lista):
+                continue
+            lista.append(texto)
+        return lista
+
+    def mostrar_resultado_ia(self, titulo, descripcion, precio_min, precio_recomendado, precio_max):
+        ventana = ctk.CTkToplevel(self)
+        ventana.title("Resultado de IA")
+        ventana.geometry("620x420")
+        ventana.resizable(False, False)
+        ventana.grab_set()
+        ventana.transient(self)
+        ventana.configure(fg_color="#0f1723")
+
+        frame = ctk.CTkFrame(ventana, fg_color="#111922", corner_radius=20, border_color="#29415d", border_width=1)
+        frame.pack(fill="both", expand=True, padx=14, pady=14)
+
+        ctk.CTkLabel(frame, text="Resultado de presupuesto", font=("Arial", 22, "bold"), text_color="#edf7ff", anchor="w").pack(anchor="w", padx=18, pady=(18, 8))
+
+        texto = tk.Text(frame, height=10, bg="#0b1220", fg="#edf6ff", relief="flat", borderwidth=0, padx=14, pady=12, insertbackground="#ffffff", font=("Arial", 11))
+        texto.insert("1.0", f"Trabajo:\n{titulo}\n\nDescripción:\n{descripcion}\n\nPrecio mínimo: {precio_min:.2f} €\nPrecio recomendado: {precio_recomendado:.2f} €\nPrecio máximo: {precio_max:.2f} €")
+        texto.configure(state="disabled")
+        texto.pack(fill="both", expand=True, padx=14, pady=(0, 12))
+
+        btns = ctk.CTkFrame(frame, fg_color="transparent")
+        btns.pack(fill="x", padx=14, pady=(0, 12))
+
+        def cancelar_resultado():
+            self.txt_desc.delete("1.0", "end")
+            self.txt_precio.delete(0, "end")
+            self.txt_cant.delete(0, "end")
+            self.txt_cant.insert(0, "1")
+            self.comprobar_campos_item()
+            ventana.destroy()
+
+        def editar_resultado():
+            self.txt_desc.delete("1.0", "end")
+            self.txt_desc.insert("1.0", descripcion)
+            self.txt_precio.delete(0, "end")
+            self.txt_precio.insert(0, f"{precio_recomendado:.2f}")
+            self.txt_cant.delete(0, "end")
+            self.txt_cant.insert(0, "1")
+            self.comprobar_campos_item()
+            self.txt_desc.focus()
+            ventana.destroy()
+
+        def aceptar_resultado():
+            self.txt_desc.delete("1.0", "end")
+            self.txt_desc.insert("1.0", descripcion)
+            self.txt_precio.delete(0, "end")
+            self.txt_precio.insert(0, f"{precio_recomendado:.2f}")
+            self.txt_cant.delete(0, "end")
+            self.txt_cant.insert(0, "1")
+            self.añadir_item()
+            ventana.destroy()
+
+        ctk.CTkButton(btns, text="Cancelar", fg_color="#ef4444", hover_color="#d93030", border_color="#fca5a5", border_width=1, width=120, height=42, corner_radius=12, command=cancelar_resultado, font=("Arial", 11, "bold")).pack(side="left", padx=6)
+        ctk.CTkButton(btns, text="Editar", fg_color="#f59e0b", hover_color="#d97706", border_color="#fcd34d", border_width=1, width=120, height=42, corner_radius=12, command=editar_resultado, font=("Arial", 11, "bold")).pack(side="left", padx=6)
+        ctk.CTkButton(btns, text="Aceptar", fg_color="#22a55f", hover_color="#1c9c53", border_color="#8ef1c3", border_width=1, width=120, height=42, corner_radius=12, command=aceptar_resultado, font=("Arial", 11, "bold")).pack(side="right", padx=6)
+
+        ventana.bind("<Escape>", lambda event: cancelar_resultado())
+        ventana.bind("<Return>", lambda event: aceptar_resultado())
+        ventana.focus_force()
+        ventana.wait_window()
+
     def _preguntas_modal(self, preguntas):
+        """Muestra un asistente tipo chat con botones rápidos y fallback seguro."""
+
         """Muestra un asistente tipo chat con botones r?pidos y fallback seguro."""
-        preguntas = [str(p).strip() for p in (preguntas or []) if str(p).strip()]
+        preguntas = self._deduplicar_preguntas(preguntas)
         if not preguntas:
             return []
 
         ventana = ctk.CTkToplevel(self)
         ventana.title("Asistente de precios")
-        ventana.geometry("920x760")
-        ventana.minsize(860, 620)
+        ventana.geometry("980x760")
+        ventana.minsize(900, 620)
         ventana.resizable(True, True)
         ventana.grab_set()
         ventana.transient(self)
@@ -912,7 +1264,7 @@ class AppPresupuestos(ctk.CTkFrame):
 
         def opciones_para(pregunta):
             ql = str(pregunta).lower()
-            if any(k in ql for k in ("noche", "fin de semana", "fuera de horario", "dentro de semana", "dentro de la jornada", "día laborable", "jornada laboral", "disponibilidad", "horario")):
+            if any(k in ql for k in ("noche", "fin de semana", "fuera de horario", "dentro de semana", "dentro de la jornada", "día laborable", "jornada laboral", "disponibilidad", "horario", "urgente", "hoy mismo", "inmediato")):
                 return [
                     ("Dentro del horario laboral", "#34d399"),
                     ("Fuera del horario laboral", "#f59e0b"),
@@ -921,16 +1273,20 @@ class AppPresupuestos(ctk.CTkFrame):
                     ("Noche dentro de semana", "#c084fc"),
                     ("Noche fin de semana", "#ec4899")
                 ]
-            if any(k in ql for k in ("acceso", "mueble", "falso techo", "difícil", "obstáculo", "movilizar", "llegar")):
+            if any(k in ql for k in ("llave de paso", "llave de escuadra", "escuadra", "retención", "pieza / retención")):
+                return [("Llave de paso", "#60a5fa"), ("Llave de escuadra", "#f59e0b"), ("Cambio de pieza", "#fbbf24"), ("Fuga / reparación", "#f87171")]
+            if any(k in ql for k in ("acceso", "mueble", "falso techo", "difícil", "obstáculo", "movilizar", "llegar", "zona tiene acceso", "espacio reducido", "escalera")):
                 return [("Acceso fácil", "#60a5fa"), ("Hay que mover muebles", "#fbbf24"), ("Acceso difícil", "#f87171"), ("Hay que abrir pared / falso techo", "#fb7185")]
             if any(k in ql for k in ("fotos", "fotograf", "imagen", "ver", "video", "vídeo")):
                 return [("Sí, hay fotos", "#60a5fa"), ("Sí, hay vídeo", "#60a5fa"), ("No hay fotos", "#f87171"), ("No puedo aportar fotos", "#fbbf24")]
-            if any(k in ql for k in ("urgente", "hoy", "inmediato", "ya mismo")):
-                return [("Sí, urgente", "#f87171"), ("No, puede esperar", "#60a5fa"), ("Hoy mismo", "#f59e0b")]
-            if any(k in ql for k in ("tipo de trabajo", "qué trabajo", "trabajo exacto", "qué tipo", "tipo de incidencia")):
+            if any(k in ql for k in ("material", "pieza", "latiguillo", "grifo", "wc", "inodoro", "llave de paso", "sifón", "válvula", "desinfección", "desinfectar", "limpieza")):
+                return [("Sí, hace falta material / limpieza", "#60a5fa"), ("No hace falta más material", "#34d399"), ("No lo sé", "#fbbf24")]
+            if any(k in ql for k in ("razone", "internet", "investigue", "referencias", "mercado")):
+                return [("Sí, razonar y revisar mercado", "#60a5fa"), ("No, cerrar presupuesto", "#f87171"), ("Quiero comparar precios", "#fbbf24")]
+            if any(k in ql for k in ("tipo de trabajo", "qué trabajo", "trabajo exacto", "qué tipo", "tipo de incidencia", "problema")):
                 return [("Cambio de pieza", "#60a5fa"), ("Fuga / reparación", "#f59e0b"), ("Desatasco", "#fbbf24"), ("Cambio de grifo / WC", "#f87171")]
-            if any(k in ql for k in ("material", "pieza", "latiguillo", "grifo", "wc", "inodoro", "llave de paso")):
-                return [("Sí, hace falta material", "#60a5fa"), ("No hace falta más material", "#34d399"), ("No lo sé", "#fbbf24")]
+            if any(k in ql for k in ("distancia", "lejos", "desplazamiento", "kilómetros", "km")):
+                return [("Muy cerca", "#60a5fa"), ("Hay desplazamiento", "#fbbf24"), ("Muy lejos", "#f87171"), ("No lo sé", "#c084fc")]
             return [("Sí", "#60a5fa"), ("No", "#f87171"), ("No lo sé", "#fbbf24")]
 
         def crear_burbuja(texto, derecha=False, color="#1d2d42"):
@@ -938,7 +1294,7 @@ class AppPresupuestos(ctk.CTkFrame):
             item.pack(fill="x", padx=8, pady=6)
             bubble = ctk.CTkFrame(item, corner_radius=16, fg_color=color, border_color="#35506a", border_width=1)
             bubble.pack(fill="x", padx=(18 if not derecha else 60, 18 if not derecha else 18))
-            ctk.CTkLabel(bubble, text=texto, justify="left", wraplength=620, font=("Arial", 12), text_color="#f8fbff", padx=14, pady=10).pack(fill="x")
+            ctk.CTkLabel(bubble, text=texto, justify="left", wraplength=720, font=("Arial", 14), text_color="#f8fbff", padx=16, pady=12).pack(fill="x")
 
         def responder(valor):
             valor_limpio = str(valor).strip()
@@ -960,7 +1316,7 @@ class AppPresupuestos(ctk.CTkFrame):
                 pintar_pregunta()
             else:
                 resultado["values"] = list(respuestas)
-                ventana.destroy()
+                ventana.after(50, ventana.destroy)
 
         def responder_custom():
             if not hasattr(responder_custom, "entry"):
@@ -999,9 +1355,10 @@ class AppPresupuestos(ctk.CTkFrame):
 
             for i in range(3):
                 btns.grid_columnconfigure(i, weight=1)
+            btns.grid_columnconfigure((0, 1, 2, 3), weight=1)
             for i, (txt, color) in enumerate(opciones):
-                row = i // 3
-                col = i % 3
+                row = i // 4
+                col = i % 4
                 btn = ctk.CTkButton(
                     btns,
                     text=txt,
@@ -1031,6 +1388,9 @@ class AppPresupuestos(ctk.CTkFrame):
             responder_custom.entry = entry
             entry.pack(fill="x", padx=12, pady=(0, 10))
             entry.bind("<Return>", lambda event: responder_custom())
+            ventana.bind("<Return>", lambda event: responder_custom())
+            entry.bind("<Escape>", lambda event: cancelar())
+            ventana.bind("<Escape>", lambda event: cancelar())
 
             aceptar = ctk.CTkButton(
                 panel,
@@ -1046,6 +1406,10 @@ class AppPresupuestos(ctk.CTkFrame):
             )
             aceptar.pack(fill="x", padx=12, pady=(0, 10))
 
+            # Si el usuario presiona una respuesta rápida, se acepta inmediatamente y se avanza.
+            # Esto evita que el flujo se quede colgado esperando un segundo clic de Aceptar.
+            entry.bind("<Control-Return>", lambda event: responder_custom())
+
         def cancelar():
             resultado["cancel"] = True
             ventana.destroy()
@@ -1054,6 +1418,8 @@ class AppPresupuestos(ctk.CTkFrame):
         footer.pack(fill="x", padx=16, pady=(0, 16))
         ctk.CTkButton(footer, text="Volver", width=120, command=volver, fg_color="#475569", hover_color="#334155", border_color="#94a3b8", border_width=1, corner_radius=12, font=("Arial", 11, "bold")).pack(side="right", padx=(10, 0), pady=10)
         ctk.CTkButton(footer, text="Cancelar", width=130, command=cancelar, fg_color="#ef4444", hover_color="#d93030", border_color="#fca5a5", border_width=1, corner_radius=12, font=("Arial", 11, "bold")).pack(side="right", padx=(10, 0), pady=10)
+
+        ventana.bind("<Escape>", lambda event: cancelar())
 
         pintar_pregunta()
         ventana.update_idletasks()
@@ -1082,34 +1448,38 @@ class AppPresupuestos(ctk.CTkFrame):
 
     def _generar_prompt_openrouter(self, texto_trabajo):
         return (
-            "Eres un experto estimador de presupuestos para fontanería en España, especialmente en Valencia capital y alrededores. "
-            "Tu trabajo es valorar el caso real del cliente, no usar valores fijos ni historicismos, y no inventar precios base de 350 € o 108 € que no correspondan al trabajo. "
-            "Haz un razonamiento profesional paso a paso antes de responder: 1) identifica exactamente qué trabajo es (WC, grifo, latiguillo, desatasco, llave de corte, llave de paso, etc.); 2) evalúa la dificultad real (acceso, pared, mueble, false roof, materiales extra); 3) valora horario/urgencia/fin de semana/nocturno; 4) estima rango de mercado real de Valencia; 5) justifica el precio con la complejidad y no con números fijos. "
-            "Analiza el texto, las fotos y la complejidad real como si fueras un técnico de obra: grifo, llave de paso, desagüe, tubería, fuga, conexión, ataque de presión, acceso, materiales, limpieza, prueba de presión, desmontaje, picado, retirada de restos y revisiones extra. "
-            "Si el caso dice claramente 'sustitución de latiguillos', 'cambio de grifo', 'fuga en conexión', 'llave de paso', 'manguera', 'cambio de pieza', 'WC' o 'inodoro', no lo conviertas en un atasco de fregadero ni en un trabajo genérico: valorarlo como cambio de material, desmontaje, acceso, pruebas y material adicional. "
-            "Si el trabajo es de WC, llave de alimentación o cisterna, no mezcles la estimación con desatascos, latiguillos de fregadero o trabajos de grifo ajenos; cada caso debe tener su categoría y su justificación. "
-            "Redacta un presupuesto técnico, profesional y realista para autónomo con lenguaje claro, serio y orientado a obra real. "
-            "Usa el baremo local del mercado de Valencia como referencia y no bajes el precio por debajo del rango razonable salvo que el caso sea claramente simple y bien explicado. "
-            "Si hay urgencia, fin de semana, noche, acceso difícil, materiales extra, piezas de calidad, limpieza, traslado o apertura de mueble/pared, sube el importe por esos motivos y lo explicas bien. "
-            "Si existe duda, haz preguntas antes de cerrar un precio. "
-            "Cuando el usuario pida 'investiga más', 'busca más', 'revisa fotos', 'mira internet' o 'haz más análisis', reexamina el caso con más detalle: fotos, materiales, zona, horario, urgencia, acceso, dificultad y comparación con mercado real de Valencia. "
-            "Nunca uses cifras predefinidas del historial ni valores abstractos que no estén justificados por la información actual. "
+            "Eres un experto estimador de presupuestos para fontanería, saneamiento y servicios técnicos en España, especialmente en Valencia capital y alrededores. "
+            "Tu trabajo es valorar el caso real del cliente con criterio profesional, no usar valores rígidos ni inventar precios fijos, y ajustar siempre según la complejidad real del trabajo. "
+            "Haz un razonamiento profesional paso a paso: 1) identifica la familia exacta del trabajo; 2) detecta si es desatasco, llave, latiguillo, tramo de tubería, cambio de pieza, conexión o montaje; 3) analiza la dificultad de acceso, gravedad, materiales, limpieza/desinfección y desplazamiento; 4) valora horario laboral, fuera de horario, noche, fin de semana y urgencia; 5) considera kilometraje, demora, mano de obra extra, y riesgo de deterioro; 6) compara con mercado real de Valencia y justifica el rango. "
+            "Tipos de trabajos que debes reconocer exactamente: desatasco de WC/váter, desatasco de lavabo/lavamanos, desatasco de fregadero, desatasco de bidé, desatasco de bañera, sustitución de llaves de escuadra de lavabo, de fregadero, de WC/váter, llave de paso general de vivienda, llave de paso de cuarto de contadores, llave de paso de calentador/termo, latiguillo de WC, latiguillo de fregadero, latiguillo de lavamanos, latiguillo de calentador, latiguillo de termo, tramo de tubería plomo, tramo de tubería cobre, tramo de tubería multicapa, tramo de tubería PEX, tramo de tubería polibutileno, cambio de sifón, cambio de racor, cambio de brida, cambio de válvula, cambio de grifo, reparación de fuga, revisión de presión, conexiones, aislamiento, y trabajos de saneamiento más complejos. "
+            "Si existen fotos o vídeos, úsalo como evidencia visual: detecta tipo de material, corrosión, envejecimiento, acceso, paso por pared, falsos techos, espacio reducido, presencia de mueble, piezas rotas, junta gastada, desnivel o gravedad del desagüe. "
+            "Si el caso habla de gravedad, la zona está baja, hay retorno, agua estancada, olor, sifón sucio o salida obstruida, debe reflejarse en la complejidad y el precio. "
+            "Si es una llave de escuadra de lavabo, fregadero, WC/váter, o una llave de paso general de vivienda o de cuarto de contadores, ten en cuenta si requiere cierre de servicio, tramos, uniones, conexión, prueba de presión y limpieza final. "
+            "Si son latiguillos de WC, fregadero, lavamanos, calentador, termo o similar, considera si requieren pieza nueva, acoplamientos, racores, bridas, válvulas, y si la maniobra es rápida o con acceso complicado. "
+            "Si son tramos de tubería en plomo, cobre, multicapa, PEX o polibutileno, hay que valorar si se perfora pared, se accede por falso techo, se cambia tramo, se necesita junta, acople, remate o aislamiento; todo eso debe aparecer en observaciones y descripción. "
+            "La evaluación debe subir claramente si hay urgencia, noche, fin de semana, trabajo fuera del horario, acceso difícil, piezas extra, limpieza especial, desinfección, trabajo con gravedad, peligro de humedad/olor, o desplazamiento por kilometraje. "
+            "También debes incluir hipótesis razonables por incidencias: enfermedad, baja, aislamiento, situación delicada del cliente, necesidad de proteger zona, o cualquier caso donde el operario deba actuar con más tiempo o esfuerzo. "
+            "Si el cliente indica urgencia, noche, fin de semana, desplazamiento, enfermedad, material extra, limpieza, desinfección, acceso complicado o varias piezas, el precio debe reflejarlo en precio_min, precio_max y precio_recomendado. "
+            "Si el caso es claramente simple, de acceso fácil, sin urgencia, sin materiales extra ni complejidad, revisa si puede mantenerse en el extremo inferior del rango o incluso reducirlo razonablemente. No fuerces un sobreprecio si la operación es pequeña y sin complicaciones. "
+            "Usa el baremo local del mercado de Valencia como referencia y no bajes por debajo del rango razonable salvo que el caso sea claramente simple, dentro de horario y sin complejidad. "
+            "Nunca uses cifras fijas sin base técnica. Si hay duda, haz preguntas antes de cerrar precio. "
             "Responde SIEMPRE en JSON puro, sin markdown, sin texto fuera del JSON. "
             "La estructura exacta es esta: {\n"
             "  \"titulo\": \"título muy técnico del trabajo\",\n"
-            "  \"descripcion\": \"2 o 3 frases profesionales con términos de obra tipo: picado de zona, sustitución de tramo de tubería, desatasco con máquina de presión, revisión de conexiones, prueba de presión, limpieza final\",\n"
-            "  \"trabajos\": [\"acción 1\", \"acción 2\", \"acción 3\"],\n"
-            "  \"categoria\": \"categoria del trabajo\",\n"
+            "  \"descripcion\": \"2 o 3 frases profesionales que reflejen exactamente el trabajo solicitado, los trabajos a realizar y la maniobra real. Debe coincidir con el texto del cliente y no inventar tareas que no estén pedidas.\",\n"
+            "  \"trabajos\": [\"trabajo 1 real\", \"trabajo 2 real\", \"trabajo 3 real\"],\n"
+            "  \"categoria\": \"categoria exacta del trabajo\",\n"
             "  \"precio_min\": 0,\n"
             "  \"precio_max\": 0,\n"
             "  \"precio_recomendado\": 0,\n"
             "  \"cantidad\": 1,\n"
-            "  \"observaciones\": \"explicación breve del motivo del precio, dificultad, accesos, piezas extra o condiciones del sitio\",\n"
+            "  \"materiales\": [\"material 1\", \"material 2\"],\n"
+            "  \"observaciones\": \"explica el motivo del precio: urgencia, horario, fin de semana, noche, kilometraje, acceso, material extra, limpieza, desinfección, gravedad, enfermedad, o tipo de tubería/material\",\n"
             "  \"necesita_info\": false,\n"
             "  \"preguntas\": [\"Pregunta 1 breve\", \"Pregunta 2 breve\"]\n"
             "}\n"
-            "Si necesitas más datos para cerrar un precio fiable, devuelve \"necesita_info\": true y añade \"preguntas\" con 2 a 5 preguntas breves y útiles. Gran prioridad: urgencia, horario laboral, fin de semana/nocturno, acceso, materiales extra, fotos. "
-            "Reglas muy importantes: 1) Redacta como un presupuesto real, no como un comentario casual. 2) Si la foto muestra tubería exterior, salida, conexión, grifo, desagüe o montaje exterior, menciona 'picado de zona', 'desmontaje', 'sustitución de tramo', 'conexión', 'prueba de presión' y 'limpieza final'. 3) Si el trabajo incluye maniobra extra, abrasión, apertura de pared, retirada o limpieza, debe aparecer en la descripción y en observaciones. 4) La respuesta debe estar en español. 5) Nunca devuelvas texto fuera del JSON. 6) Si no estás seguro, usa un precio prudente y explica la maniobra extra probable. "
+            "Si necesitas más datos, devuelve \"necesita_info\": true y añade \"preguntas\" con 2 a 5 preguntas breves. Prioriza: urgencia, horario laboral, fin de semana/nocturno, acceso, materiales extra, kilometraje, limpieza/desinfección, fotos o vídeo, tipo de tubería y gravedad. "
+            "Reglas muy importantes: 1) la descripcion y la lista de trabajos deben coincidir exactamente con lo solicitado por el cliente; 2) no inventes tareas ajenas; 3) si se piden materiales, instala esos materiales en 'materiales'; 4) si hay piezas extra, desinfección, plástico/metal, PEX/cobre/plomo/multicapa, latiguillos, racores, válvulas, bridas, sifones, mangueras, grifos o llaves, deben reflejarse en descripcion, trabajos y materiales; 5) si aparece acceso dificultoso, trabajo fuera de horario, fin de semana, noche, gravedad, fotos/vídeo, kilómetros o materiales especiales, explica el ajuste; 6) la respuesta debe estar en español; 7) nunca devuelvas texto fuera del JSON. "
             f"Texto del trabajo del cliente: {texto_trabajo}"
         )
 
@@ -1147,19 +1517,89 @@ class AppPresupuestos(ctk.CTkFrame):
         return None
 
     def _formatear_descripcion_ia(self, datos):
-        titulo = str(datos.get("titulo") or datos.get("descripcion") or "Trabajo de fontanería").strip()
-        descripcion = str(datos.get("descripcion") or titulo).strip()
+        if not isinstance(datos, dict):
+            return "Trabajo de fontanería profesional"
+        titulo = str(datos.get("titulo") or datos.get("categoria") or "Trabajo de fontanería").strip()
+        descripcion = str(datos.get("descripcion") or datos.get("observaciones") or titulo).strip()
         trabajos = datos.get("trabajos") or []
         if isinstance(trabajos, str):
             trabajos = [trabajos]
+        trabajos_limpios = [str(item).strip() for item in trabajos if str(item).strip()]
+        materiales = datos.get("materiales") or []
+        if isinstance(materiales, str):
+            materiales = [materiales]
+        materiales_limpios = [str(item).strip() for item in materiales if str(item).strip()]
+        if not descripcion or len(descripcion) < 12:
+            descripcion = f"{titulo}: intervención de fontanería profesional."
+
         texto = descripcion
-        if trabajos:
-            trabajos_limpios = [str(item).strip() for item in trabajos if str(item).strip()]
-            if trabajos_limpios:
-                texto = descripcion + "\n- " + "\n- ".join(trabajos_limpios[:4])
-        if len(texto) < 20:
-            texto = titulo
+        if trabajos_limpios:
+            texto = f"{texto}\n\nTrabajos a realizar:\n- {'\n- '.join(trabajos_limpios[:5])}"
+        if materiales_limpios:
+            texto = f"{texto}\n\nMateriales previstos:\n- {'\n- '.join(materiales_limpios[:5])}"
+        if datos.get("observaciones"):
+            obs = str(datos.get("observaciones")).strip()
+            if obs and obs not in texto:
+                texto = f"{texto}\n\nObservaciones: {obs}"
+        if len(texto) < 30:
+            texto = f"{titulo}. Revisión, ajuste y prueba de la instalación con criterio técnico profesional."
         return texto
+
+    def _descripcion_local_profesional(self, texto, respuestas=None):
+        texto_l = str(texto or "").strip()
+        resp = [str(r).strip() for r in (respuestas or []) if str(r).strip()]
+        resp_txt = " ".join(resp).lower()
+
+        if any(k in texto_l.lower() for k in ("desatasc", "atasco", "sifon", "desagüe", "aire comprimido", "máquina de aire")):
+            parte = "Desatasco de WC con máquina de aire comprimido"
+            detalles = [
+                "Revisión de la salida y del sifón para localizar la obstrucción.",
+                "Desbloqueo con máquina de aire comprimido o herramientas profesionales.",
+                "Limpieza y comprobación del tránsito del agua y del sello de la pieza.",
+                "Prueba de presión y cierre para confirmar funcionamiento correcto."
+            ]
+            if any(k in resp_txt for k in ("urgente", "hoy mismo", "inmediato", "fin de semana", "noche")):
+                detalles.insert(0, "Servicio con prioridad por horario especial y posible incidencia puntual.")
+            if any(k in resp_txt for k in ("acceso difícil", "mover muebles", "falso techo", "abrir pared")):
+                detalles.append("Ajuste por acceso complicado y maniobra extra por espacio limitado.")
+            return parte + "\n- " + "\n- ".join(detalles[:4])
+
+        if any(k in texto_l.lower() for k in ("grifo", "latiguillo", "llave de paso", "fuga", "manguera", "válvula", "sustituci", "cambio de pieza")):
+            parte = "Reparación o sustitución de grifo / latiguillo / llave de paso"
+            detalles = [
+                "Diagnóstico de la fuga, desgaste o conexión defectuosa.",
+                "Desmontaje y sustitución de pieza necesaria con material compatible.",
+                "Comprobación de presión, cierre y estanqueidad final.",
+                "Limpieza de la zona y prueba funcional del punto de servicio."
+            ]
+            if any(k in resp_txt for k in ("material", "pieza", "latiguillo", "válvula")):
+                detalles.append("Incluye material adicional por piezas y conexiones necesarias.")
+            if any(k in resp_txt for k in ("urgente", "hoy mismo", "fin de semana", "noche")):
+                detalles.append("Atención fuera del horario habitual o por urgencia puntual.")
+            return parte + "\n- " + "\n- ".join(detalles[:5])
+
+        if any(k in texto_l.lower() for k in ("wc", "inodoro", "aseo", "baño")):
+            parte = "Revisión y posible reparación del WC / inodoro"
+            detalles = [
+                "Comprobación del mecanismo, alimentación y posibles fugas.",
+                "Desmontaje parcial si es necesario para localizar la avería.",
+                "Revisión de conexiones, sello y ajuste del conjunto.",
+                "Prueba final de funcionamiento y limpieza de la zona."
+            ]
+            if any(k in resp_txt for k in ("dentro del horario laboral", "fuera del horario laboral", "fin de semana", "noche")):
+                detalles.append("Se considera el horario y la urgencia para ajustar la ejecución del servicio.")
+            return parte + "\n- " + "\n- ".join(detalles[:5])
+
+        base = "Intervención de fontanería profesional"
+        detalles = [
+            "Diagnóstico de la avería o punto de fuga identificado.",
+            "Revisión y preparación del punto de trabajo y acceso.",
+            "Intervención técnica con material compatible y prueba final.",
+            "Limpieza y entrega del servicio con comprobación funcional."
+        ]
+        if any(k in resp_txt for k in ("urgente", "fin de semana", "noche", "fuera del horario laboral")):
+            detalles.append("Servicio ajustado por urgencia, horario especial o dificultad de ejecución.")
+        return base + "\n- " + "\n- ".join(detalles[:4])
 
     def _request_openrouter(self, clave, model, texto):
         payload = {
@@ -1175,23 +1615,30 @@ class AppPresupuestos(ctk.CTkFrame):
             ],
             "temperature": 0.3
         }
-        respuesta = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {clave}",
+        try:
+            if not clave:
+                return None
+            headers = {
+                "Authorization": f"Bearer {str(clave).strip()}" if not str(clave).strip().startswith("Bearer ") else str(clave).strip(),
                 "Content-Type": "application/json",
                 "HTTP-Referer": "https://localhost",
                 "X-Title": "GestorPro"
-            },
-            json=payload,
-            timeout=90
-        )
-        return respuesta
+            }
+            respuesta = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=90
+            )
+            if respuesta.status_code in (401, 403):
+                self._marcar_llamada_ia("openrouter", cooldown_segundos=30)
+            elif respuesta.status_code == 200:
+                self._marcar_llamada_ia("openrouter", cooldown_segundos=8)
+            return respuesta
+        except Exception:
+            return None
 
     def _request_openrouter_raw(self, clave, model, prompt_text):
-        """Enviar un prompt 'raw' al endpoint de OpenRouter (sin envolver en el prompt global).
-        Usado para solicitar a la IA que genere preguntas específicas para el trabajo descrito.
-        """
         payload = {
             "model": model,
             "messages": [
@@ -1206,48 +1653,52 @@ class AppPresupuestos(ctk.CTkFrame):
             "temperature": 0.2
         }
         try:
+            if not clave:
+                return None
+            clave_limpia = str(clave).strip()
+            headers = {
+                "Authorization": f"Bearer {clave_limpia}" if not clave_limpia.startswith("Bearer ") else clave_limpia,
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://localhost",
+                "X-Title": "GestorPro"
+            }
             respuesta = requests.post(
                 "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {clave}" if clave and not clave.startswith("Bearer ") else clave,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://localhost",
-                    "X-Title": "GestorPro"
-                },
+                headers=headers,
                 json=payload,
                 timeout=30
             )
+            if respuesta.status_code in (401, 403):
+                self._marcar_llamada_ia("openrouter", cooldown_segundos=30)
+            elif respuesta.status_code == 200:
+                self._marcar_llamada_ia("openrouter", cooldown_segundos=8)
             return respuesta
         except Exception:
             return None
 
     def _generar_preguntas_con_ia(self, texto):
+        # asegurar que la preferencia del UI esté sincronizada
+        try:
+            ui_pref = getattr(self, 'ai_preferred_provider', None)
+            if hasattr(self, 'var_proveedor') and ui_pref and self.var_proveedor.get() != ui_pref:
+                self.var_proveedor.set(ui_pref)
+        except Exception:
+            pass
+
         """Pide a la IA que genere 2-4 preguntas contextuales y breves para cerrar presupuesto.
         Devuelve lista de preguntas o None si falla (fallback al generador local).
         """
         prompt = (
-            "Eres un asistente técnico experto en fontanería (Valencia) y actúas como un consultor profesional de precios. "
-            "Genera entre 2 y 4 preguntas MUY concretas que ayuden a cerrar un presupuesto profesional, con tono claro, consultor y enfocado a obra. "
+            "Eres un asistente técnico experto en fontanería y servicios de mantenimiento en Valencia, con criterio realista de mercado. "
+            "Genera entre 2 y 4 preguntas MUY concretas para cerrar un presupuesto bien ajustado. "
+            "Prioriza exactamente estas variables: urgencia, horario laboral, fuera de horario, noche, fin de semana, acceso difícil, piezas/materiales extra, limpieza/desinfección, desplazamiento, kilometraje, y si hay algún caso especial de enfermedad, incidencia o dependencia del cliente. "
             "Las preguntas deben ser específicas para el tipo de trabajo y no mezclar categorías (si es WC, no preguntes por desatascos de fregadero). "
-            "Prioriza urgencia, horario, acceso, necesidad de piezas, estado visible en fotos y si se requieren desplazamientos extra. "
             "Devuelve solo JSON con la clave 'preguntas', por ejemplo: {\"preguntas\": [\"Pregunta 1\", \"Pregunta 2\"]}. "
-            "Además, si el cliente debería poder pedir que investigues precios con referencias, añade al final una pregunta estándar: '¿Quieres que investigue precios y referencias en internet y vuelva con fuentes/ejemplos?'. "
+            "Añade una pregunta final clara como: '¿Quieres que investigue precios y referencias en internet para validar el rango antes de cerrar?' "
             f"Texto del cliente: {texto}"
         )
 
-        proveedores = []
-        clave_open = self._obtener_clave_openrouter()
-        clave_groq = self._obtener_clave_groq()
-        orden = []
-        if getattr(self, "ai_preferred_provider", "groq") == "groq" and clave_groq:
-            orden.append(("groq", clave_groq, self.groq_model))
-        if clave_open:
-            orden.append(("openrouter", clave_open, self.openrouter_model))
-        if getattr(self, "ai_preferred_provider", "groq") != "groq" and clave_groq:
-            orden.append(("groq", clave_groq, self.groq_model))
-        if not clave_groq and clave_open:
-            orden.append(("openrouter", clave_open, self.openrouter_model))
-        proveedores = orden or []
+        proveedores = self._orden_proveedores_ia()
 
         if not proveedores:
             return None
@@ -1256,6 +1707,8 @@ class AppPresupuestos(ctk.CTkFrame):
             try:
                 if provider == "groq":
                     resp = self._request_groq(clave, modelo, prompt)
+                elif provider == "local":
+                    resp = self._request_local_ai(clave, modelo, prompt)
                 else:
                     resp = self._request_openrouter_raw(clave, modelo, prompt)
                 if not resp or resp.status_code != 200:
@@ -1295,42 +1748,64 @@ class AppPresupuestos(ctk.CTkFrame):
 
     def _preguntas_iniciales_por_texto(self, texto):
         texto_l = str(texto).lower()
+        preguntas_base = [
+            "¿Es urgente o puede hacerse dentro del horario laboral normal?",
+            "¿Qué horario te interesa: dentro de la jornada laboral, fuera del horario laboral, dentro de semana, fin de semana, noche dentro de semana o noche fin de semana?",
+            "¿La zona tiene acceso fácil o hay que mover muebles, abrir pared / falso techo o llegar por un hueco difícil?",
+            "¿Quieres que razone y revise referencias en internet para ajustar mejor el precio?",
+        ]
 
-        # Prioridad: no mezclar WC, grifo, latiguillo y desatasco.
-        if any(k in texto_l for k in ("wc", "inodoro", "aseo", "baño", "escuadra", "llave de paso", "llave de alimentación", "alimentación del wc", "alimentacion del wc")):
+        if any(k in texto_l for k in ("desatasc", "atasco", "desagüe", "sifon", "aire comprimido", "maquina de aire", "máquina de aire", "wc", "váter", "vater", "lavabo", "lavamanos", "fregadero")):
             preguntas = [
-                "¿Es un cambio de la llave de alimentación del WC, una fuga o una reparación del mecanismo?",
-                "¿La zona tiene acceso fácil o hay que mover muebles, abrir un armario o llegar detrás del WC?",
-                "¿Necesitas cambiar también racor, manguera, válvula o material adicional?",
-                "¿Tienes fotos de la llave, la conexión y el espacio de trabajo?"
-            ]
-            return preguntas[:4]
-
-        if any(k in texto_l for k in ("latiguillo", "manguera", "grifo", "llave de paso", "fuga", "sustituci", "cambio de pieza", "reemplazo", "conexión", "alimentación")):
-            preguntas = [
-                "¿Se trata de una fuga activa, cambio de pieza o sustitución del latiguillo/grifo?",
-                "¿La zona tiene acceso fácil o hay que mover muebles, abrir un mueble o llegar a un techo?",
-                "¿Necesitas cambiar material adicional como latiguillos, juntas, abrazaderas o válvulas?",
-                "¿Hay fotos claras de la conexión, la fuga y el estado de la instalación?"
-            ]
-            return preguntas[:4]
-
-        if any(k in texto_l for k in ("desatasc", "atasco", "desagüe", "sifon")):
-            preguntas = [
-                "¿El problema es un atasco total o va bajando muy lento?",
-                "¿Hay olor, agua estancada o retorno por el otro sifón?",
-                "¿La zona tiene acceso fácil o está detrás de muebles, armario o falso techo?",
-                "¿Hay fotos claras del desagüe y de la zona de trabajo?"
+                "¿Es un desatasco de WC/váter, lavabo/lavamanos o fregadero?",
+                "¿Hay olor fuerte, agua estancada, retorno, gravedad muy lenta o hay que abrir sifón para limpiar?",
+                "¿La zona tiene acceso fácil o está detrás de muebles, armario, pared o con poco hueco?",
+                "¿Necesitas cambiar sifón, manguera, racor, pieza o hacer una intervención más técnica?",
+                "¿Hay fotos o vídeo del desagüe, la salida y la zona de trabajo para detectar la gravedad y el material?"
             ]
             if any(k in texto_l for k in ("urgente", "hoy", "ya")):
                 preguntas.insert(0, "¿Necesitas que se haga urgentemente hoy mismo?")
-            return preguntas[:4]
+            return (preguntas_base + preguntas)[:6]
+
+        if any(k in texto_l for k in ("llave de paso", "llave escuadra", "escuadra", "retención", "llave de escuadra", "llave de corte", "cuarto de contadores", "contador")):
+            preguntas = [
+                "¿Es una llave de escuadra de lavabo, fregadero, WC/váter, o una llave de paso general de vivienda / cuarto de contadores?",
+                "¿Es urgente y necesitas que se haga hoy mismo o fuera del horario laboral?",
+                "¿La instalación está en una zona fácil o hay que mover muebles, abrir pared / falso techo o llegar por un sitio difícil?",
+                "¿Hace falta material adicional como llave nueva, latiguillo, junta, racor, válvula, brida o conexión?",
+                "¿Hay que usar productos de limpieza o desinfección especiales o hay desplazamiento extra por la zona?",
+                "¿Tienes fotos del punto de paso, la conexión y el espacio de trabajo?"
+            ]
+            return (preguntas_base + preguntas)[:6]
+
+        if any(k in texto_l for k in ("latiguillo", "manguera", "grifo", "fuga", "sustituci", "cambio de pieza", "reemplazo", "conexión", "alimentación", "calentador", "termo")):
+            preguntas = [
+                "¿Es de WC, fregadero, lavamanos, calentador o termo?",
+                "¿Se trata de una fuga activa, cambio de pieza o sustitución del latiguillo/grifo?",
+                "¿La zona tiene acceso fácil o hay que mover muebles, abrir un mueble o llegar a un techo o pared?",
+                "¿Necesitas cambiar material adicional como latiguillos, juntas, abrazaderas, válvulas, racores o piezas extra?",
+                "¿Hay fotos o vídeo de la conexión, la fuga, la zona y el material para valorar bien el trabajo?"
+            ]
+            return (preguntas_base + preguntas)[:6]
+
+        if any(k in texto_l for k in ("tuberia", "cobre", "multicapa", "pex", "polibutileno", "plomo", "tramo de tubería", "tramo de cobre", "tramo de pex")):
+            preguntas = [
+                "¿Es un tramo de tubería en plomo, cobre, multicapa, PEX o polibutileno?",
+                "¿Se debe abrir pared, foso, falso techo o hay acceso directo?",
+                "¿La zona requiere desmantelado, retirada de restos, limpieza, aislamiento o conexión de varias piezas?",
+                "¿Hay fotos o vídeo del tramo, unión y material para detectar la corrosión, envejecimiento y el tipo de tubo?",
+                "¿Hay urgencia, fin de semana o noche, o es una intervención dentro del horario normal?"
+            ]
+            return (preguntas_base + preguntas)[:6]
 
         return [
-            "¿Qué tipo de trabajo exacto necesitas: reparación, cambio de pieza, limpieza o desatasco?",
-            "¿La zona tiene acceso fácil o está difícil de llegar?",
-            "¿El servicio es urgente o puede hacerse en horario laboral normal?",
-            "¿Hay fotos o una explicación clara del problema y del material necesario?"
+            "¿Qué tipo de trabajo exacto necesitas: desatasco, llave de paso, llave de escuadra, latiguillo, tramo de tubería, reparación de fuga o cambio de pieza?",
+            "¿Es urgente o puede hacerse dentro del horario laboral normal?",
+            "¿Qué horario te interesa: dentro de la jornada laboral, fuera del horario laboral, dentro de semana, fin de semana, noche dentro de semana o noche fin de semana?",
+            "¿La zona tiene acceso fácil o está difícil de llegar por muebles, pared, falso techo, escaleras o espacio reducido?",
+            "¿Necesitas limpieza extra, desinfección, materiales adicionales, desplazamiento extra por kilometraje o trabajos de apertura?",
+            "¿Hay fotos o un vídeo del punto exacto para detectar gravedad, material, conexión y complejidad?",
+            "¿Quieres que razone y revise referencias en internet para ajustar mejor el precio?"
         ]
 
     def _preguntas_adicionales_por_contexto(self, texto, respuestas_previas):
@@ -1363,7 +1838,66 @@ class AppPresupuestos(ctk.CTkFrame):
                 visto.add(clave)
         return final[:3]
 
+    def razonar_precio(self):
+        ventana = ctk.CTkToplevel(self)
+        ventana.title("Razonar precio")
+        ventana.geometry("520x360")
+        ventana.grab_set()
+        ventana.transient(self)
+        ventana.configure(fg_color="#0d1722")
+
+        ctk.CTkLabel(ventana, text="Revisión de precio", font=("Arial", 22, "bold"), text_color="#edf7ff").pack(anchor="w", padx=18, pady=(18, 10))
+        ctk.CTkLabel(ventana, text="Valora si el presupuesto está ajustado y añade contexto antes de cerrar.", font=("Arial", 12), text_color="#bfd2ea").pack(anchor="w", padx=18, pady=(0, 12))
+
+        opciones = [
+            ("Me parece muy económico", lambda: self._marcar_razonamiento("muy economico")),
+            ("Me parece muy costoso", lambda: self._marcar_razonamiento("muy costoso")),
+            ("Adjuntar fotos / vídeos", lambda: (self.adjuntar_archivos_ia(), ventana.destroy())),
+            ("Revisar información", lambda: (analizar := self.analizar_con_openrouter(), ventana.destroy())),
+        ]
+
+        for idx, (texto, accion) in enumerate(opciones):
+            ctk.CTkButton(
+                ventana,
+                text=texto,
+                command=accion,
+                fg_color="#1e3a5f" if idx % 2 == 0 else "#2a4f73",
+                hover_color="#234a70",
+                height=48,
+                corner_radius=12,
+                font=("Arial", 12, "bold")
+            ).pack(fill="x", padx=18, pady=(0, 8))
+
+        ctk.CTkButton(
+            ventana,
+            text="Cerrar",
+            fg_color="#ef4444",
+            hover_color="#d93030",
+            height=40,
+            corner_radius=10,
+            command=ventana.destroy,
+            font=("Arial", 11, "bold")
+        ).pack(fill="x", padx=18, pady=(6, 18))
+
+    def _marcar_razonamiento(self, valor):
+        texto = self.txt_desc.get("1.0", "end-1c").strip()
+        if not texto:
+            messagebox.showwarning("Aviso", "Escribe antes el concepto a revisar.")
+            return
+        mensaje = f"El precio me parece {valor}. Reviso el alcance real del trabajo, accesos, urgencia, materiales y horario antes de cerrar."
+        self.txt_desc.delete("1.0", "end")
+        self.txt_desc.insert("1.0", f"{texto}\n\n{mensaje}")
+        self.comprobar_campos_item()
+
     def _recalcular_estimacion_parcial(self, texto_trabajo, respuestas_parciales):
+        # actualizar etiqueta de proveedor preferido en caso de cambio externo
+        try:
+            ui_pref = getattr(self, 'ai_preferred_provider', None)
+            if ui_pref and hasattr(self, 'lbl_proveedor_actual'):
+                self.lbl_proveedor_actual.configure(text=f"Proveedor preferido: {ui_pref}")
+        except Exception:
+            pass
+
         """Reconsulta a la IA con la información parcial para ajustar el precio en tiempo real."""
         try:
             texto = str(texto_trabajo).strip()
@@ -1392,10 +1926,17 @@ class AppPresupuestos(ctk.CTkFrame):
             proveedor = None
             clave = None
             model = None
-            if getattr(self, "ai_preferred_provider", "groq") == "groq" and clave_groq:
+            pref = str(getattr(self, "ai_preferred_provider", "auto") or "auto").lower()
+            if pref == "groq" and clave_groq:
                 proveedor = "groq"
                 clave = clave_groq
                 model = self.groq_model
+            elif pref == "local":
+                cfg_local = self._obtener_config_local_ai()
+                if cfg_local.get("base_url") and cfg_local.get("model"):
+                    proveedor = "local"
+                    clave = cfg_local["base_url"]
+                    model = cfg_local["model"]
             elif clave_open:
                 proveedor = "openrouter"
                 clave = clave_open
@@ -1404,10 +1945,23 @@ class AppPresupuestos(ctk.CTkFrame):
                 proveedor = "groq"
                 clave = clave_groq
                 model = self.groq_model
+            elif self._local_ai_esta_configurado():
+                cfg_local = self._obtener_config_local_ai()
+                proveedor = "local"
+                clave = cfg_local["base_url"]
+                model = cfg_local["model"]
             if not proveedor or not clave or not model:
+                return
+            if proveedor == "groq" and not self._puede_hacer_llamada_ia("groq", cooldown_segundos=8):
+                return
+            if proveedor == "openrouter" and not self._puede_hacer_llamada_ia("openrouter", cooldown_segundos=8):
+                return
+            if proveedor == "local" and not self._puede_hacer_llamada_ia("local", cooldown_segundos=8):
                 return
             if proveedor == "groq":
                 resp = self._request_groq(clave, model, prompt)
+            elif proveedor == "local":
+                resp = self._request_local_ai(clave, model, prompt)
             else:
                 resp = self._request_openrouter(clave, model, prompt)
             if not resp or resp.status_code != 200:
@@ -1451,470 +2005,140 @@ class AppPresupuestos(ctk.CTkFrame):
             pass
 
     def analizar_con_openrouter(self):
+        """Flujo completo del asistente IA con preguntas, proveedor y fallback local."""
         texto = self.txt_desc.get("1.0", "end-1c").strip()
         if not texto:
             messagebox.showwarning("Aviso", "Escribe primero el trabajo que quieres presupuestar.")
             return
 
-        # Generar preguntas iniciales preferentemente con la IA para que sean naturales y contextuales
-        preguntas_previas = self._generar_preguntas_con_ia(texto) or self._preguntas_iniciales_por_texto(texto)
-        respuestas_previas = self._preguntas_modal(preguntas_previas)
-        if respuestas_previas is None:
+        preguntas = self._preguntas_iniciales_por_texto(texto)
+        if not preguntas:
+            preguntas = [
+                "¿Qué tipo de trabajo exacto necesitas: reparación, cambio de pieza, limpieza o desatasco?",
+                "¿La zona tiene acceso fácil o está difícil de llegar?",
+                "¿Es urgente o puede hacerse dentro del horario laboral normal?",
+                "¿Hay fotos o una explicación clara del problema y del material necesario?"
+            ]
+
+        # Enriquecer con IA si hay proveedor disponible — evita perder el flujo de preguntas si la API responde bien.
+        try:
+            preguntas_ia = self._generar_preguntas_con_ia(texto)
+            if preguntas_ia:
+                preguntas = self._deduplicar_preguntas(preguntas + preguntas_ia)
+        except Exception:
+            pass
+
+        preguntas = self._deduplicar_preguntas(preguntas)
+        if not preguntas:
+            preguntas = [
+                "¿La zona tiene acceso fácil o está difícil de llegar?",
+                "¿Es urgente o puede hacerse dentro del horario laboral normal?",
+                "¿Hay fotos o una explicación clara del problema y del material necesario?",
+                "¿Necesitas que revise precios y referencias del mercado antes de cerrar?"
+            ]
+
+        respuestas = self._preguntas_modal(preguntas)
+        if not respuestas:
+            # Si el usuario cancela, mantenemos la estimación local para no romper el flujo.
+            base_local = self._precio_base_profesional(texto, "", [])
+            precio_fallback = float(base_local.get("recomendado", 0) or 0)
+            self.txt_precio.delete(0, "end")
+            self.txt_precio.insert(0, f"{precio_fallback:.2f}")
+            self.comprobar_campos_item()
             return
 
-        respuestas_previas = [str(x).strip() for x in respuestas_previas]
+        respuestas = [str(r).strip() for r in respuestas if str(r).strip()]
+        prompt_extra = "\n".join(respuestas)
 
-        preguntas_extra = self._preguntas_adicionales_por_contexto(texto, respuestas_previas)
-        if preguntas_extra:
-            respuestas_extra = self._preguntas_modal(preguntas_extra)
-            if respuestas_extra is None:
-                return
-            respuestas_previas.extend([str(x).strip() for x in respuestas_extra])
+        # Intento principal con proveedor actual; la lógica local queda separada de la lógica de razonamiento IA.
+        claves = self._orden_proveedores_ia()
 
-        # Si el cliente solicitó explícitamente investigar referencias, lanzar un flujo de investigación antes de enviar la petición principal
-        investigacion_flag = any("investig" in str(r).lower() or "investiga" in str(r).lower() for r in respuestas_previas)
-        referencia_baremo = self._contexto_baremo(texto)
-
-        info_cliente_texto = "\n".join(f"{q}: {a}" for q, a in zip(preguntas_previas + (preguntas_extra or []), respuestas_previas[:len(preguntas_previas) + (len(preguntas_extra) if preguntas_extra else 0)]))
-        razonamiento_contexto = (
-            "Razonamiento requerido antes de cerrar el precio: "
-            "1) identifica exactamente el tipo de trabajo; "
-            "2) revisa dificultad de acceso, materiales y fotos; "
-            "3) ajusta por urgencia, horario, fin de semana o nocturno; "
-            "4) compara con mercado real de Valencia; "
-            "5) justifica el rango final con argumentos técnicos y no con precios fijos."
-        )
-        texto_envio = texto + "\n\nInformación cliente:\n" + info_cliente_texto + "\n\nReferencia local:\n" + referencia_baremo + "\n\n" + razonamiento_contexto
-
-        if investigacion_flag:
-            # Pedir feedback adicional opcional al usuario antes de investigar
-            fb = self._feedback_modal()
-            if not fb:
-                investigacion_flag = False
-            else:
-                referencias_web = self._buscar_web_referencias(texto)
-                clave = self._obtener_clave_openrouter()
-                if clave:
-                    try:
-                        modelo = self.openrouter_model
-                        referencias_txt = "\n".join(
-                            f"- {r.get('titulo', 'Resultado web')}: {r.get('url','')} | {r.get('snippet','')}"
-                            for r in referencias_web[:4]
-                        ) if referencias_web else "- No se encontraron referencias web útiles en esta consulta."
-                        prompt_inv = (
-                            texto_envio +
-                            "\n\nEl cliente ha pedido que investigues precios y referencias en internet. "
-                            "Consulta la información web aportada y compárala con el mercado real de Valencia. "
-                            "Reevalúa el caso con rigor, no uses valores fijos de 350 o 108, y explica si el precio debe subir por horario, urgencia, accesos, piezas extra o complejidad del trabajo. "
-                            "Devuelve JSON con la estructura habitual (titulo, descripcion, trabajos, categoria, precio_min, precio_max, precio_recomendado, observaciones). "
-                            "Incluye en observaciones una breve referencia a los comparables web y a la lógica de mercado local. "
-                            "Si no hay referencias sólidas, explica la duda y usa un precio prudente. "
-                            "Responde en español y solo en JSON. "
-                            f"\n\nReferencias web: {referencias_txt}\n\nFeedback usuario: {fb}"
-                        )
-                        resp_inv = self._request_openrouter(clave, modelo, prompt_inv)
-                        resp_inv.raise_for_status()
-                        datos_inv = resp_inv.json()
-                        contenido_inv = datos_inv["choices"][0]["message"]["content"]
-                        if isinstance(contenido_inv, list):
-                            texto_respuesta_inv = "".join(part.get("text", "") for part in contenido_inv if isinstance(part, dict))
-                        else:
-                            texto_respuesta_inv = str(contenido_inv)
-                        parsed_inv = self._parsear_respuesta_openrouter(texto_respuesta_inv)
-                        if parsed_inv:
-                            desc_inv = self._formatear_descripcion_ia(parsed_inv)
-                            precio_inv = self._normalizar_precio(parsed_inv.get("precio_recomendado", 0))
-                            self.txt_desc.delete("1.0", "end")
-                            self.txt_desc.insert("1.0", desc_inv)
-                            self.txt_precio.delete(0, "end")
-                            self.txt_precio.insert(0, f"{precio_inv:.2f}")
-                            self.comprobar_campos_item()
-                            messagebox.showinfo("Investigación completada", "La IA ha revisado el caso con referencias y ha ajustado la estimación.")
-                            texto = desc_inv
-                            texto_envio = texto + "\n\nInformación cliente:\n" + info_cliente_texto + "\n\nReferencia local:\n" + referencia_baremo
-                    except Exception as e:
-                        messagebox.showerror("Error IA", f"No se pudo completar la investigación: {e}")
-                        investigacion_flag = False
-                else:
-                    messagebox.showwarning("Sin buscador Web", "No hay clave de búsqueda web configurada. Se conservará la estimación local/IA, pero sin referencias online.")
-                    investigacion_flag = False
-
-        # Ajustes reales basados en el caso, no en factores ocultos ni guardados.
-        notas_recargos = []
-        multiplicador = 1.0
-        for respuesta in respuestas_previas:
-            r = str(respuesta).lower()
-            if any(x in r for x in ("urgente", "hoy mismo", "ya mismo", "inmediato")):
-                multiplicador *= 1.25
-                notas_recargos.append("+25% por urgencia")
-            if any(x in r for x in ("fuera de horario laboral", "noche", "nocturno", "fin de semana", "sábado", "domingo")):
-                multiplicador *= 1.30
-                notas_recargos.append("+30% por horario especial")
-            if any(x in r for x in ("difícil", "mueble", "falso techo", "acceso limitado", "no hay fotos", "no fotograf", "poco accesible")):
-                multiplicador *= 1.10
-                notas_recargos.append("+10% por acceso o complejidad")
-
-        clave_open = self._obtener_clave_openrouter()
-        clave_groq = self._obtener_clave_groq()
-        if not clave_open and not clave_groq:
-            messagebox.showerror(
-                "IA no configurada",
-                "No hay ninguna clave válida de OpenRouter o Groq. Revisa cloud/env.txt o las variables del sistema."
+        referencias_web = self._buscar_web_referencias(f"{texto} presupuesto fontanería Valencia {prompt_extra}", max_results=3)
+        contexto_web = ""
+        if referencias_web:
+            contexto_web = "\nReferencias web verificadas para validar el rango:\n" + "\n".join(
+                f"- {r.get('titulo', 'Referencia')}: {r.get('url', '')} | {r.get('snippet', '')[:220]}"
+                for r in referencias_web[:3]
             )
+
+        payload = (
+            "Eres un consultor técnico profesional de fontanería y precios en Valencia. "
+            "Responde solo en JSON con este esquema exacto: {\"titulo\":\"\",\"descripcion\":\"\",\"trabajos\":[\"\"],\"categoria\":\"\",\"precio_min\":0,\"precio_max\":0,\"precio_recomendado\":0,\"cantidad\":1,\"observaciones\":\"\",\"necesita_info\":false,\"preguntas\":[\"\"]}. "
+            "Usa el texto del trabajo, la información del cliente y las respuestas del consultor para razonar bien. "
+            "Toma muy en cuenta: urgencia, fin de semana, noche dentro de semana, noche fin de semana, fuera del horario laboral, dentro de la jornada laboral, acceso difícil, materiales extra, fotos, piezas, limpieza/desinfección, desplazamiento, kilometraje, trabajo con dificultad añadida o cualquier incidencia por enfermedad/cliente especial. "
+            "Si hay urgencia, horario especial, noche o fin de semana, aumenta el precio con criterio real y lo justificas en observaciones y descripción. "
+            "Si hay acceso difícil, piezas extra, trabajo sanitario, limpieza especial, distancia, kilometraje o necesidad de desinfectar la zona, debe reflejarse en el precio final. "
+            "No uses números fijos ni valores artificiales sin justificar. Revisa el mercado real de Valencia y usa referencias web si están disponibles. "
+            f"Trabajo: {texto}\nRespuestas:\n{prompt_extra}{contexto_web}"
+        )
+
+        datos_ia = None
+        for provider, clave, model in claves:
+            if provider == "groq":
+                if not self._puede_hacer_llamada_ia("groq", 8):
+                    continue
+                resp = self._request_groq(clave, model, payload)
+            elif provider == "local":
+                if not self._puede_hacer_llamada_ia("local", 8):
+                    continue
+                resp = self._request_local_ai(clave, model, payload)
+            else:
+                if not self._puede_hacer_llamada_ia("openrouter", 8):
+                    continue
+                resp = self._request_openrouter(clave, model, payload)
+            if not resp or resp.status_code != 200:
+                continue
+            try:
+                datos = resp.json()
+                contenido = datos.get("choices", [{}])[0].get("message", {}).get("content")
+                if isinstance(contenido, list):
+                    texto_resp = "".join(part.get("text", "") for part in contenido if isinstance(part, dict))
+                else:
+                    texto_resp = str(contenido)
+                datos_ia = self._parsear_respuesta_openrouter(texto_resp)
+                if datos_ia:
+                    break
+            except Exception:
+                continue
+
+        if datos_ia is None:
+            base_local = self._precio_base_profesional(texto, "", [])
+            precio_fallback = float(base_local.get("recomendado", 0) or 0)
+            precio_fallback = self._aplicar_factores_contexto(precio_fallback, texto, respuestas)
+            minimo = max(0.0, float(base_local.get("min", 0) or 0) * 0.9)
+            maximo = max(float(base_local.get("max", 0) or 0), precio_fallback)
+            descripcion_local = self._descripcion_local_profesional(texto, respuestas)
+            self.mostrar_resultado_ia("Trabajo profesional", descripcion_local, minimo, precio_fallback, maximo)
             return
 
-        modelos = []
-        if clave_open:
-            modelos.extend(list(dict.fromkeys([self.openrouter_model] + self.openrouter_modelos_fallback)))
-        if clave_groq:
-            modelos.append(self.groq_model)
-        modelos = list(dict.fromkeys(modelos))
-        ultimo_error = None
+        precio_min = self._normalizar_precio(datos_ia.get("precio_min", 0))
+        precio_max = self._normalizar_precio(datos_ia.get("precio_max", 0))
+        precio_recomendado = self._normalizar_precio(datos_ia.get("precio_recomendado") or datos_ia.get("precio") or 0)
+        if precio_recomendado <= 0:
+            precio_recomendado = self._normalizar_precio(precio_min)
+        if precio_recomendado <= 0:
+            base_local = self._precio_base_profesional(texto, datos_ia.get("categoria", ""), datos_ia.get("trabajos", []))
+            precio_recomendado = float(base_local.get("recomendado", 0) or 0)
+            precio_min = float(base_local.get("min", 0) or 0)
+            precio_max = float(base_local.get("max", 0) or 0)
+        precio_min = self._aplicar_factores_contexto(precio_min, texto, respuestas) if precio_min > 0 else precio_min
+        precio_max = self._aplicar_factores_contexto(precio_max, texto, respuestas) if precio_max > 0 else precio_max
+        precio_recomendado = self._aplicar_factores_contexto(precio_recomendado, texto, respuestas)
+        if precio_min <= 0:
+            precio_min = min(precio_recomendado, precio_max if precio_max > 0 else precio_recomendado)
+        if precio_max <= 0:
+            precio_max = max(precio_recomendado, precio_min)
+        if precio_max < precio_recomendado:
+            precio_max = precio_recomendado
+        if precio_min > precio_recomendado:
+            precio_min = precio_recomendado * 0.9
 
-        for model in modelos:
-            try:
-                if clave_open and model in list(dict.fromkeys([self.openrouter_model] + self.openrouter_modelos_fallback)):
-                    respuesta = self._request_openrouter(clave_open, model, texto_envio)
-                elif clave_groq and model == self.groq_model:
-                    respuesta = self._request_groq(clave_groq, model, texto_envio)
-                else:
-                    continue
+        titulo = str(datos_ia.get("titulo") or datos_ia.get("categoria") or "Trabajo de fontanería").strip()
+        descripcion = self._formatear_descripcion_ia(datos_ia)
+        descripcion = descripcion if descripcion else texto
 
-                if respuesta is None:
-                    ultimo_error = f"No se pudo contactar con la API del modelo {model}."
-                    continue
-
-                if respuesta.status_code == 402:
-                    ultimo_error = (
-                        f"La IA responde 402 para el modelo {model}. "
-                        "La cuenta no tiene saldo o la API no está activada."
-                    )
-                    continue
-
-                if respuesta.status_code in (400, 404, 422):
-                    ultimo_error = (
-                        f"El modelo {model} no está disponible o no es válido para esta cuenta. "
-                        "Se probará el siguiente proveedor/modelo disponible."
-                    )
-                    continue
-
-                respuesta.raise_for_status()
-                datos = respuesta.json()
-                contenido = datos["choices"][0]["message"]["content"]
-                if isinstance(contenido, list):
-                    texto_respuesta = "".join(part.get("text", "") for part in contenido if isinstance(part, dict))
-                else:
-                    texto_respuesta = str(contenido)
-
-                parsed = self._parsear_respuesta_openrouter(texto_respuesta)
-                if not parsed:
-                    messagebox.showwarning("IA sin respuesta útil", "La IA no devolvió un presupuesto válido. Revisa el texto o intenta otra descripción.")
-                    return
-
-                # Si la IA dice que necesita más información, preguntar al usuario y reconsultar
-                if parsed.get("necesita_info"):
-                    preguntas = parsed.get("preguntas") or []
-                    if preguntas:
-                        # Usar modal personalizado (no minimizable) para recoger varias respuestas
-                        respuestas_vals = self._preguntas_modal(preguntas)
-                        if respuestas_vals is None:
-                            messagebox.showinfo("Cancelado", "No se completaron las preguntas. Operación cancelada.")
-                            return
-
-                        respuestas = [f"{q}: {a}" for q, a in zip(preguntas, respuestas_vals)]
-                        texto_respuestas = "\n".join(respuestas)
-                        # Reconsultar la IA añadiendo las respuestas del cliente
-                        try:
-                            respuesta2 = self._request_openrouter(clave, model, texto_envio + "\n\nRespuestas del cliente:\n" + texto_respuestas)
-                            respuesta2.raise_for_status()
-                            datos2 = respuesta2.json()
-                            contenido2 = datos2["choices"][0]["message"]["content"]
-                            if isinstance(contenido2, list):
-                                texto_respuesta = "".join(part.get("text", "") for part in contenido2 if isinstance(part, dict))
-                            else:
-                                texto_respuesta = str(contenido2)
-                            parsed = self._parsear_respuesta_openrouter(texto_respuesta)
-                            if not parsed:
-                                messagebox.showwarning("IA sin respuesta útil", "La IA no devolvió un presupuesto válido en la reconsulta.")
-                                return
-                        except Exception as e:
-                            messagebox.showerror("Error OpenRouter", f"Error al reconsultar la IA tras responder preguntas: {e}")
-                            return
-
-                descripcion = self._formatear_descripcion_ia(parsed)
-                precio_min = self._normalizar_precio(parsed.get("precio_min", 0))
-                precio_max = self._normalizar_precio(parsed.get("precio_max", 0))
-                precio_recomendado = self._normalizar_precio(parsed.get("precio_recomendado", 0))
-
-                verificacion = self._verificar_estimacion(texto, precio_recomendado, self._precio_base_profesional(texto, parsed.get("categoria", ""), parsed.get("trabajos", [])).get("recomendado", 0), parsed.get("categoria", ""))
-                if verificacion.get("alerta"):
-                    messagebox.showwarning("Verificación de mercado", verificacion["mensaje"])
-
-                # Base profesional local para Valencia capital y trabajo de desatasco/aire a presión.
-                base_local = self._precio_base_profesional(texto, parsed.get("categoria", ""), parsed.get("trabajos", []))
-                base_min = float(base_local["min"])
-                base_recomendado = float(base_local["recomendado"])
-                base_max = float(base_local["max"])
-
-                # Aplicar recargos automáticos según zona, horario y urgencia.
-                # Se mantiene como ajuste contextual real, sin valores fijos ni guardados.
-                texto_buscado = (texto + " " + descripcion).lower()
-                localidad_cliente = str(self.cliente_actual.get("localidad", "") or "").lower()
-
-                # Caso específico: latiguillo de WC tiene una referencia realista muy por debajo de 300 €.
-                # Se usa como base de mercado, y solo sube si hay urgencia, acceso difícil o material extra.
-                if ("latiguillo" in texto_buscado or "manguera" in texto_buscado) and ("wc" in texto_buscado or "inodoro" in texto_buscado or "aseo" in texto_buscado):
-                    precio_recomendado = max(precio_recomendado, 140.0)
-                    precio_min = max(precio_min, 110.0)
-                    precio_max = max(precio_max, 190.0)
-                    notas_recargos.append("+base realista para sustitución de latiguillo de WC")
-
-                # Recargo por Valencia capital y para desatascos
-                es_desatasco = (
-                    "desatasc" in texto_buscado or
-                    "desatasc" in str(parsed.get("categoria", "")).lower() or
-                    any("desatasc" in str(t).lower() for t in parsed.get("trabajos", []))
-                )
-                if ("valencia" in localidad_cliente or "valencia" in texto_buscado) and es_desatasco:
-                    multiplicador *= 1.20
-                    notas_recargos.append("+20% por desatasco en Valencia capital")
-
-                # Horario y urgencia (según la respuesta de la IA si la proporciona)
-                if parsed.get("nocturno") or "noche" in str(parsed.get("horario", "")).lower() or "nocturno" in texto_buscado:
-                    multiplicador *= 1.50
-                    notas_recargos.append("+50% por trabajo nocturno")
-                if parsed.get("fin_de_semana") or "fin de semana" in texto_buscado or "sábado" in texto_buscado or "domingo" in texto_buscado:
-                    multiplicador *= 1.40
-                    notas_recargos.append("+40% por fin de semana")
-                if parsed.get("urgente") or "urgente" in texto_buscado:
-                    multiplicador *= 1.30
-                    notas_recargos.append("+30% por urgencia")
-
-                # Recargo específico para cambios/sustituciones de grifo (mano de obra y material)
-                es_grifo = "grifo" in texto_buscado or any("grifo" in str(t).lower() for t in parsed.get("trabajos", []))
-                if es_grifo:
-                    # Si se menciona cambiar/sustituir/reemplazar, añadir recargo mayor
-                    if any(k in texto_buscado for k in ("cambi", "sustit", "reemplaz", "cambio")):
-                        multiplicador *= 1.25
-                        notas_recargos.append("+25% por sustitución/cambio de grifo (mano de obra + material)")
-                    else:
-                        # Pequeño recargo si solo se menciona grifo pero no el verbo
-                        multiplicador *= 1.10
-                        notas_recargos.append("+10% por intervención en grifo")
-
-                # Aplicar multiplicador a precios si procede
-                precio_recomendado = precio_recomendado * multiplicador if precio_recomendado > 0 else precio_recomendado
-                precio_min = precio_min * multiplicador if precio_min > 0 else precio_min
-                precio_max = precio_max * multiplicador if precio_max > 0 else precio_max
-
-                # Ajuste por fotos: si hay imágenes, incrementar ligeramente por posible complejidad/materiales
-                try:
-                    hay_imagen = any(mimetypes.guess_type(p)[0] and mimetypes.guess_type(p)[0].startswith("image/") for p in self.archivos_ia)
-                except Exception:
-                    hay_imagen = False
-                if hay_imagen:
-                    precio_recomendado *= 1.10
-                    precio_min *= 1.10
-                    precio_max *= 1.10
-                    notas_recargos.append("+10% por análisis de fotos (complejidad detectada)")
-
-                # Base profesional local: si la IA está por debajo del baremo realista, subimos al mínimo profesional.
-                precio_recomendado = max(precio_recomendado, base_recomendado * multiplicador)
-                precio_min = max(precio_min, base_min * multiplicador)
-                precio_max = max(precio_max, base_max * multiplicador)
-
-                # Asegurar mínimos razonables (evitar precios demasiado baratos)
-                minimo_general = 40.0
-                minimo_desatasco_valencia = 90.0
-                if es_desatasco and ("valencia" in localidad_cliente or "valencia" in texto_buscado):
-                    precio_recomendado = max(precio_recomendado, minimo_desatasco_valencia)
-                else:
-                    precio_recomendado = max(precio_recomendado, minimo_general)
-                if precio_min <= 0:
-                    precio_min = precio_recomendado * 0.9
-                if precio_max <= 0:
-                    precio_max = precio_recomendado * 1.15
-                if precio_recomendado <= 0:
-                    if precio_min > 0 and precio_max > 0:
-                        precio_recomendado = (precio_min + precio_max) / 2
-                    elif precio_min > 0:
-                        precio_recomendado = precio_min
-                    elif precio_max > 0:
-                        precio_recomendado = precio_max
-                if precio_min <= 0:
-                    precio_min = precio_recomendado * 0.9
-                if precio_max <= 0:
-                    precio_max = precio_recomendado * 1.15
-
-                self.txt_desc.delete("1.0", "end")
-                self.txt_desc.insert("1.0", descripcion)
-                self.txt_precio.delete(0, "end")
-                self.txt_precio.insert(0, f"{precio_recomendado:.2f}")
-                cantidad = int(parsed.get("cantidad") or 1)
-                self.txt_cant.delete(0, "end")
-                self.txt_cant.insert(0, str(max(1, cantidad)))
-                self.comprobar_campos_item()
-
-                observaciones = str(parsed.get("observaciones") or "").strip()
-                mensaje = (
-                    f"Estimación IA: {precio_recomendado:.2f} €\n"
-                    f"Rango: {precio_min:.2f} € - {precio_max:.2f} €\n"
-                    f"Detalle: {descripcion[:220]}"
-                )
-                if observaciones:
-                    mensaje += f"\n\nMotivo del precio: {observaciones[:180]}"
-                if notas_recargos:
-                    mensaje += f"\n\nRecargos aplicados: {', '.join(notas_recargos)}"
-
-                # Comprobar contra baremo local si existe y avisar si la IA propone mucho menos
-                try:
-                    sugerencia = self.buscar_precio_baremo(texto)
-                except Exception:
-                    sugerencia = None
-                if sugerencia:
-                    trabajo = sugerencia.get("item", {})
-                    precio_baremo = trabajo.get("precio_recomendado", (trabajo.get("precio_min", 0) + trabajo.get("precio_max", 0)) / 2)
-                    try:
-                        precio_baremo = float(precio_baremo)
-                    except Exception:
-                        precio_baremo = 0.0
-                    if precio_baremo > 0 and precio_recomendado > 0 and precio_recomendado < 0.6 * precio_baremo:
-                        msg_baremo = (
-                            "La referencia local del mercado de Valencia indica que este caso puede requerir un ajuste.\n"
-                            "Revisa urgencia, cierre de horario, accesos, materiales o fotos antes de cerrar el presupuesto.\n"
-                            "¿Quieres investigar más o dejarlo como está?"
-                        )
-                        accion_b = self._mostrar_dialogo_estimacion("Revisión del baremo", msg_baremo)
-                        accion_b_sel = accion_b.get("sel") if isinstance(accion_b, dict) else accion_b
-                        accion_b_txt = accion_b.get("texto", "") if isinstance(accion_b, dict) else ""
-                        if accion_b_sel == "tabla":
-                            self.añadir_item()
-                            return
-                        elif accion_b_sel == "concepto":
-                            self.txt_desc.delete("1.0", "end")
-                            self.txt_desc.insert("1.0", descripcion)
-                            self.txt_precio.delete(0, "end")
-                            self.txt_precio.insert(0, f"{precio_recomendado:.2f}")
-                            self.txt_cant.delete(0, "end")
-                            self.txt_cant.insert(0, str(max(1, int(parsed.get("cantidad") or 1))))
-                            self.comprobar_campos_item()
-                            return
-                        elif accion_b_sel == "volver":
-                            self.analizar_con_openrouter()
-                            return
-                        elif accion_b_sel == "investigar":
-                            fb = self._feedback_modal()
-                            if not fb:
-                                return
-                            if accion_b_txt:
-                                fb = f"{accion_b_txt}. {fb}" if fb else accion_b_txt
-                            clave = self._obtener_clave_openrouter()
-                            if clave:
-                                try:
-                                    modelo = self.openrouter_model
-                                    respuesta_fb = self._request_openrouter(clave, modelo, texto_envio + "\n\nFeedback usuario:\n" + fb)
-                                    respuesta_fb.raise_for_status()
-                                    datos_fb = respuesta_fb.json()
-                                    contenido_fb = datos_fb["choices"][0]["message"]["content"]
-                                    if isinstance(contenido_fb, list):
-                                        texto_respuesta_fb = "".join(part.get("text", "") for part in contenido_fb if isinstance(part, dict))
-                                    else:
-                                        texto_respuesta_fb = str(contenido_fb)
-                                    parsed_fb = self._parsear_respuesta_openrouter(texto_respuesta_fb)
-                                    if parsed_fb:
-                                        desc_fb = self._formatear_descripcion_ia(parsed_fb)
-                                        precio_fb = self._normalizar_precio(parsed_fb.get("precio_recomendado", 0))
-                                        self.txt_desc.delete("1.0", "end")
-                                        self.txt_desc.insert("1.0", desc_fb)
-                                        self.txt_precio.delete(0, "end")
-                                        self.txt_precio.insert(0, f"{precio_fb:.2f}")
-                                        self.comprobar_campos_item()
-                                        messagebox.showinfo("Afinado", "La IA ha re-evaluado el presupuesto con tu feedback.")
-                                        return
-                                except Exception as e:
-                                    messagebox.showerror("Error IA", f"No se pudo reconsultar la IA: {e}")
-                            if "más" in fb.lower() or "investiga" in fb.lower() or "fotos" in fb.lower():
-                                factor = 1.20
-                            elif "menos" in fb.lower():
-                                factor = 0.85
-                            else:
-                                factor = 1.10
-                            nuevo_precio = precio_recomendado * factor
-                            self.txt_precio.delete(0, "end")
-                            self.txt_precio.insert(0, f"{nuevo_precio:.2f}")
-                            messagebox.showinfo("Afinado", f"Precio revisado temporalmente: {nuevo_precio:.2f} € (ajuste de revisión)")
-                            return
-
-                accion = self._mostrar_dialogo_estimacion("Presupuesto estimado por IA", mensaje)
-                accion_sel = accion.get("sel") if isinstance(accion, dict) else accion
-                accion_txt = accion.get("texto", "") if isinstance(accion, dict) else ""
-                if accion_sel == "tabla":
-                    self.añadir_item()
-                elif accion_sel == "concepto":
-                    self.txt_desc.delete("1.0", "end")
-                    self.txt_desc.insert("1.0", descripcion)
-                    self.txt_precio.delete(0, "end")
-                    self.txt_precio.insert(0, f"{precio_recomendado:.2f}")
-                    self.txt_cant.delete(0, "end")
-                    self.txt_cant.insert(0, str(max(1, int(parsed.get("cantidad") or 1))))
-                    self.comprobar_campos_item()
-                elif accion_sel == "volver":
-                    self.analizar_con_openrouter()
-                elif accion_sel == "investigar":
-                    # pedir feedback y ajustar
-                    fb = self._feedback_modal()
-                    if not fb:
-                        return
-                    if accion_txt:
-                        fb = f"{accion_txt}. {fb}" if fb else accion_txt
-                    clave = self._obtener_clave_openrouter()
-                    if clave:
-                        try:
-                            modelo = self.openrouter_model
-                            respuesta_fb = self._request_openrouter(clave, modelo, texto_envio + "\n\nFeedback usuario:\n" + fb)
-                            respuesta_fb.raise_for_status()
-                            datos_fb = respuesta_fb.json()
-                            contenido_fb = datos_fb["choices"][0]["message"]["content"]
-                            if isinstance(contenido_fb, list):
-                                texto_respuesta_fb = "".join(part.get("text", "") for part in contenido_fb if isinstance(part, dict))
-                            else:
-                                texto_respuesta_fb = str(contenido_fb)
-                            parsed_fb = self._parsear_respuesta_openrouter(texto_respuesta_fb)
-                            if parsed_fb:
-                                desc_fb = self._formatear_descripcion_ia(parsed_fb)
-                                precio_fb = self._normalizar_precio(parsed_fb.get("precio_recomendado", 0))
-                                self.txt_desc.delete("1.0", "end")
-                                self.txt_desc.insert("1.0", desc_fb)
-                                self.txt_precio.delete(0, "end")
-                                self.txt_precio.insert(0, f"{precio_fb:.2f}")
-                                self.comprobar_campos_item()
-                                messagebox.showinfo("Afinado", "La IA ha re-evaluado el presupuesto con tu feedback.")
-                                return
-                        except Exception as e:
-                            messagebox.showerror("Error IA", f"No se pudo reconsultar la IA: {e}")
-                    if "más" in fb.lower() or "investiga" in fb.lower() or "fotos" in fb.lower():
-                        factor = 1.20
-                    elif "menos" in fb.lower():
-                        factor = 0.85
-                    else:
-                        factor = 1.10
-                    nuevo_precio = self._normalizar_precio(parsed.get("precio_recomendado", 0)) * factor
-                    self.txt_precio.delete(0, "end")
-                    self.txt_precio.insert(0, f"{nuevo_precio:.2f}")
-                    messagebox.showinfo("Afinado", f"Precio revisado temporalmente: {nuevo_precio:.2f} € (ajuste de revisión)")
-                    return
-                return
-
-            except requests.exceptions.RequestException as e:
-                ultimo_error = f"Error de conexión con OpenRouter: {e}"
-            except Exception as e:
-                ultimo_error = f"No se pudo consultar la IA:\n\n{e}"
-
-        if ultimo_error:
-            messagebox.showerror("Error de IA", ultimo_error + "\n\nComprueba la clave, el modelo disponible y el saldo del proveedor de IA.")
-        else:
-            messagebox.showerror("Error de IA", "No se pudo consultar la IA con ningún modelo disponible.")
-
+        self.mostrar_resultado_ia(titulo, descripcion, precio_min, precio_recomendado, precio_max)
+        return
     def ver_baremos(self):
 
         ventana = ctk.CTkToplevel(self)
@@ -2418,6 +2642,45 @@ USOS
         entrada.pack(pady=2, padx=20, fill="x")
         return entrada
 
+    def _guardar_preferencia_proveedor(self, valor):
+        """Guarda la preferencia de proveedor en cloud/env.txt como AI_PREFERRED_PROVIDER=valor.
+        Si el archivo no existe lo crea. Mantiene otras líneas intactas.
+        """
+        try:
+            base = os.path.dirname(os.path.dirname(__file__))
+            ruta_env = os.path.join(base, "cloud", "env.txt")
+            os.makedirs(os.path.dirname(ruta_env), exist_ok=True)
+            lines = []
+            if os.path.exists(ruta_env):
+                try:
+                    with open(ruta_env, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                except Exception:
+                    lines = []
+            key = "AI_PREFERRED_PROVIDER"
+            found = False
+            new_lines = []
+            for line in lines:
+                if not line or "=" not in line:
+                    new_lines.append(line)
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip()
+                if k == key:
+                    new_lines.append(f"{key}={valor}\n")
+                    found = True
+                else:
+                    new_lines.append(line)
+            if not found:
+                if new_lines and not new_lines[-1].endswith("\n"):
+                    new_lines[-1] = new_lines[-1] + "\n"
+                new_lines.append(f"{key}={valor}\n")
+            with open(ruta_env, "w", encoding="utf-8") as f:
+                f.writelines(new_lines)
+        except Exception:
+            # no fallamos la app por un error al escribir preferencias
+            pass
+
     def cargar_clientes(self):
         if not os.path.exists(self.archivo_clientes):
             return []
@@ -2757,92 +3020,76 @@ USOS
         return mejores[0]
 
     def buscar_precio_baremo(self, texto):
-        texto = texto.lower()
-        palabras_usuario = texto.split()
-        resultados=[]
+        def limpiar_texto(valor):
+            valor = str(valor or '').lower()
+            valor = valor.replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').replace('ü', 'u').replace('ñ', 'n')
+            valor = re.sub(r'[^a-z0-9\s]', ' ', valor)
+            valor = re.sub(r'\s+', ' ', valor).strip()
+            return valor
+
+        texto_limpio = limpiar_texto(texto)
+        palabras_usuario = set(re.findall(r'[a-z0-9]+', texto_limpio))
+
+        resultados = []
         for item in self.baremos:
-            puntos=0
-            palabras_detectadas=[]
-            nombre=item.get(
-                "nombre",
-                ""
-            ).lower()
-            alias=item.get(
-                "alias",
-                []
-            )
-            buscar = item.get(
-                "buscar",
-                []
-            )
+            puntos = 0
+            palabras_detectadas = []
+            nombre = limpiar_texto(item.get("nombre", ""))
+            alias = [limpiar_texto(v) for v in item.get("alias", [])]
+            buscar = [limpiar_texto(v) for v in item.get("buscar", [])]
             palabras = alias + buscar
-            # Coincidencia nombre
+
             for palabra in palabras_usuario:
-                if palabra in nombre:
-                    puntos +=15
-                    palabras_detectadas.append(
-                        palabra
-                    )
-            # Coincidencia alias
-            for frase in palabras:
-                frase=frase.lower()
-                if frase in texto:
-                    puntos +=20
-                    palabras_detectadas.append(
-                        frase
-                    )
-                else:
-                    for palabra in frase.split():
-                        if palabra in palabras_usuario:
-                            puntos+=5
-                            palabras_detectadas.append(
-                                palabra
-                            )
-            # aprendizaje previo
-            aprendizaje = item.get("aprendizaje", {})
-            
-            # 1. Palabras aprendidas (palabras sueltas)
-            for palabra in aprendizaje.get("palabras_aprendidas", []):
-                if palabra.lower() in palabras_usuario:
-                    puntos += 8
+                if palabra and palabra in nombre:
+                    puntos += 15
                     palabras_detectadas.append(palabra)
 
-            # 2. Frases aprendidas (frases completas como "conexion flexible de agua")
+            for frase in palabras:
+                if not frase:
+                    continue
+                if frase in texto_limpio:
+                    puntos += 20
+                    palabras_detectadas.append(frase)
+                else:
+                    for palabra in set(re.findall(r'[a-z0-9]+', frase)):
+                        if palabra and palabra in palabras_usuario:
+                            puntos += 5
+                            palabras_detectadas.append(palabra)
+
+            aprendizaje = item.get("aprendizaje", {})
+            for palabra in aprendizaje.get("palabras_aprendidas", []):
+                pal = limpiar_texto(palabra)
+                if pal and pal in palabras_usuario:
+                    puntos += 8
+                    palabras_detectadas.append(pal)
+
             for frase in aprendizaje.get("frases_aprendidas", []):
-                frase_clean = frase.lower().strip()
-                # Comprobamos si la frase completa está dentro del texto buscado
-                if frase_clean and frase_clean in texto:
-                    puntos += 25  # Le damos puntuación alta por coincidir la frase aprendida
+                frase_clean = limpiar_texto(frase)
+                if frase_clean and frase_clean in texto_limpio:
+                    puntos += 25
                     palabras_detectadas.append(frase_clean)
                 else:
-                    # Si no coincide la frase entera, sumamos puntos por cada palabra de esa frase
-                    for pal in frase_clean.split():
-                        if pal in palabras_usuario and len(pal) > 2:  # ignorar palabras muy cortas como 'de', 'el'
+                    for pal in set(re.findall(r'[a-z0-9]+', frase_clean)):
+                        if pal and pal in palabras_usuario and len(pal) > 2:
                             puntos += 4
                             palabras_detectadas.append(pal)
-            if puntos>0:
+
+            if puntos > 0:
                 resultados.append({
-                    "item":item,
-                    "puntos":puntos,
-                    "detectadas":list(
-                        set(palabras_detectadas)
-                    )
+                    "item": item,
+                    "puntos": puntos,
+                    "detectadas": list(set(palabras_detectadas))
                 })
+
         if not resultados:
-            parecido = self.buscar_similitud_baremo(texto)
+            parecido = self.buscar_similitud_baremo(texto_limpio)
             if parecido:
                 return parecido
             return None
-        resultados.sort(
-            key=lambda x:x["puntos"],
-            reverse=True
-        )
-        mejor=resultados[0]
-        porcentaje=min(
-            mejor["puntos"]*5,
-            99
-        )
-        mejor["porcentaje"]=porcentaje
+
+        resultados.sort(key=lambda x: x["puntos"], reverse=True)
+        mejor = resultados[0]
+        mejor["porcentaje"] = min(mejor["puntos"] * 5, 99)
         return mejor
 
     def mostrar_sugerencia_precio(self, resultado):
@@ -2859,30 +3106,75 @@ USOS
             )
         )
 
-        respuesta = messagebox.askyesno(
-            "🤖 Inteligencia Gestor Pro",
-    f"""
-    Coincidencia:
-    {porcentaje}%
-    Trabajo:
-    {sugerencia['nombre']}
-    Categoría:
-    {sugerencia.get('categoria','')}
-    Precio mínimo:
-    {sugerencia['precio_min']} €
-    Precio máximo:
-    {sugerencia['precio_max']} €
-    Precio recomendado:
-    {precio} €
-    ¿Es este trabajo?
-    """
-        )
+        ventana = ctk.CTkToplevel(self)
+        ventana.title("🤖 Inteligencia Gestor Pro")
+        ventana.geometry("620x420")
+        ventana.resizable(False, False)
+        ventana.grab_set()
+        ventana.transient(self)
+        ventana.configure(fg_color="#0f1723")
+
+        try:
+            ventana.update_idletasks()
+            sw = ventana.winfo_screenwidth()
+            sh = ventana.winfo_screenheight()
+            ww = ventana.winfo_width()
+            wh = ventana.winfo_height()
+            x = int((sw - ww) / 2)
+            y = int((sh - wh) / 2)
+            ventana.geometry(f"+{x}+{y}")
+        except Exception:
+            pass
+
+        frame = ctk.CTkFrame(ventana, fg_color="#111922", corner_radius=20, border_color="#29415d", border_width=1)
+        frame.pack(fill="both", expand=True, padx=16, pady=16)
+
+        ctk.CTkLabel(frame, text="Inteligencia Gestor Pro", font=("Arial", 22, "bold"), text_color="#edf7ff", anchor="w").pack(anchor="w", padx=18, pady=(18, 10))
+
+        txt = tk.Text(frame, height=11, bg="#0b1220", fg="#edf6ff", relief="flat", borderwidth=0, padx=14, pady=12, insertbackground="#ffffff", font=("Arial", 11))
+        txt.insert("1.0", f"""
+Coincidencia:
+{porcentaje}%
+Trabajo:
+{sugerencia['nombre']}
+Categoría:
+{sugerencia.get('categoria','')}
+Precio mínimo:
+{sugerencia['precio_min']} €
+Precio máximo:
+{sugerencia['precio_max']} €
+Precio recomendado:
+{precio} €
+
+¿Es este trabajo?
+""")
+        txt.configure(state="disabled")
+        txt.pack(fill="both", expand=True, padx=14, pady=(0, 12))
+
+        btns = ctk.CTkFrame(frame, fg_color="transparent")
+        btns.pack(fill="x", padx=14, pady=(0, 14))
+
+        decision = {"respuesta": False}
+
+        def cerrar(valor):
+            decision["respuesta"] = valor
+            ventana.destroy()
+
+        ctk.CTkButton(btns, text="Sí, es este", fg_color="#22a55f", hover_color="#1c9c53", border_color="#8ef1c3", border_width=1, width=170, height=42, corner_radius=12, command=lambda: cerrar(True), font=("Arial", 11, "bold")).pack(side="right", padx=6)
+        ctk.CTkButton(btns, text="No", fg_color="#ef4444", hover_color="#d93030", border_color="#fca5a5", border_width=1, width=110, height=42, corner_radius=12, command=lambda: cerrar(False), font=("Arial", 11, "bold")).pack(side="right")
+
+        ventana.bind("<Return>", lambda event: cerrar(True))
+        ventana.bind("<Escape>", lambda event: cerrar(False))
+        ventana.focus_force()
+        ventana.wait_window()
+
+        respuesta = decision["respuesta"]
 
         if respuesta:
-            # 👈 CAMBIO 1: También le pasamos el texto original al aprender el "Sí" directo
+            frases_aprendidas = [texto_original] + (resultado.get("detectadas", []) if isinstance(resultado, dict) else [])
             self.aprender_confirmacion(
                 sugerencia,
-                [texto_original] + resultado.get("detectadas", [])
+                frases_aprendidas
             )
             self.txt_desc.delete("1.0", "end")
             self.txt_desc.insert("1.0", sugerencia["nombre"])
@@ -2948,27 +3240,99 @@ USOS
 
         lineas = []
         for bloque in texto.splitlines():
-            bloque = bloque.strip()
-            if not bloque:
+            if not bloque.strip():
                 continue
+            lineas.extend(textwrap.wrap(
+                bloque.strip(),
+                width=28,
+                break_long_words=False,
+                break_on_hyphens=False
+            ))
 
-            if re.match(r"^(?:[-*•]|\d+\.)\s*", bloque):
-                texto_bullet = re.sub(r"^(?:[-*•]|\d+\.)\s*", "• ", bloque)
-                lineas.append(texto_bullet)
-                continue
+        return "\n".join(lineas) if lineas else ""
 
-            lineas.extend(
-                textwrap.wrap(
-                    bloque,
-                    width=55,
-                    break_long_words=False,
-                    break_on_hyphens=False
-                )
+    def _seleccionar_fila(self, index):
+        self.selected_item_index = index
+        for row_index, row in enumerate(self.item_rows):
+            row.configure(bg="#1e5a8a" if row_index == index else "#2b6da8")
+            for child in row.winfo_children():
+                if isinstance(child, tk.Label):
+                    child.configure(bg="#1e5a8a" if row_index == index else "#2b6da8")
+
+    def _ajustar_ancho_fila(self, row, desc_label):
+        try:
+            row.update_idletasks()
+            ancho_total = max(300, row.winfo_width())
+            ancho_valores = max(150, int(ancho_total * 0.30))
+            ancho_desc = max(220, ancho_total - ancho_valores - 30)
+            desc_label.configure(wraplength=max(220, ancho_desc))
+        except Exception:
+            pass
+
+    def _agregar_fila_presupuesto(self, descripcion, precio, cantidad, total):
+        row_index = len(self.item_rows)
+        row = tk.Frame(self.items_container, bg="#101820", padx=0, pady=0, highlightthickness=0)
+        row.grid(row=row_index + 1, column=0, sticky="ew", pady=(0, 6))
+        row.grid_columnconfigure(0, weight=7, minsize=420)
+        row.grid_columnconfigure(1, weight=3, minsize=250)
+
+        lineas_desc = max(2, len(textwrap.wrap(descripcion.strip(), width=34, break_long_words=False, break_on_hyphens=False)))
+        altura_fila = min(240, max(120, lineas_desc * 22 + 36))
+
+        desc_box = tk.Frame(row, bg="#2b6da8", padx=0, pady=0, highlightbackground="#9ed7ff", highlightthickness=2, bd=0, height=altura_fila)
+        desc_box.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        desc_box.grid_propagate(False)
+        desc_label = tk.Label(
+            desc_box,
+            text=descripcion,
+            bg="#2b6da8",
+            fg="#edf7ff",
+            justify="left",
+            anchor="w",
+            wraplength=430,
+            font=("Arial", 11, "normal"),
+            padx=10,
+            pady=10,
+            compound="left"
+        )
+        desc_label.pack(fill="both", expand=True)
+
+        values_box = tk.Frame(row, bg="#2b6da8", highlightbackground="#9ed7ff", highlightthickness=2, height=altura_fila)
+        values_box.grid(row=0, column=1, sticky="nsew", padx=(4, 0))
+        values_box.grid_propagate(False)
+        values_box.grid_columnconfigure(0, weight=1, minsize=70)
+        values_box.grid_columnconfigure(1, weight=1, minsize=70)
+        values_box.grid_columnconfigure(2, weight=1, minsize=70)
+        values_box.grid_rowconfigure(0, weight=1)
+
+        def crear_celda(parent, col, valor):
+            cell = tk.Frame(parent, bg="#2b6da8", highlightbackground="#a8deff", highlightthickness=1)
+            cell.grid(row=0, column=col, sticky="nsew", padx=(0, 2), pady=0)
+            cell.grid_propagate(False)
+            label = tk.Label(
+                cell,
+                text=valor,
+                bg="#2b6da8",
+                fg="#edf7ff",
+                font=("Arial", 11, "bold"),
+                anchor="center",
+                justify="center",
+                pady=8,
             )
+            label.pack(fill="both", expand=True, padx=0, pady=0)
+            return label
 
-        if not lineas:
-            return texto
-        return "\n".join(lineas)
+        precio_label = crear_celda(values_box, 0, f"{precio:.2f}")
+        cant_label = crear_celda(values_box, 1, str(cantidad))
+        total_label = crear_celda(values_box, 2, f"{total:.2f}")
+
+        row.bind("<Button-1>", lambda event, idx=row_index: self._seleccionar_fila(idx))
+        desc_label.bind("<Button-1>", lambda event, idx=row_index: self._seleccionar_fila(idx))
+        precio_label.bind("<Button-1>", lambda event, idx=row_index: self._seleccionar_fila(idx))
+        cant_label.bind("<Button-1>", lambda event, idx=row_index: self._seleccionar_fila(idx))
+        total_label.bind("<Button-1>", lambda event, idx=row_index: self._seleccionar_fila(idx))
+
+        self.item_rows.append(row)
 
     def añadir_item(self):
         descripcion = self.txt_desc.get("1.0", "end-1c").strip()
@@ -3026,11 +3390,8 @@ USOS
                     precio_texto.replace(",", ".")
                 )
 
-
             cantidad = int(self.txt_cant.get())
-
             total = precio * cantidad
-
 
             self.items_presupuesto.append({
                 "desc": descripcion,
@@ -3039,29 +3400,14 @@ USOS
                 "total": total
             })
 
-
             descripcion_visible = self._formatear_descripcion_tabla(descripcion)
-
-            self.tree.insert(
-                "",
-                "end",
-                values=(
-                    descripcion_visible,
-                    f"{precio:.2f}",
-                    cantidad,
-                    f"{total:.2f}"
-                )
-            )
-
-
+            self._agregar_fila_presupuesto(descripcion_visible, precio, cantidad, total)
             self.actualizar_totales_ui()
-
 
             self.txt_desc.delete("1.0", "end")
             self.txt_precio.delete(0, "end")
             self.txt_cant.delete(0, "end")
             self.txt_cant.insert(0, "1")
-
 
         except Exception as e:
             messagebox.showerror(
@@ -3071,38 +3417,19 @@ USOS
 
         self.comprobar_campos_item()
     def analizar_trabajo(self):
-
-        texto = self.txt_desc.get(
-            "1.0",
-            "end-1c"
-        ).strip()
-
-
+        texto = self.txt_desc.get("1.0", "end-1c").strip()
         if not texto:
-            messagebox.showwarning(
-                "Aviso",
-                "Escribe primero el trabajo a analizar."
-            )
+            messagebox.showwarning("Aviso", "Escribe primero el trabajo a analizar.")
             return
 
-
         resultado = self.buscar_precio_baremo(texto)
-
-
         if resultado:
-
-            self.mostrar_sugerencia_precio(
-                resultado
-            )
-
-
+            aceptado = self.mostrar_sugerencia_precio(resultado)
+            if aceptado:
+                self.añadir_item()
+                return
         else:
-
-            messagebox.showinfo(
-                "Sin resultado",
-                "No encuentro este trabajo todavía."
-            )
-
+            messagebox.showinfo("Sin resultado", "No encuentro este trabajo todavía.")
             self.aprender_nuevo_trabajo(texto)
 
 
@@ -3562,11 +3889,24 @@ USOS
             tree.winfo_toplevel().focus_force()
 
     def eliminar_item(self):
-        seleccionados = self.tree.selection()
-        for item in seleccionados:
-            indice = self.tree.index(item)
+        if self.selected_item_index is None:
+            if self.item_rows:
+                self.selected_item_index = len(self.item_rows) - 1
+            else:
+                return
+
+        indice = self.selected_item_index
+        if 0 <= indice < len(self.items_presupuesto):
             self.items_presupuesto.pop(indice)
-            self.tree.delete(item)
+        if 0 <= indice < len(self.item_rows):
+            row = self.item_rows.pop(indice)
+            row.destroy()
+            for i in range(indice, len(self.item_rows)):
+                self.item_rows[i].configure(bg="#2b6da8")
+                for child in self.item_rows[i].winfo_children():
+                    if isinstance(child, tk.Label):
+                        child.configure(bg="#2b6da8")
+            self.selected_item_index = None if not self.item_rows else max(0, indice - 1)
         self.actualizar_totales_ui()
 
     def actualizar_totales_ui(self):
@@ -3594,9 +3934,11 @@ USOS
 
         # Vaciar presupuesto
         self.items_presupuesto.clear()
+        self.selected_item_index = None
 
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        for row in list(self.item_rows):
+            row.destroy()
+        self.item_rows.clear()
 
         # Reiniciar interfaz
         self.actualizar_totales_ui()
