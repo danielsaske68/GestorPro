@@ -117,7 +117,7 @@
         "precio_max": 85.0,
         "precio_recomendado": 70.0,
         "aprendizaje": {
-            "usos": 21,
+            "usos": 23,
             "palabras_aprendidas": [
                 "latiguil",
                 "latiguillo",
@@ -132,9 +132,11 @@
             "frases_aprendidas": [
                 "conexion flexible de agua",
                 "conexion flexible agua",
-                "sustitucion de latiguillos"
+                "sustitucion de latiguillos",
+                "sustitucion de latiguillos wc",
+                "latiguillo estandar"
             ],
-            "ultima_fecha": "01/09/2026"
+            "ultima_fecha": "25/09/2026"
         }
     },
     {
@@ -515,15 +517,17 @@
         "precio_max": 190,
         "precio_recomendado": 160,
         "aprendizaje": {
-            "usos": 11,
+            "usos": 13,
             "palabras_aprendidas": [
                 "wc",
                 "conexion",
                 "de",
                 "mangueton"
             ],
-            "frases_aprendidas": [],
-            "ultima_fecha": "05/08/2026"
+            "frases_aprendidas": [
+                "sustitucion de mangueton"
+            ],
+            "ultima_fecha": "25/09/2026"
         }
     },
     {
@@ -1297,10 +1301,16 @@
         "precio_max": 100,
         "precio_recomendado": 85,
         "aprendizaje": {
-            "usos": 0,
-            "palabras_aprendidas": [],
-            "frases_aprendidas": [],
-            "ultima_fecha": ""
+            "usos": 6,
+            "palabras_aprendidas": [
+                "latiguillos"
+            ],
+            "frases_aprendidas": [
+                "cambio de latiguillos",
+                "sustitucion de latiguillos",
+                "sustitucion de latiguillos wc"
+            ],
+            "ultima_fecha": "25/09/2026"
         }
     },
     {
