@@ -52,7 +52,8 @@ from reportlab.platypus import (
     Image as RLImage,
     BaseDocTemplate,
     PageTemplate,
-    Frame
+    Frame,
+    PageBreak
 )
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
@@ -985,6 +986,14 @@ class AppPresupuestos(ctk.CTkFrame):
         if any(k in combinacion for k in ("dentro de semana", "dentro del horario laboral", "jornada laboral", "horario normal", "horario laboral")):
             extra += 0.00
 
+        # Presupuesto sin visita / sin inspección: se basa en lo hablado y requiere margen
+        if any(k in combinacion for k in ("sin visita", "sin ver", "sin inspeccionar", "sin inspeccion", "presupuesto sin visita", "sobre lo hablado", "según lo hablado", "sin ir a sitio", "sin ir al sitio", "sin ver el sitio")):
+            extra += 0.10
+
+        # Casos sensibles o tratamientos especiales por enfermedad / circunstancias sociales
+        if any(k in combinacion for k in ("enfermedad", "baja", "incapacidad", "situacion delicada", "situación delicada", "cliente especial", "tratamiento especial", "caso sensible", "miedo", "aislamiento", "dependencia")):
+            extra += 0.15
+
         # Acceso, distancia, kilometraje y complejidad
         if any(k in combinacion for k in ("acceso difícil", "acceso limitado", "hay que mover muebles", "mover muebles", "abrir pared", "falso techo", "poco acceso", "escalera", "zona complicada", "acceso complicado")):
             extra += 0.12
@@ -997,6 +1006,12 @@ class AppPresupuestos(ctk.CTkFrame):
         if any(k in combinacion for k in ("material extra", "latiguillo", "válvula", "valvula", "junta", "llave de paso", "llave de escuadra", "pieza nueva", "manguera", "racor", "sifón", "sifon", "brida", "válvulas", "juntas")):
             extra += 0.12
         if any(k in combinacion for k in ("llave de paso", "llave de escuadra")):
+            extra += 0.06
+
+        # Tipo de tubería y materiales específicos: más complejidad si no es un tubo estándar
+        if any(k in combinacion for k in ("plomo", "cobre", "multicapa", "pex", "polibutileno", "galvanizado", "metal", "cpvc", "pvc", "tubería de metal", "tuberia de metal", "otro tipo de tuberia", "otro tipo de tubería")):
+            extra += 0.12
+        if any(k in combinacion for k in ("cobre", "plomo")):
             extra += 0.06
 
         # Riesgo o limpieza especial
@@ -1049,6 +1064,20 @@ class AppPresupuestos(ctk.CTkFrame):
             base += 20.0
         if "picado" in txt or "abras" in txt or "retira" in txt or "limpieza" in txt:
             base += 15.0
+
+        # Tipo de tubería no estándar o materiales específicos: más coste si no es una simple conexión visible
+        if any(k in txt for k in ("plomo", "cobre", "multicapa", "pex", "polibutileno", "galvanizado", "metal", "cpvc", "pvc", "otro tipo de tuberia", "otro tipo de tubería")):
+            base += 25.0
+        if any(k in txt for k in ("cobre", "plomo")):
+            base += 10.0
+
+        # Presupuesto por referencia oral / sin visita: margen prudente para evitar dejarlo muy corto por sorpresas de obra
+        if any(k in txt for k in ("sin visita", "sin ver", "sin inspeccionar", "sin inspeccion", "presupuesto sin visita", "sobre lo hablado", "según lo hablado", "sin ir a sitio", "sin ir al sitio")):
+            base += 15.0
+
+        # Casos con enfermedad o requerimiento especial: sumando margen para trabajo más delicado o con tratamiento especial
+        if any(k in txt for k in ("enfermedad", "baja", "incapacidad", "situacion delicada", "situación delicada", "tratamiento especial", "caso sensible", "aislamiento")):
+            base += 18.0
 
         # Caso específico: la sustitución de un latiguillo de WC no debe ir a 300 € por defecto.
         # El precio real suele estar alrededor de 120-180 € en Valencia para pieza + mano de obra,
@@ -1457,13 +1486,16 @@ class AppPresupuestos(ctk.CTkFrame):
             "Tipos de trabajos que debes reconocer exactamente: desatasco de WC/váter, desatasco de lavabo/lavamanos, desatasco de fregadero, desatasco de bidé, desatasco de bañera, sustitución de llaves de escuadra de lavabo, de fregadero, de WC/váter, llave de paso general de vivienda, llave de paso de cuarto de contadores, llave de paso de calentador/termo, latiguillo de WC, latiguillo de fregadero, latiguillo de lavamanos, latiguillo de calentador, latiguillo de termo, tramo de tubería plomo, tramo de tubería cobre, tramo de tubería multicapa, tramo de tubería PEX, tramo de tubería polibutileno, cambio de sifón, cambio de racor, cambio de brida, cambio de válvula, cambio de grifo, reparación de fuga, revisión de presión, conexiones, aislamiento, y trabajos de saneamiento más complejos. "
             "Si existen fotos o vídeos, úsalo como evidencia visual: detecta tipo de material, corrosión, envejecimiento, acceso, paso por pared, falsos techos, espacio reducido, presencia de mueble, piezas rotas, junta gastada, desnivel o gravedad del desagüe. "
             "Si el caso habla de gravedad, la zona está baja, hay retorno, agua estancada, olor, sifón sucio o salida obstruida, debe reflejarse en la complejidad y el precio. "
+            "Si el presupuesto se hace sin visita o sobre lo hablado, debe describirse como estimación basada en la información aportada, con margen prudente para incidencias ocultas y ajuste posterior tras inspección. "
+            "Si hay un caso de enfermedad, baja, incapacidad, aislamiento o situación delicada del cliente, debes reflejar que exige trato especial y se valora como coste adicional por mayor exigencia operativa y cuidado. "
             "Si es una llave de escuadra de lavabo, fregadero, WC/váter, o una llave de paso general de vivienda o de cuarto de contadores, ten en cuenta si requiere cierre de servicio, tramos, uniones, conexión, prueba de presión y limpieza final. "
             "Si son latiguillos de WC, fregadero, lavamanos, calentador, termo o similar, considera si requieren pieza nueva, acoplamientos, racores, bridas, válvulas, y si la maniobra es rápida o con acceso complicado. "
             "Si son tramos de tubería en plomo, cobre, multicapa, PEX o polibutileno, hay que valorar si se perfora pared, se accede por falso techo, se cambia tramo, se necesita junta, acople, remate o aislamiento; todo eso debe aparecer en observaciones y descripción. "
             "La evaluación debe subir claramente si hay urgencia, noche, fin de semana, trabajo fuera del horario, acceso difícil, piezas extra, limpieza especial, desinfección, trabajo con gravedad, peligro de humedad/olor, o desplazamiento por kilometraje. "
             "También debes incluir hipótesis razonables por incidencias: enfermedad, baja, aislamiento, situación delicada del cliente, necesidad de proteger zona, o cualquier caso donde el operario deba actuar con más tiempo o esfuerzo. "
-            "Si el cliente indica urgencia, noche, fin de semana, desplazamiento, enfermedad, material extra, limpieza, desinfección, acceso complicado o varias piezas, el precio debe reflejarlo en precio_min, precio_max y precio_recomendado. "
+            "Si el cliente indica urgencia, noche, fin de semana, desplazamiento, enfermedad, material extra, limpieza, desinfección, acceso complicado, presupuesto sin visita o varias piezas, el precio debe reflejarlo en precio_min, precio_max y precio_recomendado. "
             "Si el caso es claramente simple, de acceso fácil, sin urgencia, sin materiales extra ni complejidad, revisa si puede mantenerse en el extremo inferior del rango o incluso reducirlo razonablemente. No fuerces un sobreprecio si la operación es pequeña y sin complicaciones. "
+            "Si se trata de otro tipo de tubería (cobre, plomo, multicapa, PEX, polibutileno, galvanizado, PVC/CPVC u otro material específico), añade ajuste por tipo de material, accesibilidad, posible soldadura o manipulación, y lo explica en observaciones. "
             "Usa el baremo local del mercado de Valencia como referencia y no bajes por debajo del rango razonable salvo que el caso sea claramente simple, dentro de horario y sin complejidad. "
             "Nunca uses cifras fijas sin base técnica. Si hay duda, haz preguntas antes de cerrar precio. "
             "Responde SIEMPRE en JSON puro, sin markdown, sin texto fuera del JSON. "
@@ -1755,6 +1787,8 @@ class AppPresupuestos(ctk.CTkFrame):
             "¿Es urgente o puede hacerse dentro del horario laboral normal?",
             "¿Qué horario te interesa: dentro de la jornada laboral, fuera del horario laboral, dentro de semana, fin de semana, noche dentro de semana o noche fin de semana?",
             "¿La zona tiene acceso fácil o hay que mover muebles, abrir pared / falso techo o llegar por un hueco difícil?",
+            "¿Es un presupuesto sin visita o sobre lo hablado, y quieres que se base en la información que me das?",
+            "¿Hay un caso especial por enfermedad, baja, aislamiento o circunstancias delicadas que requiera trato especial o mayor cuidado?",
             "¿Quieres que razone y revise referencias en internet para ajustar mejor el precio?",
         ]
 
@@ -1791,13 +1825,14 @@ class AppPresupuestos(ctk.CTkFrame):
             ]
             return (preguntas_base + preguntas)[:6]
 
-        if any(k in texto_l for k in ("tuberia", "cobre", "multicapa", "pex", "polibutileno", "plomo", "tramo de tubería", "tramo de cobre", "tramo de pex")):
+        if any(k in texto_l for k in ("tuberia", "cobre", "multicapa", "pex", "polibutileno", "plomo", "galvanizado", "pvc", "cpvc", "metal", "tramo de tubería", "tramo de cobre", "tramo de pex", "otro tipo de tuberia", "otro tipo de tubería")):
             preguntas = [
-                "¿Es un tramo de tubería en plomo, cobre, multicapa, PEX o polibutileno?",
+                "¿Es un tramo de tubería en plomo, cobre, multicapa, PEX, polibutileno, galvanizado, PVC/CPVC u otro material?",
                 "¿Se debe abrir pared, foso, falso techo o hay acceso directo?",
                 "¿La zona requiere desmantelado, retirada de restos, limpieza, aislamiento o conexión de varias piezas?",
                 "¿Hay fotos o vídeo del tramo, unión y material para detectar la corrosión, envejecimiento y el tipo de tubo?",
-                "¿Hay urgencia, fin de semana o noche, o es una intervención dentro del horario normal?"
+                "¿Hay urgencia, fin de semana o noche, o es una intervención dentro del horario normal?",
+                "¿Es un presupuesto basado en lo hablado o se puede visitar el punto antes de cerrar?"
             ]
             return (preguntas_base + preguntas)[:6]
 
@@ -4139,6 +4174,32 @@ Precio recomendado:
 
         # Añadimos la tabla directamente al documento
         el.append(t)
+
+        # ==========================================================
+        # HOJA ADICIONAL DE TÉRMINOS Y GARANTÍA
+        # ==========================================================
+        el.append(PageBreak())
+
+        titulo_terminos = Paragraph(
+            "<font size='18' color='#FF9900'><b>CONDICIONES GENERALES DEL PRESUPUESTO</b></font>",
+            estilos["Title"]
+        )
+        el.append(titulo_terminos)
+        el.append(Spacer(1, 12))
+
+        terminos = f"""
+        <para alignment="justify" fontName="Helvetica" fontSize="10" leading="14">
+        <b>1. Alcance y materiales:</b> Este presupuesto cubre únicamente los trabajos, materiales y maniobras indicados en la presente oferta. Cualquier cambio, ampliación, sustitución de piezas no contempladas, acceso difícil adicional, limpieza especial, desinfección extra, desplazamiento por kilómetro o trabajo fuera del horario convenido se considerará extra y deberá ser autorizado previamente por el cliente.<br/><br/>
+        <b>2. Trabajos presupuestados:</b> Se entiende incluido el diagnóstico inicial, retirada del elemento defectuoso, instalación o sustitución del material indicado, prueba funcional y limpieza básica de la zona de trabajo. No se incluye demolición, albañilería, pintura, apertura de pared o falso techo, ni trabajos no especificados expresamente en este presupuesto.<br/><br/>
+        <b>3. Garantía:</b> La garantía de la empresa en mano de obra será de <b>6 meses</b> desde la finalización del trabajo, salvo que la normativa aplicable o la legislación vigente exija un plazo distinto o más amplio. Los materiales suministrados por la empresa se garantizan conforme a la garantía del fabricante y en función de su uso correcto y mantenimiento adecuado.<br/><br/>
+        <b>4. Exclusiones:</b> Quedan excluidos del presente presupuesto los desperfectos ocultos, averías no visibles en el diagnóstico inicial, daños derivados del uso, humedad acumulada, corrosión avanzada, presencia de instalaciones no visibles, desgaste natural del material, rotura por fuerza mayor, falta de mantenimiento o trabajos no autorizados por escrito.<br/><br/>
+        <b>5. Aceptación:</b> La aceptación de este presupuesto implica la conformidad con el alcance, materiales, tiempos de ejecución y condiciones de garantía aquí indicadas. Cualquier variación deberá ser comunicada y autorizada antes de comenzar la intervención.<br/><br/>
+        <b>6. Protección del presupuesto:</b> La presente oferta se entiende vinculada a los materiales y servicios concretamente definidos en este documento. No cubre ampliaciones no autorizadas, cambios de proyecto, trabajos extra no presupuestados ni incidencias de terceros.<br/><br/>
+        <b>7. Datos del cliente y contacto:</b> El cliente acepta la realización del servicio en la dirección indicada y la coordinación de horarios con la empresa. Cualquier consulta o modificación deberá comunicarse a través de los medios de contacto indicados en el presente documento.
+        </para>
+        """
+
+        el.append(Paragraph(terminos, estilos["Normal"]))
 
         doc.build(el)
         messagebox.showinfo("Éxito", "Presupuesto generado.")
