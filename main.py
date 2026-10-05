@@ -143,6 +143,7 @@ class GestorPro(ctk.CTk):
         self.contenido.grid(row=0, column=1, sticky="nsew", padx=(0, 10), pady=10)
         self.frame_actual = None
         self.inicio()
+        self.after(1200, self._comprobar_actualizacion_automatica)
 
     def restaurar_interfaz(self):
         """Método de instancia para restaurar la ventana de Gestor PRO limpia"""
@@ -309,6 +310,133 @@ class GestorPro(ctk.CTk):
             border_width=1
         )
         lbl_version.place(relx=1.0, rely=1.0, anchor="se", x=-15, y=-10)
+
+    def _centrar_ventana_en_parent(self, ventana, ancho=520, alto=220):
+        try:
+            self.update_idletasks()
+            x = self.winfo_rootx() + max(0, (self.winfo_width() - ancho) // 2)
+            y = self.winfo_rooty() + max(0, (self.winfo_height() - alto) // 2)
+            ventana.geometry(f"{ancho}x{alto}+{x}+{y}")
+        except Exception:
+            ventana.geometry(f"{ancho}x{alto}")
+
+    def _mostrar_popup_actualizacion(self, remote_version):
+        ventana = ctk.CTkToplevel(self)
+        ventana.title("Actualización disponible")
+        ventana.configure(fg_color="#0d1218")
+        ventana.resizable(False, False)
+        ventana.grab_set()
+        ventana.transient(self)
+        ventana.geometry("520x255")
+        self._centrar_ventana_en_parent(ventana, 520, 255)
+        ventana.update_idletasks()
+
+        panel = ctk.CTkFrame(
+            ventana,
+            fg_color="#111b26",
+            corner_radius=22,
+            border_color="#2d4f72",
+            border_width=1,
+            width=490,
+            height=220
+        )
+        panel.pack(fill="both", expand=True, padx=12, pady=12)
+        panel.pack_propagate(False)
+        panel.grid_columnconfigure(0, weight=1)
+
+        header = ctk.CTkFrame(panel, fg_color="transparent")
+        header.grid(row=0, column=0, sticky="ew", padx=18, pady=(14, 0))
+        header.grid_columnconfigure(0, weight=0)
+        header.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(header, text="🔄", font=("Segoe UI", 18, "bold"), text_color="#7ec8ff").grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ctk.CTkLabel(header, text="Nueva versión disponible", font=("Segoe UI", 18, "bold"), text_color="#7ec8ff").grid(row=0, column=1, sticky="w")
+
+        contenido = ctk.CTkFrame(panel, fg_color="transparent")
+        contenido.grid(row=1, column=0, sticky="nsew", padx=18, pady=(8, 8))
+
+        texto = ctk.CTkLabel(
+            contenido,
+            text=f"Versión actual: {VERSION}\nVersión disponible: {remote_version}\n\nSe abrirá la ventana de actualización y la app se reiniciará sola.",
+            font=("Segoe UI", 12),
+            text_color="#edf7ff",
+            justify="center",
+            wraplength=360,
+        )
+        texto.pack(anchor="center", pady=(0, 10))
+
+        botones = ctk.CTkFrame(contenido, fg_color="transparent")
+        botones.pack(fill="x", pady=(0, 0))
+        botones.grid_columnconfigure((0, 1), weight=1)
+
+        def abrir_actualizador_desde_popup():
+            ventana.destroy()
+            self.abrir_actualizador()
+            if self.frame_actual is not None and hasattr(self.frame_actual, "buscar_actualizaciones"):
+                self.frame_actual.buscar_actualizaciones()
+
+        def cerrar_popup_actualizacion():
+            ventana.destroy()
+
+        ctk.CTkButton(
+            botones,
+            text="Actualizar ahora",
+            command=abrir_actualizador_desde_popup,
+            fg_color="#0f6cbd",
+            hover_color="#0d5ea8",
+            font=("Segoe UI", 11, "bold"),
+            height=36,
+            corner_radius=10,
+        ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
+
+        ctk.CTkButton(
+            botones,
+            text="Más tarde",
+            command=cerrar_popup_actualizacion,
+            fg_color="#2a3e52",
+            hover_color="#213547",
+            font=("Segoe UI", 11, "bold"),
+            height=36,
+            corner_radius=10,
+        ).grid(row=0, column=1, padx=(6, 0), sticky="ew")
+
+        ventana.bind("<Return>", lambda event: abrir_actualizador_desde_popup())
+        ventana.bind("<Escape>", lambda event: cerrar_popup_actualizacion())
+        ventana.focus_set()
+
+    def _comprobar_actualizacion_automatica(self):
+        try:
+            import requests
+
+            url = "https://raw.githubusercontent.com/danielsaske68/GestorPro/main/version.json"
+            response = requests.get(url, timeout=10)
+            if response.status_code != 200:
+                return
+
+            data = response.json()
+            remote_version = str(data.get("version", "")).strip()
+            if not remote_version:
+                return
+
+            def parse_version(v):
+                v = str(v).strip().lstrip("vV")
+                partes = [p for p in v.split(".") if p]
+                nums = []
+                for parte in partes[:3]:
+                    try:
+                        nums.append(int(parte))
+                    except ValueError:
+                        nums.append(0)
+                while len(nums) < 3:
+                    nums.append(0)
+                return tuple(nums)
+
+            if parse_version(VERSION) >= parse_version(remote_version):
+                return
+
+            self._mostrar_popup_actualizacion(remote_version)
+        except Exception:
+            pass
 
     def abrir_actualizador(self):
         from modules.actualizador import ActualizadorFrame
