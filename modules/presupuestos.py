@@ -8,12 +8,14 @@ import mimetypes
 import re
 import textwrap
 import time
+import webbrowser
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog, simpledialog
 from datetime import datetime
 import os
 import requests
+from urllib.parse import quote, unquote
 
 def ruta_app(carpeta, archivo=None):
     base = os.path.dirname(
@@ -86,6 +88,7 @@ class AppPresupuestos(ctk.CTkFrame):
         self.cliente_actual = {
             "nombre": "",
             "telefono": "",
+            "correo": "",
             "nif": "",
             "direccion": "",
             "localidad": ""
@@ -367,19 +370,37 @@ class AppPresupuestos(ctk.CTkFrame):
         self.lbl_totales_ui = ctk.CTkLabel(self.right_frame, text="Subtotal: 0.00 € | IVA: 0.00 € | TOTAL: 0.00 €", font=("Arial", 14, "bold"), text_color="#6fe3a5")
         self.lbl_totales_ui.pack(pady=(10, 8))
 
+        btns_accion = ctk.CTkFrame(self.right_frame, fg_color="transparent")
+        btns_accion.pack(fill="x", padx=16, pady=(0, 10))
+        btns_accion.grid_columnconfigure((0, 1), weight=1)
+
         ctk.CTkButton(
-            self.right_frame,
+            btns_accion,
             text="📄 GENERAR PDF",
             fg_color="#22d170",
             hover_color="#18af5a",
             text_color="#14251b",
-            height=52,
-            font=("Arial", 18, "bold"),
+            height=48,
+            font=("Arial", 14, "bold"),
             border_color="#9bf0be",
             border_width=1,
             corner_radius=12,
             command=self.generar_pdf_presupuesto
-        ).pack(fill="x", padx=16, pady=(0, 10))
+        ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
+
+        ctk.CTkButton(
+            btns_accion,
+            text="� Enviar",
+            fg_color="#1bbd7d",
+            hover_color="#129b67",
+            text_color="#f4fff9",
+            height=48,
+            font=("Arial", 15, "bold"),
+            border_color="#9df4c2",
+            border_width=1,
+            corner_radius=12,
+            command=self.abrir_envio_whatsapp
+        ).grid(row=0, column=1, padx=(6, 0), sticky="ew")
 
     def shift_enter_nueva_linea(self, event=None):
         self.txt_desc.insert("insert", "\n")
@@ -443,6 +464,7 @@ class AppPresupuestos(ctk.CTkFrame):
         return {
             "nombre": "",
             "telefono": "",
+            "correo": "",
             "nif": "",
             "direccion": "",
             "localidad": ""
@@ -2783,8 +2805,8 @@ USOS
     def abrir_gestor_clientes(self):
         ventana = ctk.CTkToplevel(self)
         ventana.title("Gestor de Clientes")
-        ventana.geometry("1080x650")
-        ventana.minsize(980, 560)
+        ventana.geometry("1180x700")
+        ventana.minsize(1040, 600)
         ventana.configure(fg_color="#0b1117")
         ventana.grab_set()
 
@@ -2833,6 +2855,7 @@ USOS
             cliente = {
                "nombre": (campos["nombre"].get() or "").strip(),
                "telefono": (campos["telefono"].get() or "").strip(),
+               "correo": (campos["correo"].get() or "").strip(),
                "nif": (campos["nif"].get() or "").strip(),
                "direccion": (campos["direccion"].get() or "").strip(),
                "localidad": (campos["localidad"].get() or "").strip(),
@@ -2889,11 +2912,18 @@ USOS
             messagebox.showinfo("Guardado", f"Cliente {accion} correctamente")
             campos["nombre"].focus_set()
 
+        def seleccionar_desde_lista(event=None):
+            sel = lista.curselection()
+            if not sel:
+                return
+            nombre = lista.get(sel[0])
+            seleccionar_por_nombre(nombre)
+
         def seleccionar_cliente(event=None, cerrar_ventana=True):
             sel = lista.curselection()
             if not sel:
                return
-            nombre = lista.get(sel)
+            nombre = lista.get(sel[0])
             seleccionar_por_nombre(nombre)
             if cerrar_ventana:
                ventana.destroy()
@@ -2978,6 +3008,7 @@ USOS
         scroll_lista.config(command=lista.yview)
         lista.grid(row=1, column=0, sticky="nsew", padx=(10, 0), pady=10)
         scroll_lista.grid(row=1, column=1, sticky="ns", pady=10)
+        lista.bind("<<ListboxSelect>>", seleccionar_desde_lista)
         lista.bind("<Double-Button-1>", lambda e: seleccionar_cliente(cerrar_ventana=True))
         lista.bind("<Return>", lambda e: seleccionar_cliente(cerrar_ventana=True))
         lista.bind("<Escape>", lambda e: cerrar_ventana())
@@ -2987,13 +3018,16 @@ USOS
         panel = ctk.CTkFrame(ventana, fg_color="#111a22", border_color="#3a5976", border_width=2, corner_radius=18)
         panel.grid(row=1, column=1, padx=(8, 16), pady=(0, 12), sticky="nsew")
         panel.grid_columnconfigure(0, weight=1)
+        panel.grid_rowconfigure(0, weight=1)
 
         form_container = ctk.CTkFrame(panel, fg_color="#111a22")
-        form_container.pack(fill="both", expand=True, padx=18, pady=16)
+        form_container.grid(row=0, column=0, sticky="nsew", padx=18, pady=(16, 8))
+        form_container.grid_columnconfigure(0, weight=1)
 
         datos = [
             ("Nombre", "nombre"),
             ("Teléfono", "telefono"),
+            ("Correo", "correo"),
             ("NIF", "nif"),
             ("Dirección", "direccion"),
             ("Localidad", "localidad")
@@ -3018,7 +3052,7 @@ USOS
             campos[clave] = entrada
 
         botones = ctk.CTkFrame(panel, fg_color="transparent")
-        botones.pack(fill="x", padx=18, pady=(0, 14))
+        botones.grid(row=1, column=0, sticky="ew", padx=18, pady=(0, 14))
         botones.grid_columnconfigure((0, 1), weight=1)
 
         buttons_style = dict(height=42, corner_radius=10, border_width=1, font=("Arial", 12, "bold"))
@@ -4029,6 +4063,16 @@ Precio recomendado:
             "Todos los datos han sido borrados."
         )
 
+    def _centrar_ventana_en_parent(self, ventana, ancho=420, alto=280):
+        try:
+            parent = self.winfo_toplevel()
+            parent.update_idletasks()
+            x = parent.winfo_rootx() + max(0, (parent.winfo_width() - ancho) // 2)
+            y = parent.winfo_rooty() + max(0, (parent.winfo_height() - alto) // 2)
+            ventana.geometry(f"{ancho}x{alto}+{x}+{y}")
+        except Exception:
+            ventana.geometry(f"{ancho}x{alto}")
+
     def abrir_carpeta_pdf(self):
         """Crea la carpeta 'presupuestos_pdf' en la raíz del proyecto si no existe y la abre."""
         # 1. Obtener la ruta del directorio raíz (donde se ejecuta la app)
@@ -4050,6 +4094,325 @@ Precio recomendado:
                 subprocess.run(['xdg-open', carpeta_pdf])
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo abrir la carpeta:\n{e}")
+
+    def _normalizar_telefono_whatsapp(self, telefono):
+        valor = (telefono or "").strip()
+        if not valor:
+            return ""
+        digitos = re.sub(r"\D", "", valor)
+        if not digitos:
+            return ""
+        if valor.startswith("+"):
+            return f"{digitos}"
+        if len(digitos) > 9 and not digitos.startswith("34"):
+            return digitos
+        return digitos
+
+    def _traer_ventana_navegador_al_frente(self):
+        try:
+            import ctypes
+            candidates = []
+
+            def _enum_windows(hwnd, _):
+                if ctypes.windll.user32.IsWindowVisible(hwnd):
+                    txt_len = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
+                    if txt_len > 0:
+                        buf = ctypes.create_unicode_buffer(txt_len + 1)
+                        ctypes.windll.user32.GetWindowTextW(hwnd, buf, txt_len + 1)
+                        title = buf.value.lower()
+                        if any(token in title for token in ["whatsapp", "chrome", "msedge", "edge", "firefox", "brave", "opera", "safari"]):
+                            pid = ctypes.c_ulong()
+                            ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                            candidates.append((hwnd, title, pid.value))
+                return True
+
+            cb = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)(_enum_windows)
+            ctypes.windll.user32.EnumWindows(cb, 0)
+
+            for hwnd, title, _ in candidates:
+                try:
+                    ctypes.windll.user32.ShowWindow(hwnd, 9)
+                    ctypes.windll.user32.SetForegroundWindow(hwnd)
+                    ctypes.windll.user32.BringWindowToTop(hwnd)
+                    return True
+                except Exception:
+                    continue
+            return False
+        except Exception:
+            return False
+
+    def _abrir_url_al_frente(self, url):
+        try:
+            if not url:
+                return
+
+            try:
+                self.update_idletasks()
+                self.withdraw()
+                self.update()
+            except Exception:
+                pass
+
+            try:
+                if os.name == 'nt':
+                    if url.lower().startswith('mailto:'):
+                        try:
+                            subprocess.Popen(['rundll32', 'url.dll,FileProtocolHandler', url], shell=False)
+                            return
+                        except Exception:
+                            pass
+                        try:
+                            os.startfile(url)
+                            return
+                        except Exception:
+                            pass
+
+                    try:
+                        import ctypes
+                        ctypes.windll.shell32.ShellExecuteW(
+                            None,
+                            "open",
+                            url,
+                            None,
+                            None,
+                            5
+                        )
+                        if "mail.google.com" in url.lower() or "wa.me" in url.lower() or "whatsapp" in url.lower():
+                            self.after(1000, self._traer_ventana_navegador_al_frente)
+                        return
+                    except Exception:
+                        pass
+
+                    if url.lower().startswith('mailto:'):
+                        try:
+                            webbrowser.open(url, new=0, autoraise=True)
+                            return
+                        except Exception:
+                            pass
+
+                        try:
+                            correo = re.search(r'mailto:([^?]+)', url, re.I)
+                            if correo:
+                                mail_to = correo.group(1)
+                            else:
+                                mail_to = ""
+                            subject = ""
+                            body = ""
+                            params = url.split("?", 1)[1] if "?" in url else ""
+                            if params:
+                                values = {}
+                                for part in params.split("&"):
+                                    if "=" in part:
+                                        k, v = part.split("=", 1)
+                                        values[k.lower()] = v
+                                subject = values.get('subject', '')
+                                body = values.get('body', '')
+                            subject = unquote(subject)
+                            body = unquote(body)
+                            gmail_url = f"https://mail.google.com/mail/?view=cm&fs=1&to={quote(mail_to)}&su={quote(subject)}&body={quote(body)}"
+                            webbrowser.open(gmail_url, new=2, autoraise=True)
+                            return
+                        except Exception:
+                            pass
+
+                    try:
+                        subprocess.Popen(['cmd', '/c', 'start', '', url], shell=False)
+                        return
+                    except Exception:
+                        pass
+
+                elif sys.platform == 'darwin':
+                    if url.lower().startswith('mailto:'):
+                        try:
+                            subprocess.Popen(['open', url])
+                            return
+                        except Exception:
+                            pass
+                    try:
+                        subprocess.Popen(['open', url])
+                        return
+                    except Exception:
+                        pass
+                else:
+                    if url.lower().startswith('mailto:'):
+                        try:
+                            subprocess.Popen(['xdg-open', url])
+                            return
+                        except Exception:
+                            pass
+                    try:
+                        subprocess.Popen(['xdg-open', url])
+                        return
+                    except Exception:
+                        pass
+
+                if url.lower().startswith('mailto:'):
+                    try:
+                        webbrowser.open(url, new=0, autoraise=True)
+                        return
+                    except Exception:
+                        pass
+
+                try:
+                    webbrowser.open(url, new=2, autoraise=True)
+                    if "mail.google.com" in url.lower() or "wa.me" in url.lower() or "whatsapp" in url.lower():
+                        self.after(1000, self._traer_ventana_navegador_al_frente)
+                except Exception:
+                    try:
+                        webbrowser.open_new_tab(url)
+                        if "mail.google.com" in url.lower() or "wa.me" in url.lower() or "whatsapp" in url.lower():
+                            self.after(1000, self._traer_ventana_navegador_al_frente)
+                    except Exception:
+                        pass
+            finally:
+                try:
+                    self.after(1500, self.deiconify)
+                    self.after(1500, self.update)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    def abrir_envio_whatsapp(self):
+        if not self.items_presupuesto:
+            messagebox.showwarning("Sin presupuesto", "Primero añade algún concepto al presupuesto.")
+            return
+
+        subtotal = sum(item["total"] for item in self.items_presupuesto)
+        iva = subtotal * 0.21
+        total = subtotal + iva
+
+        nombre = (self.cliente_actual.get("nombre") or "Cliente").strip() or "Cliente"
+        telefono_actual = (self.cliente_actual.get("telefono") or "").strip()
+        correo_actual = (self.cliente_actual.get("correo") or "").strip()
+
+        ventana = ctk.CTkToplevel(self)
+        ventana.title("Enviar presupuesto")
+        ventana.configure(fg_color="#111b26")
+        ventana.resizable(False, False)
+        ventana.grab_set()
+        ventana.transient(self)
+        ventana.geometry("470x340")
+        self._centrar_ventana_en_parent(ventana, 470, 340)
+        ventana.update_idletasks()
+
+        panel = ctk.CTkFrame(ventana, fg_color="#172633", corner_radius=22, border_color="#2d4f72", border_width=1)
+        panel.pack(fill="both", expand=True, padx=12, pady=12)
+
+        titulo = ctk.CTkLabel(panel, text="📩 Enviar presupuesto", font=("Segoe UI", 20, "bold"), text_color="#7ec8ff")
+        titulo.pack(anchor="w", padx=18, pady=(16, 12))
+
+        if telefono_actual:
+            etiqueta_telf = ctk.CTkLabel(panel, text="Teléfono del cliente", font=("Segoe UI", 12, "bold"), text_color="#edf7ff")
+            etiqueta_telf.pack(anchor="w", padx=18, pady=(0, 4))
+            entrada_telf = ctk.CTkEntry(panel, width=350, height=38, font=("Segoe UI", 12), placeholder_text="Ej: +34 600 123 456", fg_color="#1b2430", border_color="#4f718c")
+            entrada_telf.pack(fill="x", padx=18, pady=(0, 10))
+            entrada_telf.insert(0, telefono_actual)
+        else:
+            entrada_telf = ctk.CTkEntry(panel, width=350, height=38, font=("Segoe UI", 12), placeholder_text="Ej: +34 600 123 456", fg_color="#1b2430", border_color="#4f718c")
+            entrada_telf.pack_forget()
+
+        if correo_actual:
+            etiqueta_email = ctk.CTkLabel(panel, text="Correo (opcional)", font=("Segoe UI", 12, "bold"), text_color="#edf7ff")
+            etiqueta_email.pack(anchor="w", padx=18, pady=(0, 4))
+            entrada_email = ctk.CTkEntry(panel, width=350, height=38, font=("Segoe UI", 12), placeholder_text="ejemplo@email.com", fg_color="#1b2430", border_color="#4f718c")
+            entrada_email.pack(fill="x", padx=18, pady=(0, 14))
+            entrada_email.insert(0, correo_actual)
+        else:
+            entrada_email = ctk.CTkEntry(panel, width=350, height=38, font=("Segoe UI", 12), placeholder_text="ejemplo@email.com", fg_color="#1b2430", border_color="#4f718c")
+            entrada_email.pack_forget()
+
+        if not telefono_actual:
+            etiqueta_telf = ctk.CTkLabel(panel, text="Teléfono del cliente", font=("Segoe UI", 12, "bold"), text_color="#edf7ff")
+            etiqueta_telf.pack(anchor="w", padx=18, pady=(0, 4))
+            entrada_telf.pack(fill="x", padx=18, pady=(0, 10))
+
+        if not correo_actual:
+            etiqueta_email = ctk.CTkLabel(panel, text="Correo (opcional)", font=("Segoe UI", 12, "bold"), text_color="#edf7ff")
+            etiqueta_email.pack(anchor="w", padx=18, pady=(0, 4))
+            entrada_email.pack(fill="x", padx=18, pady=(0, 14))
+
+        msg_preview = (
+            f"Hola {nombre}, te envío el presupuesto solicitado.\n\n"
+            f"Total estimado: {total:.2f} €\n"
+            f"IVA: {iva:.2f} €\n"
+            f"Subtotal: {subtotal:.2f} €\n\n"
+            f"Adjunto el presupuesto en PDF."
+        )
+        if correo_actual:
+            msg_preview += f"\nCorreo de contacto: {correo_actual}"
+
+        def preparar_respuesta():
+            telefono = entrada_telf.get().strip()
+            correo = entrada_email.get().strip()
+
+            if telefono and correo:
+                return "elegir", {"telefono": telefono, "correo": correo}
+            if correo and (not telefono or telefono == telefono_actual):
+                return "email", correo
+            if telefono:
+                return "whatsapp", telefono
+            if correo:
+                return "email", correo
+            return None, None
+
+        def enviar_whatsapp_con_valor(valor):
+            telefono_limpio = self._normalizar_telefono_whatsapp(valor)
+            if not telefono_limpio or len(telefono_limpio) < 9:
+                messagebox.showwarning("Teléfono inválido", "Introduce un número válido para abrir la conversación.")
+                return False
+            texto = quote(msg_preview)
+            url = f"https://wa.me/{telefono_limpio}?text={texto}"
+            ventana.destroy()
+            self._abrir_url_al_frente(url)
+            return True
+
+        def enviar_email_con_valor(valor):
+            correo = valor
+            asunto = f"Presupuesto {nombre}"
+            cuerpo = msg_preview
+            gmail_url = (
+                "https://mail.google.com/mail/?view=cm&fs=1&to="
+                f"{quote(correo)}&su={quote(asunto)}&body={quote(cuerpo)}"
+            )
+            ventana.destroy()
+            self._abrir_url_al_frente(gmail_url)
+            return True
+
+        def enviar_presupuesto():
+            tipo, valor = preparar_respuesta()
+            if tipo == "whatsapp":
+                enviar_whatsapp_con_valor(valor)
+                return
+
+            if tipo == "email":
+                enviar_email_con_valor(valor)
+                return
+
+            if tipo == "elegir":
+                respuesta = messagebox.askyesno(
+                    "Elegir destino",
+                    "Tienes teléfono y correo. ¿Quieres enviarlo por WhatsApp?",
+                    icon="question"
+                )
+                if respuesta:
+                    enviar_whatsapp_con_valor(valor["telefono"])
+                else:
+                    enviar_email_con_valor(valor["correo"])
+                return
+
+            messagebox.showwarning("Falta dato", "Rellena un teléfono o un correo para enviar el presupuesto.")
+
+        botones = ctk.CTkFrame(panel, fg_color="transparent")
+        botones.pack(fill="x", padx=18, pady=(0, 18))
+        botones.grid_columnconfigure((0, 1), weight=1)
+
+        ctk.CTkButton(botones, text="➤ Enviar", command=enviar_presupuesto, fg_color="#1bbd7d", hover_color="#129b67", height=40, font=("Segoe UI", 12, "bold")).grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        ctk.CTkButton(botones, text="✕ Cancelar", command=ventana.destroy, fg_color="#2a3e52", hover_color="#213547", height=40, font=("Segoe UI", 12, "bold")).grid(row=0, column=1, sticky="ew", padx=(6, 0))
+
+        ventana.bind("<Return>", lambda event: enviar_presupuesto())
+        ventana.bind("<Escape>", lambda event: ventana.destroy())
+        entrada_telf.focus_set()
 
     def generar_pdf_presupuesto(self):
         numero = datetime.now().strftime("%Y%m%d-%H%M%S") 
@@ -4246,3 +4609,4 @@ Precio recomendado:
 
         doc.build(el)
         messagebox.showinfo("Éxito", "Presupuesto generado.")
+        self.after(100, self.abrir_envio_whatsapp)
