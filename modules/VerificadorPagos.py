@@ -46,6 +46,22 @@ class VerificadorPagosFrame(ctk.CTkFrame):
 
         self.lbl_pdf_path = ctk.CTkLabel(controles_frame, text="Ningún PDF seleccionado", text_color="#9bb7d3", font=("Arial", 12))
         self.lbl_pdf_path.grid(row=0, column=1, sticky="w", pady=12)
+        # Selector de mes y año para incluir en el informe
+        meses_full = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
+                  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
+        from datetime import datetime as _dt
+        mes_actual = meses_full[_dt.now().month - 1]
+        anio_actual = str(_dt.now().year)
+
+        ctk.CTkLabel(controles_frame, text="Mes:").grid(row=0, column=2, padx=(8, 4))
+        self.cmb_mes_verif = ctk.CTkComboBox(controles_frame, values=meses_full, width=140)
+        self.cmb_mes_verif.set(mes_actual)
+        self.cmb_mes_verif.grid(row=0, column=3, padx=(0, 8))
+
+        ctk.CTkLabel(controles_frame, text="Año:").grid(row=0, column=4, padx=(8, 4))
+        self.e_year_verif = ctk.CTkEntry(controles_frame, width=80)
+        self.e_year_verif.insert(0, anio_actual)
+        self.e_year_verif.grid(row=0, column=5, padx=(0, 8))
 
         cuerpo_frame = ctk.CTkFrame(self, fg_color="transparent")
         cuerpo_frame.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
@@ -200,15 +216,10 @@ class VerificadorPagosFrame(ctk.CTkFrame):
 
             os.makedirs(CARPETA_RESULTADOS, exist_ok=True)
 
-            # Nomenclatura correlativa por fecha (ej: 05/Agost_001)
-            fecha_actual = datetime.now()
-            meses_es = {
-                1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun",
-                7: "Jul", 8: "Agost", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic"
-            }
-            dia_str = fecha_actual.strftime("%d")
-            mes_str = meses_es.get(fecha_actual.month, fecha_actual.strftime("%b"))
-            prefijo_fecha = f"{dia_str}_{mes_str}"
+            # Usar mes/año seleccionado por el usuario para el nombre del archivo
+            mes_sel = self.cmb_mes_verif.get().strip() or datetime.now().strftime("%B")
+            anio_sel = self.e_year_verif.get().strip() or datetime.now().strftime("%Y")
+            prefijo_fecha = f"{mes_sel}_{anio_sel}"
 
             archivos_existentes = os.listdir(CARPETA_RESULTADOS)
             contador = 1
@@ -244,10 +255,11 @@ class VerificadorPagosFrame(ctk.CTkFrame):
                 
                 f.write(f"--- [❌] AÚN NO PAGADOS ({len(no_pagados)}) ---\n")
                 if no_pagados:
+                    # escribir cada código en una línea sin viñetas
                     for cod in no_pagados:
-                        f.write(f"  • {cod}\n")
+                        f.write(f"{cod}\n")
                 else:
-                    f.write("  (Ninguno)\n")
+                    f.write("(Ninguno)\n")
 
             # Construir texto para mostrar en pantalla de la app
             texto_pantalla = f"=== [✔] PAGADOS ({len(pagados)}) ===\n"
@@ -266,7 +278,11 @@ class VerificadorPagosFrame(ctk.CTkFrame):
             else:
                 texto_pantalla += "(Ninguno)\n\n"
 
-            texto_pantalla += f"=== [❌] AÚN NO PAGADOS ({len(no_pagados)}) ===\n" + ("\n".join([f"• {c}" for c in no_pagados]) if no_pagados else "(Ninguno)")
+            texto_pantalla += f"=== [❌] AÚN NO PAGADOS ({len(no_pagados)}) ===\n"
+            if no_pagados:
+                texto_pantalla += "\n".join([c for c in no_pagados]) + "\n"
+            else:
+                texto_pantalla += "(Ninguno)\n"
             texto_pantalla += f"\n\n[✔] Archivo TXT guardado:\n{nombre_archivo_salida}"
 
             self.txt_resultados.configure(state="normal")

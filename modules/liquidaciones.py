@@ -406,6 +406,28 @@ class LiquidacionesFrame(ctk.CTkFrame):
             command=ventana.destroy
         ).pack(side="left", padx=10)
 
+        # ----- Comportamiento teclado: Enter avanza, Esc cierra -----
+        try:
+            widgets = []
+            if tipo == 'fijo':
+                widgets = [e_nombre, e_importe]
+            elif tipo in ('material', 'combustible'):
+                widgets = [e_importe]
+            elif tipo == 'ajuste':
+                widgets = [e_importe]
+
+            for i, w in enumerate(widgets):
+                # Avanzar o guardar al pulsar Enter
+                w.bind('<Return>', (lambda idx: (lambda ev: (widgets[idx+1].focus_set() if idx+1 < len(widgets) else guardar())))(i))
+                # Esc cierra
+                w.bind('<Escape>', lambda ev: ventana.destroy())
+
+            # poner foco en el primer widget
+            if widgets:
+                ventana.after(50, lambda: widgets[0].focus_set())
+        except Exception:
+            pass
+
     def _contenedor_rows(self, parent):
         cont = ctk.CTkFrame(parent, fg_color=COLOR_CARD, corner_radius=10,
                             border_width=1, border_color=COLOR_BORDER)
@@ -445,17 +467,97 @@ class LiquidacionesFrame(ctk.CTkFrame):
         except ValueError: return 0.0
 
     def add_fila_doble(self, p):
+        # Si el contenedor es material o combustible, usar una rejilla de 3 columnas
+        is_price_grid = p in (getattr(self, 'cont_mat', None), getattr(self, 'cont_comb', None))
+
         f = ctk.CTkFrame(p, fg_color=COLOR_ROW, corner_radius=8)
-        f.pack(fill="x", pady=3, padx=4)
-        e = ctk.CTkEntry(f, height=30, corner_radius=6, fg_color="#151515",
-                         border_color=COLOR_BORDER)
-        e.pack(side="left", fill="x", expand=True, padx=6, pady=6)
+        # contenedor normal (gastos fijos / ajustes)
+        if not is_price_grid:
+            f.pack(fill="x", pady=3, padx=4)
+            e = ctk.CTkEntry(f, height=30, corner_radius=6, fg_color="#151515",
+                             border_color=COLOR_BORDER)
+            e.pack(side="left", fill="x", expand=True, padx=6, pady=6)
+            e.bind("<KeyRelease>", self._on_edit)
+            ctk.CTkButton(f, text="✕", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
+                          width=30, corner_radius=8,
+                          command=lambda: [f.destroy(), self._on_edit()]
+                          ).pack(side="right", padx=6, pady=6)
+            return e
+
+        # Inicializar rejilla de 3 columnas en el contenedor si no se hizo antes
+        try:
+            if not getattr(p, '_grid_init', False):
+                for col in range(3):
+                    try: p.grid_columnconfigure(col, weight=1)
+                    except Exception: pass
+                p._grid_init = True
+        except Exception:
+            pass
+
+        # Celda compacta: entrada centrada y botón eliminar pequeño
+        e = ctk.CTkEntry(f, height=28, corner_radius=6, fg_color="#151515",
+                 border_color=COLOR_BORDER, text_color=COLOR_TEXT,
+                 font=("Segoe UI", 11), justify="left", width=80)
         e.bind("<KeyRelease>", self._on_edit)
-        ctk.CTkButton(f, text="✕", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
-                      width=32, corner_radius=8,
-                      command=lambda: [f.destroy(), self._on_edit()]
-                      ).pack(side="right", padx=4, pady=4)
+
+        del_btn = ctk.CTkButton(f, text="✕", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
+                    width=22, height=22, corner_radius=6)
+
+        # usar grid dentro de la celda: entrada expandible a la izquierda, botón a la derecha
+        try:
+            f.grid_columnconfigure(0, weight=1)
+            e.grid(row=0, column=0, sticky='ew', padx=(8, 4), pady=6)
+            del_btn.grid(row=0, column=1, sticky='e', padx=(4, 8), pady=6)
+        except Exception:
+            # fallback a pack si grid falla
+            e.pack(fill="both", expand=True, padx=6, pady=6)
+            del_btn.place(relx=0.92, rely=0.12)
+
+        # comando eliminar: destruir y reordenar
+        del_btn.configure(command=lambda: [f.destroy(), self._on_edit(), self._reflow_grid(p)])
+
+        # colocar la nueva celda al final
+        count = len([w for w in p.winfo_children()])
+        r = count // 3; ccol = count % 3
+        f.grid(row=r, column=ccol, padx=6, pady=6, sticky='nsew')
+
+        # asegurar reflow para forzar 3 columnas consistentes
+        try:
+            self._reflow_grid(p)
+        except Exception:
+            pass
+
+        # botón eliminado: no usar place para evitar sobreposiciones
+
         return e
+
+    def _reflow_grid(self, p):
+        """Reorganiza los children del contenedor `p` en una rejilla de 3 columnas."""
+        try:
+            children = [w for w in p.winfo_children()]
+            for idx, child in enumerate(children):
+                try:
+                    child.pack_forget()
+                except Exception:
+                    pass
+                try:
+                    child.grid_forget()
+                except Exception:
+                    pass
+                r = idx // 3; ccol = idx % 3
+                try:
+                    # dar un ancho fijo a las celdas para que quepan 3 por fila
+                    try:
+                        # solo ajustar ancho para material/combustible contenedores
+                        if p in (getattr(self, 'cont_mat', None), getattr(self, 'cont_comb', None)):
+                            child.configure(width=120)
+                    except Exception:
+                        pass
+                    child.grid(row=r, column=ccol, padx=6, pady=6, sticky='w')
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     def add_ajuste_mes(self, nombre="Mes anterior", valor="0"):
         f = ctk.CTkFrame(self.cont_ajustes, fg_color=COLOR_ROW, corner_radius=8)
@@ -502,6 +604,25 @@ class LiquidacionesFrame(ctk.CTkFrame):
                       command=lambda: [f.destroy(), self._on_edit()]).pack(side="right")
         c["n"].bind("<KeyRelease>", lambda e: [self.calc_extra(t, c), self._autosave()])
         f.c = c; f.t = t
+
+        # poner foco en neto y bindings: Enter -> siguiente campo, Esc -> cerrar fila (elimina)
+        try:
+            entradas = [c['n'], c['iva'], c['irpf'], c['res']]
+            for i, w in enumerate(entradas):
+                def _make_enter(i):
+                    def _on_enter(ev):
+                        if i+1 < len(entradas):
+                            entradas[i+1].focus_set()
+                        else:
+                            # al final, recalcular y autosave
+                            self.calc_extra(t, c); self._autosave()
+                    return _on_enter
+                w.bind('<Return>', _make_enter(i))
+                w.bind('<Escape>', lambda ev, ff=f: ff.destroy())
+            # foco inicial
+            f.after(50, lambda: entradas[0].focus_set())
+        except Exception:
+            pass
 
     def crear_fila_fijo(self, nombre="", importe=""):
         f = ctk.CTkFrame(self.cont_fijos, fg_color=COLOR_ROW, corner_radius=8)
@@ -587,8 +708,14 @@ class LiquidacionesFrame(ctk.CTkFrame):
             for x in w.winfo_children():
                 for y in x.winfo_children() if hasattr(x, "winfo_children") else []:
                     if isinstance(y, DateEntry):
-                        try: fecha = fecha = self.formato_fecha(y.get_date())
-                        except Exception: fecha = ""
+                        try:
+                            d = y.get_date()
+                            try:
+                                fecha = d.isoformat()
+                            except Exception:
+                                fecha = d.strftime("%Y-%m-%d")
+                        except Exception:
+                            fecha = ""
             extras.append({
                 "tipo": w.t,
                 "neto": w.c["n"].get(), "iva": w.c["iva"].get(),
@@ -636,11 +763,31 @@ class LiquidacionesFrame(ctk.CTkFrame):
                     fecha = None
                     if ex.get("fecha"):
                         from datetime import date
-                        try: fecha = date.fromisoformat(ex["fecha"])
-                        except Exception: fecha = None
+                        f = ex["fecha"]
+                        # Intentar ISO primero, luego formatos antiguos
+                        try:
+                            fecha = date.fromisoformat(f)
+                        except Exception:
+                            try:
+                                # aceptar dd/Mon/YYYY o d/Mon/YYYY, y d/mm/YYYY
+                                for fmt in ("%d/%b/%Y", "%d/%B/%Y", "%d/%m/%Y"):
+                                    try:
+                                        fecha = datetime.strptime(f, fmt).date()
+                                        break
+                                    except Exception:
+                                        continue
+                            except Exception:
+                                fecha = None
                     self.add_extra(ex.get("tipo", "Bizum"),
                                    ex.get("neto", ""), ex.get("iva", ""),
                                    ex.get("irpf", ""), ex.get("res", ""), fecha)
+
+                # Forzar reordenación de la rejilla tras cargar datos
+                try:
+                    self._reflow_grid(self.cont_mat)
+                    self._reflow_grid(self.cont_comb)
+                except Exception:
+                    pass
             else:
                 # defaults primera vez
                 for n, imp in [("Internet", "20"), ("Autónomo", "120"),

@@ -1496,6 +1496,7 @@ class AppPresupuestos(ctk.CTkFrame):
             "Si el cliente indica urgencia, noche, fin de semana, desplazamiento, enfermedad, material extra, limpieza, desinfección, acceso complicado, presupuesto sin visita o varias piezas, el precio debe reflejarlo en precio_min, precio_max y precio_recomendado. "
             "Si el caso es claramente simple, de acceso fácil, sin urgencia, sin materiales extra ni complejidad, revisa si puede mantenerse en el extremo inferior del rango o incluso reducirlo razonablemente. No fuerces un sobreprecio si la operación es pequeña y sin complicaciones. "
             "Si se trata de otro tipo de tubería (cobre, plomo, multicapa, PEX, polibutileno, galvanizado, PVC/CPVC u otro material específico), añade ajuste por tipo de material, accesibilidad, posible soldadura o manipulación, y lo explica en observaciones. "
+            "Si el cliente menciona varios trabajos distintos en un mismo presupuesto (por ejemplo: desatasco + cambio de llave + limpieza o reparación), no los conviertas en un único trabajo genérico. Debes devolver una lista real de cada intervención, en orden de prioridad, hasta 3 trabajos si hay 3 tareas distintas. "
             "Usa el baremo local del mercado de Valencia como referencia y no bajes por debajo del rango razonable salvo que el caso sea claramente simple, dentro de horario y sin complejidad. "
             "Nunca uses cifras fijas sin base técnica. Si hay duda, haz preguntas antes de cerrar precio. "
             "Responde SIEMPRE en JSON puro, sin markdown, sin texto fuera del JSON. "
@@ -1518,6 +1519,41 @@ class AppPresupuestos(ctk.CTkFrame):
             f"Texto del trabajo del cliente: {texto_trabajo}"
         )
 
+    def _normalizar_trabajos(self, trabajos, descripcion="", texto_base=""):
+        if isinstance(trabajos, str):
+            trabajos = [trabajos]
+        if not isinstance(trabajos, list):
+            trabajos = []
+
+        lista = []
+        vistos = set()
+        for item in trabajos:
+            txt = str(item).strip()
+            if not txt:
+                continue
+            clave = txt.lower()
+            if clave in {"trabajo de fontanería", "trabajo profesional", "trabajo técnico de fontanería", "fontanería"}:
+                continue
+            if clave not in vistos:
+                lista.append(txt)
+                vistos.add(clave)
+
+        if not lista:
+            texto = ((descripcion or "") + " " + (texto_base or "")).strip()
+            if texto:
+                patrones = [
+                    "desatasco", "llave de paso", "llave de escuadra", "latiguillo",
+                    "cambio de grifo", "cambio de sifón", "cambio de sifon", "revisión de presión",
+                    "tramo de tubería", "tramo de tuberia"
+                ]
+                for patron in patrones:
+                    if patron.lower() in texto.lower():
+                        lista.append(patron.capitalize())
+                if not lista:
+                    lista = ["Intervención de fontanería profesional"]
+
+        return lista[:3]
+
     def _parsear_respuesta_openrouter(self, texto):
         try:
             texto_limpio = texto.strip()
@@ -1530,6 +1566,13 @@ class AppPresupuestos(ctk.CTkFrame):
                 texto_limpio = texto_limpio[inicio:fin+1]
             datos = json.loads(texto_limpio)
             if isinstance(datos, dict):
+                trabajos = self._normalizar_trabajos(datos.get("trabajos"), datos.get("descripcion") or "", texto)
+                datos["trabajos"] = trabajos
+                if not datos.get("titulo") or str(datos.get("titulo")).strip().lower() in {"trabajo de fontanería", "trabajo profesional", "trabajo técnico de fontanería"}:
+                    if trabajos:
+                        datos["titulo"] = " | ".join(trabajos[:2])
+                    else:
+                        datos["titulo"] = "Trabajo de fontanería"
                 return datos
         except Exception:
             pass
