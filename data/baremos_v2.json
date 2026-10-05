@@ -164,10 +164,14 @@
         "precio_max": 160,
         "precio_recomendado": 127,
         "aprendizaje": {
-            "usos": 0,
-            "palabras_aprendidas": [],
-            "frases_aprendidas": [],
-            "ultima_fecha": ""
+            "usos": 1,
+            "palabras_aprendidas": [
+                "de"
+            ],
+            "frases_aprendidas": [
+                "sustitcion de latiguillos"
+            ],
+            "ultima_fecha": "25/09/2026"
         }
     },
     {
@@ -646,10 +650,16 @@
         "precio_max": 220,
         "precio_recomendado": 185,
         "aprendizaje": {
-            "usos": 0,
-            "palabras_aprendidas": [],
-            "frases_aprendidas": [],
-            "ultima_fecha": ""
+            "usos": 1,
+            "palabras_aprendidas": [
+                "desatasco",
+                "maquina",
+                "con"
+            ],
+            "frases_aprendidas": [
+                "desatasco con maquina"
+            ],
+            "ultima_fecha": "29/09/2026"
         }
     },
     {
