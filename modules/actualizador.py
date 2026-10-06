@@ -1,4 +1,4 @@
-import customtkinter as ctk
+﻿import customtkinter as ctk
 import threading
 import requests
 import zipfile
@@ -7,6 +7,7 @@ import sys
 import json
 import shutil
 import subprocess
+
 
 class ActualizadorFrame(ctk.CTkFrame):
     def __init__(self, master):
@@ -82,7 +83,6 @@ class ActualizadorFrame(ctk.CTkFrame):
             self.barra.set(0.05)
             self.escribir("✔ Conectando con GitHub...")
 
-            # Directorio base (funciona tanto en script como en .exe)
             if getattr(sys, 'frozen', False):
                 base_dir = os.path.dirname(sys.executable)
                 is_exe = True
@@ -91,13 +91,11 @@ class ActualizadorFrame(ctk.CTkFrame):
                 is_exe = False
 
             version_path = os.path.join(base_dir, "version.json")
-            
             local_version = "1.0.0"
             if os.path.exists(version_path):
                 with open(version_path, "r", encoding="utf-8") as f:
                     local_version = json.load(f).get("version", "1.0.0")
 
-            # Normalizar versiones: quitar prefijo 'v' y convertir partes a enteros
             def parse_version(v):
                 if isinstance(v, str):
                     v_str = v.strip()
@@ -110,35 +108,28 @@ class ActualizadorFrame(ctk.CTkFrame):
                             nums.append(int(''.join(ch for ch in p if ch.isdigit())))
                         except Exception:
                             nums.append(0)
-                    # Asegurar 3 componentes (major.minor.patch)
                     while len(nums) < 3:
                         nums.append(0)
                     return tuple(nums[:3])
-                return (0,0,0)
+                return (0, 0, 0)
 
             parsed_local = parse_version(local_version)
-
             self.escribir(f"📍 Versión local actual: {local_version}")
-            
-            # Consultar versión remota en GitHub
+
             response = requests.get(URL_VERSION_REMOTE, timeout=10)
             if response.status_code != 200:
                 raise Exception(f"No se pudo conectar (Código HTTP {response.status_code})")
-            
-            # Limpiamos posibles caracteres invisibles o de control
+
             contenido_texto = response.text.strip()
             try:
-                # Usamos strict=False para permitir caracteres de control en el string
                 remote_data = json.loads(contenido_texto, strict=False)
             except Exception:
-                # Si aun así falla, extraemos el texto directamente
                 remote_data = json.loads(response.content.decode('utf-8-sig'), strict=False)
 
             remote_version = remote_data.get("version", "1.0.0")
             parsed_remote = parse_version(remote_version)
             self.escribir(f"📍 Versión en el servidor: {remote_version}")
 
-            # Comparación semántica sencilla (major, minor, patch)
             if parsed_local == parsed_remote:
                 self.barra.set(1.0)
                 self.estado.configure(text="Gestor PRO está actualizado.")
@@ -146,23 +137,19 @@ class ActualizadorFrame(ctk.CTkFrame):
                 self.boton.configure(state="normal")
                 return
             elif parsed_local > parsed_remote:
-                # Local más nueva que remota (caso inusual)
                 self.barra.set(1.0)
                 self.estado.configure(text="Versión local más reciente que la servidor.")
                 self.escribir("⚠ La versión local es más reciente que la disponible en el servidor.")
                 self.boton.configure(state="normal")
                 return
             else:
-                # parsed_remote > parsed_local → hay actualización
                 self.escribir(f"⬆️ Nueva versión disponible: {remote_version} (local: {local_version})")
 
-            # Descarga con cálculo de porcentaje en tiempo real
             self.estado.configure(text="Descargando actualización...")
             self.escribir("⬇ Iniciando descarga del paquete...")
 
             zip_path = os.path.join(base_dir, "update.zip")
             response_zip = requests.get(URL_ZIP_REPO, stream=True, timeout=30)
-            
             total_size = int(response_zip.headers.get('content-length', 0))
             downloaded_size = 0
 
@@ -175,9 +162,8 @@ class ActualizadorFrame(ctk.CTkFrame):
                             percent = downloaded_size / total_size
                             barra_val = 0.10 + (percent * 0.50)
                             self.barra.set(barra_val)
-                            
                             percent_int = int(percent * 100)
-                            if percent_int % 20 == 0: 
+                            if percent_int % 20 == 0:
                                 self.estado.configure(text=f"Descargando... {percent_int}%")
 
             self.escribir("✔ Descarga completada al 100%.")
@@ -196,8 +182,6 @@ class ActualizadorFrame(ctk.CTkFrame):
 
             extracted_folders = os.listdir(extract_dir)
             source_folder = os.path.join(extract_dir, extracted_folders[0])
-
-            # Autodetección de elementos a actualizar
             items_a_actualizar = os.listdir(source_folder)
 
             for item in items_a_actualizar:
@@ -215,7 +199,6 @@ class ActualizadorFrame(ctk.CTkFrame):
                                     shutil.rmtree(dst_item, ignore_errors=True)
                                 except Exception:
                                     pass
-                            
                             if not os.path.exists(dst_item):
                                 shutil.copytree(src_item, dst_item, dirs_exist_ok=True)
                             else:
@@ -231,8 +214,6 @@ class ActualizadorFrame(ctk.CTkFrame):
                                         except PermissionError:
                                             self.escribir(f"  -> Omitido (en uso por Windows): {item}/{file}")
                         else:
-                            # Si es un archivo ejecutable nuevo (.exe) y estamos corriendo como .exe, 
-                            # lo guardamos temporalmente con otro nombre para aplicarlo mediante el script .bat
                             if is_exe and item.endswith(".exe"):
                                 nuevo_exe_path = os.path.join(base_dir, "nuevo_" + item)
                                 shutil.copy2(src_item, nuevo_exe_path)
@@ -243,7 +224,6 @@ class ActualizadorFrame(ctk.CTkFrame):
                     except Exception as sub_err:
                         self.escribir(f"  -> No se pudo actualizar {item}: {sub_err}")
 
-            # Limpiar zip temporal pero mantener la carpeta extraída por si hay un .exe nuevo
             if os.path.exists(zip_path):
                 os.remove(zip_path)
 
@@ -251,37 +231,64 @@ class ActualizadorFrame(ctk.CTkFrame):
             self.estado.configure(text="¡Actualización completada con éxito!")
             self.escribir("🎉 Archivos actualizados correctamente.")
 
-            # Si estamos corriendo como .exe y hay un ejecutable nuevo pendiente de actualizar
-            if is_exe:
-                # Buscamos si se descargó algún nuevo_*.exe
-                exe_actual_nombre = os.path.basename(sys.executable)
-                nuevo_exe_encontrado = os.path.join(base_dir, "nuevo_" + exe_actual_nombre)
+            def reiniciar_aplicacion():
+                try:
+                    if is_exe:
+                        exe_actual_nombre = os.path.basename(sys.executable)
+                        nuevo_exe_encontrado = os.path.join(base_dir, "nuevo_" + exe_actual_nombre)
 
-                if os.path.exists(nuevo_exe_encontrado):
-                    self.escribir("🔄 Actualizando archivo ejecutable principal (.exe)...")
-                    
-                    # Creamos un script .bat temporal para reemplazar el .exe y reiniciar la app
-                    bat_path = os.path.join(base_dir, "actualizar.bat")
-                    with open(bat_path, "w", encoding="utf-8") as bat_file:
-                        bat_file.write(f"""@echo off
-timeout /t 2 /nobreak > nul
-del /f /q "{sys.executable}"
-move /y "{nuevo_exe_encontrado}" "{sys.executable}"
-start "" "{sys.executable}"
-del "%~f0"
-""")
-                    
-                    self.escribir("🚀 Reiniciando aplicación para aplicar los cambios...")
-                    # Lanzamos el .bat y cerramos la app actual
-                    subprocess.Popen(bat_path, shell=True)
-                    os._exit(0)
+                        if os.path.exists(nuevo_exe_encontrado):
+                            self.escribir("🔄 Actualizando archivo ejecutable principal (.exe)...")
+                            bat_path = os.path.join(base_dir, "actualizar.bat")
+                            bat_content = (
+                                "@echo off\n"
+                                "timeout /t 2 /nobreak > nul\n"
+                                f'del /f /q "{sys.executable}"\n'
+                                f'move /y "{nuevo_exe_encontrado}" "{sys.executable}"\n'
+                                f'start "" "{sys.executable}"\n'
+                                'del "%~f0"\n'
+                            )
+                            with open(bat_path, "w", encoding="utf-8") as bat_file:
+                                bat_file.write(bat_content)
 
-            # Limpieza general si no es .exe compilado
+                            self.escribir("🚀 Reiniciando aplicación para aplicar los cambios...")
+                            subprocess.Popen(bat_path, shell=True)
+                            return True
+
+                        if os.path.exists(sys.executable):
+                            subprocess.Popen(
+                                [sys.executable],
+                                cwd=base_dir,
+                                creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0),
+                            )
+                            return True
+
+                    launcher_path = os.path.join(base_dir, "launcher.py")
+                    if os.path.exists(launcher_path):
+                        subprocess.Popen([sys.executable, launcher_path], cwd=base_dir)
+                        return True
+
+                    main_path = os.path.join(base_dir, "main.py")
+                    if os.path.exists(main_path):
+                        subprocess.Popen([sys.executable, main_path], cwd=base_dir)
+                        return True
+
+                    return False
+                except Exception as err:
+                    self.escribir(f"❌ No se pudo reiniciar la aplicación: {err}")
+                    return False
+
+            self.escribir("🚀 Cerrando la app y volviéndola a abrir con la nueva versión...")
+            if reiniciar_aplicacion():
+                if os.path.exists(extract_dir):
+                    shutil.rmtree(extract_dir, ignore_errors=True)
+                os._exit(0)
+
             if os.path.exists(extract_dir):
                 shutil.rmtree(extract_dir, ignore_errors=True)
 
             self.boton.configure(state="normal")
-            
+
         except Exception as e:
             self.estado.configure(text="Error en la actualización.")
             self.escribir(f"❌ Error crítico: {str(e)}")
