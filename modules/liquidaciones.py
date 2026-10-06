@@ -68,9 +68,20 @@ class LiquidacionesFrame(ctk.CTkFrame):
             width=200, height=34, corner_radius=10,
             button_color=COLOR_BLUE, button_hover_color=COLOR_BLUE_HOV,
             border_color=COLOR_BORDER,
+            fg_color="#1d2f44",
+            text_color="#edf4ff",
             command=self._on_cambio_mes,
+            state="readonly",
         )
         self.mes_seleccionado.set("------ Seleccione Fecha ---------")
+        self.mes_seleccionado.configure(state="readonly")
+        try:
+            self.mes_seleccionado._entry.configure(state="readonly")
+            self.mes_seleccionado._entry.bind("<Key>", lambda event: "break")
+            self.mes_seleccionado._entry.bind("<<Paste>>", lambda event: "break")
+            self.mes_seleccionado._entry.bind("<<Cut>>", lambda event: "break")
+        except Exception:
+            pass
         self.mes_seleccionado.grid(row=1, column=0, pady=(0, 18))
 
         # ================= BODY (3 columnas) =================
@@ -202,18 +213,26 @@ class LiquidacionesFrame(ctk.CTkFrame):
         self.lbl_mio.grid(row=0, column=0, sticky="w", padx=20, pady=18)
 
         ctk.CTkButton(
+            self.footer, text="�  DECLARACIÓN TRIMESTRAL / ANUAL",
+            command=self.mostrar_resumen_renta,
+            width=280, height=44, corner_radius=10,
+            fg_color=COLOR_BLUE, hover_color=COLOR_BLUE_HOV,
+            font=("Segoe UI", 12, "bold"),
+        ).grid(row=0, column=1, padx=(10, 8), pady=18)
+
+        ctk.CTkButton(
             self.footer, text="📄  GENERAR PDF", command=self.generar_pdf,
             width=170, height=44, corner_radius=10,
             fg_color=COLOR_BLUE, hover_color=COLOR_BLUE_HOV,
             font=("Segoe UI", 13, "bold"),
-        ).grid(row=0, column=1, padx=(10, 8), pady=18)
+        ).grid(row=0, column=2, padx=(10, 8), pady=18)
 
         ctk.CTkButton(
             self.footer, text="📁  IR A CARPETA", command=self.abrir_carpeta,
             width=160, height=44, corner_radius=10,
             fg_color=COLOR_GRAY_BTN, hover_color=COLOR_GRAY_HOV,
             font=("Segoe UI", 13, "bold"),
-        ).grid(row=0, column=2, padx=(0, 20), pady=18)
+        ).grid(row=0, column=3, padx=(0, 20), pady=18)
        
 
     # ==============================================================
@@ -798,6 +817,488 @@ class LiquidacionesFrame(ctk.CTkFrame):
             self.calcular()
         finally:
             self._cargando = False
+
+    def _meses_del_trimestre(self, mes):
+        meses = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+                 "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
+        idx = meses.index(mes.upper()) if mes.upper() in meses else -1
+        if idx == -1:
+            return []
+        inicio = (idx // 3) * 3
+        return meses[inicio:inicio + 3]
+
+    def _meses_del_anio(self):
+        return ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+                "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
+
+    def _sumar_periodo(self, meses):
+        total = {
+            "base": 0.0,
+            "material": 0.0,
+            "combustible": 0.0,
+            "extras": 0.0,
+            "fijos": 0.0,
+            "ajustes": 0.0,
+            "iva_facturas": 0.0,
+            "iva_extras": 0.0,
+            "gastos_deducibles": 0.0,
+            "base_imponible": 0.0,
+            "iva_estimado": 0.0,
+            "irpf_estimado": 0.0,
+            "resultado_neto": 0.0,
+        }
+
+        def parse_number(value):
+            try:
+                if value is None or value == "":
+                    return 0.0
+                if isinstance(value, (int, float)):
+                    return float(value)
+
+                s = str(value).strip().replace(" ", "").replace("€", "")
+                if s in {"", "-"}:
+                    return 0.0
+
+                if "," in s and "." in s:
+                    if s.rfind(",") > s.rfind("."):
+                        s = s.replace(".", "").replace(",", ".")
+                    else:
+                        s = s.replace(",", "")
+                elif "," in s:
+                    if s.count(",") > 1:
+                        s = s.replace(",", "")
+                    else:
+                        s = s.replace(",", ".")
+                elif "." in s and s.count(".") > 1:
+                    s = s.replace(".", "")
+
+                return float(s)
+            except Exception:
+                return 0.0
+
+        def sum_values(items):
+            if not items:
+                return 0.0
+            total_items = 0.0
+            for item in items:
+                if isinstance(item, (int, float, str)):
+                    total_items += parse_number(item)
+                elif isinstance(item, list):
+                    if len(item) >= 2:
+                        total_items += parse_number(item[-1])
+                elif isinstance(item, dict):
+                    total_items += parse_number(item.get("neto", item.get("importe", item.get("res", item.get("valor", 0)))))
+            return total_items
+
+        for mes in meses:
+            path = os.path.join(self.CARPETA_DATA, f"{mes}.json")
+            if not os.path.exists(path):
+                continue
+            try:
+                with open(path, "r", encoding="utf-8") as fh:
+                    datos = json.load(fh)
+            except Exception:
+                continue
+
+            base_mes = parse_number(datos.get("base", 0))
+            material_mes = parse_number(datos.get("total_material", 0))
+            if material_mes == 0:
+                material_mes = sum_values(datos.get("material", []))
+            combustible_mes = parse_number(datos.get("total_combustible", 0))
+            if combustible_mes == 0:
+                combustible_mes = sum_values(datos.get("combustible", []))
+            extras_neto = 0.0
+            extras_iva = 0.0
+            for extra in datos.get("extras", []) or []:
+                if isinstance(extra, dict):
+                    extras_neto += parse_number(extra.get("neto", extra.get("res", 0)))
+                    extras_iva += parse_number(extra.get("iva", 0))
+
+            if base_mes == 0 and material_mes == 0 and combustible_mes == 0 and extras_neto == 0:
+                continue
+
+            total["base"] += base_mes
+            total["material"] += material_mes
+            total["combustible"] += combustible_mes
+            total["iva_facturas"] += base_mes * 0.21
+            total["extras"] += extras_neto
+            total["iva_extras"] += extras_iva
+
+        total["base"] = total["base"] + total["extras"]
+        total["gastos_deducibles"] = total["material"] + (total["combustible"] * 0.5)
+        total["base_imponible"] = max(0.0, total["base"] - total["gastos_deducibles"])
+        total["iva_estimado"] = total["iva_facturas"] + total["iva_extras"]
+        total["irpf_estimado"] = total["base_imponible"] * 0.20
+        total["resultado_neto"] = total["base"] - total["gastos_deducibles"] - total["irpf_estimado"]
+        return total
+
+    def mostrar_resumen_renta(self):
+        mes_actual = self.mes_seleccionado.get().upper().strip()
+        if not mes_actual or mes_actual == "------ SELECCIONE FECHA ---------":
+            mes_actual = "MARZO"
+
+        trimestre_default = ["ENERO", "FEBRERO", "MARZO"]
+        selected_quarter = "1er Trimestre"
+        quarter_choice = {
+            "label": selected_quarter,
+            "months": trimestre_default[:],
+        }
+        resumen_trim = self._sumar_periodo(trimestre_default)
+        resumen_anual = self._sumar_periodo(self._meses_del_anio())
+
+        ventana = ctk.CTkToplevel(self)
+        ventana.title("Resumen de renta autónomo")
+        ventana.configure(fg_color="#081722")
+        ventana.minsize(1180, 760)
+        ventana.geometry("1500x900")
+        ventana.grab_set()
+        ventana.focus_force()
+        ventana.protocol("WM_DELETE_WINDOW", ventana.destroy)
+        ventana.bind("<Escape>", lambda event: ventana.destroy())
+
+        try:
+            ventana.update_idletasks()
+            ventana.state("zoomed")
+        except Exception:
+            try:
+                ventana.attributes("-fullscreen", True)
+            except Exception:
+                pass
+
+        ventana.grid_columnconfigure(0, weight=1)
+        ventana.grid_rowconfigure(1, weight=1)
+
+        header = ctk.CTkFrame(ventana, fg_color="#0f1d2e", corner_radius=18, border_width=1, border_color="#2f4869")
+        header.grid(row=0, column=0, sticky="ew", padx=16, pady=(16, 12))
+        header.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(header, text="📊 RESUMEN DE RENTA AUTÓNOMO",
+                     font=("Segoe UI", 30, "bold"), text_color="#5bc0ff",
+                     anchor="w").grid(row=0, column=0, sticky="w", padx=18, pady=(18, 4))
+        ctk.CTkLabel(header, text="Periodo activo: Declaración trimestral y anual",
+                     font=("Segoe UI", 12), text_color="#bfd2ea").grid(row=1, column=0, sticky="w", padx=18, pady=(0, 18))
+
+        tabs = ctk.CTkTabview(ventana, width=1380, height=640)
+        tabs.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 12))
+        tabs.add("TRIMESTRE")
+        tabs.add("ANUAL")
+        tabs.set("TRIMESTRE")
+
+        estado_label = None
+
+        def update_estado(resumen_obj):
+            nonlocal estado_label
+            total = resumen_obj["iva_estimado"] + resumen_obj["irpf_estimado"]
+            estado = "Sin cuota a pagar" if total <= 0 else "Con cuota a pagar"
+            if estado_label is not None:
+                estado_label.configure(
+                    text=(
+                        f"Estado fiscal: {estado} | Cuota estimada: {total:.2f} €\n"
+                        f"Base imponible: {resumen_obj['base_imponible']:.2f} € | IVA + IRPF: {total:.2f} € | Resultado neto: {resumen_obj['resultado_neto']:.2f} €"
+                    )
+                )
+
+        def render_tab(tab_name, resumen_obj):
+            frame = tabs.tab(tab_name)
+            for child in frame.winfo_children():
+                child.destroy()
+            update_estado(resumen_obj)
+
+            frame.grid_columnconfigure(0, weight=3)
+            frame.grid_columnconfigure(1, weight=1)
+            frame.grid_rowconfigure(0, weight=1)
+            frame.configure(fg_color="#0d1726")
+
+            if tab_name == "TRIMESTRE":
+                selector_box = ctk.CTkFrame(frame, fg_color="#0f1d2e", corner_radius=16, border_width=1, border_color="#2f4869")
+                selector_box.grid(row=0, column=0, columnspan=2, sticky="ew", padx=12, pady=(12, 6))
+                selector_box.grid_columnconfigure(1, weight=1)
+                ctk.CTkLabel(selector_box, text="Elegir trimestre", font=("Segoe UI", 14, "bold"), text_color="#5bc0ff").grid(row=0, column=0, padx=(16, 8), pady=12, sticky="w")
+                opciones = ["1er Trimestre", "2º Trimestre", "3er Trimestre", "4º Trimestre"]
+                combo = ctk.CTkOptionMenu(
+                    selector_box,
+                    values=opciones,
+                    width=260,
+                    height=36,
+                    font=("Segoe UI", 12, "bold"),
+                    command=None,
+                )
+                combo.grid(row=0, column=1, sticky="ew", padx=(0, 16), pady=12)
+                combo.set(selected_quarter)
+
+                def actualizar_trimestre(valor=None):
+                    nonlocal selected_quarter
+                    opt = combo.get() if valor is None else valor
+                    mapping = {
+                        "1er Trimestre": ["ENERO", "FEBRERO", "MARZO"],
+                        "2º Trimestre": ["ABRIL", "MAYO", "JUNIO"],
+                        "3er Trimestre": ["JULIO", "AGOSTO", "SEPTIEMBRE"],
+                        "4º Trimestre": ["OCTUBRE", "NOVIEMBRE", "DICIEMBRE"],
+                    }
+                    selected_quarter = opt
+                    quarter_choice["label"] = opt
+                    quarter_choice["months"] = mapping.get(opt, ["ENERO", "FEBRERO", "MARZO"])
+                    resumen_actual = self._sumar_periodo(quarter_choice["months"])
+                    render_tab("TRIMESTRE", resumen_actual)
+
+                combo.configure(command=actualizar_trimestre)
+
+            left = ctk.CTkFrame(frame, fg_color="#122233", corner_radius=18, border_width=1, border_color="#2f4869")
+            left.grid(row=1 if tab_name == "TRIMESTRE" else 0, column=0, sticky="nsew", padx=(12, 10), pady=(6 if tab_name == "TRIMESTRE" else 12), rowspan=1)
+            left.grid_columnconfigure(0, weight=1)
+            left.grid_rowconfigure(0, weight=1)
+
+            right = ctk.CTkFrame(frame, fg_color="#122233", corner_radius=18, border_width=1, border_color="#2f4869")
+            right.grid(row=1 if tab_name == "TRIMESTRE" else 0, column=1, sticky="nsew", padx=(0, 12), pady=(6 if tab_name == "TRIMESTRE" else 12), rowspan=1)
+            right.grid_columnconfigure(0, weight=1)
+
+            contenido = ctk.CTkScrollableFrame(left, fg_color="#122233", width=760, height=420)
+            contenido.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+            contenido.grid_columnconfigure(0, weight=1)
+
+            total_iva_irpf = resumen_obj["iva_estimado"] + resumen_obj["irpf_estimado"]
+            datos = [
+                ("Ingresos", resumen_obj["base"], "#7cc8ff"),
+                ("Materiales", resumen_obj["material"], "#7cc8ff"),
+                ("Combustible", resumen_obj["combustible"], "#7cc8ff"),
+                ("Extras netos", resumen_obj["extras"], "#7cc8ff"),
+                ("Gastos deducibles", resumen_obj["gastos_deducibles"], "#f6c65b"),
+                ("Base imponible", resumen_obj["base_imponible"], "#77f7a6"),
+                ("IVA estimado", resumen_obj["iva_estimado"], "#f6c65b"),
+                ("IRPF estimado", resumen_obj["irpf_estimado"], "#f6c65b"),
+                ("IVA + IRPF", total_iva_irpf, "#f6c65b"),
+                ("Resultado neto", resumen_obj["resultado_neto"], "#77f7a6"),
+            ]
+
+            for i, (label, valor, color_text) in enumerate(datos):
+                fila = ctk.CTkFrame(contenido, fg_color="#132638", corner_radius=10, border_width=1, border_color="#2a466b")
+                fila.grid(row=i, column=0, sticky="ew", padx=10, pady=(10 if i == 0 else 6, 6))
+                ctk.CTkLabel(fila, text=label, font=("Segoe UI", 15), text_color="#dfeeff", anchor="w").pack(side="left", padx=16, pady=10, expand=True)
+                ctk.CTkLabel(fila, text=f"{valor:.2f} €", font=("Segoe UI", 15, "bold"), text_color=color_text, anchor="e").pack(side="right", padx=16, pady=10)
+
+            ctk.CTkLabel(right, text="Distribución fiscal", font=("Segoe UI", 22, "bold"), text_color="#5bc0ff").pack(pady=(18, 10))
+            cam = tk.Canvas(right, width=220, height=220, bg="#122233", highlightthickness=0)
+            cam.pack(padx=10, pady=(0, 8))
+
+            cx, cy, r = 110, 110, 82
+            cam.create_oval(cx - r, cy - r, cx + r, cy + r, outline="#2f4869", width=2, fill="#0d1726")
+            cam.create_oval(cx - r + 18, cy - r + 18, cx + r - 18, cy + r - 18, outline="#1c3350", width=1, fill="#122233")
+            valor_base = max(0.0, resumen_obj["base_imponible"])
+            valor_gasto = max(0.0, resumen_obj["gastos_deducibles"])
+            total = max(valor_base + valor_gasto, 1.0)
+            ang = 360 * (valor_base / total)
+            cam.create_arc(cx - r, cy - r, cx + r, cy + r, start=90, extent=-ang, style="pieslice", fill="#2dd881", outline="#2dd881")
+            cam.create_arc(cx - r, cy - r, cx + r, cy + r, start=90 - ang, extent=-(360 - ang), style="pieslice", fill="#4ea3ff", outline="#4ea3ff")
+            cam.create_oval(cx - 46, cy - 46, cx + 46, cy + 46, fill="#0d1726", outline="#2f4869", width=2)
+            cam.create_text(cx, cy - 6, text=f"{valor_base:.0f}€", fill="#edf4ff", font=("Segoe UI", 20, "bold"))
+            cam.create_text(cx, cy + 18, text="Base", fill="#9bb7d3", font=("Segoe UI", 10, "bold"))
+
+            info = ctk.CTkFrame(right, fg_color="#0d1726", corner_radius=12, border_width=1, border_color="#2f4869")
+            info.pack(fill="x", padx=14, pady=(0, 14))
+            total_iva_irpf = resumen_obj["iva_estimado"] + resumen_obj["irpf_estimado"]
+            ctk.CTkLabel(
+                info,
+                text=(
+                    f"Base: {resumen_obj['base_imponible']:.2f} €\n"
+                    f"IVA + IRPF: {total_iva_irpf:.2f} €\n"
+                    f"Resultado: {resumen_obj['resultado_neto']:.2f} €"
+                ),
+                font=("Segoe UI", 13, "bold"), text_color="#edf4ff", justify="left",
+            ).pack(anchor="w", padx=14, pady=12)
+
+        render_tab("TRIMESTRE", resumen_trim)
+        render_tab("ANUAL", resumen_anual)
+
+        total_trim = resumen_trim["iva_estimado"] + resumen_trim["irpf_estimado"]
+        estado_trim = "Sin cuota a pagar" if total_trim <= 0 else "Con cuota a pagar"
+        estado_texto = (
+            f"Estado fiscal: {estado_trim} | Total a pagar: {total_trim:.2f} €\n"
+            f"Base anual: {resumen_anual['base_imponible']:.2f} € | IVA anual: {resumen_anual['iva_estimado']:.2f} € | IRPF anual: {resumen_anual['irpf_estimado']:.2f} €"
+        )
+
+        estado = ctk.CTkFrame(ventana, fg_color="#0f1d2e", corner_radius=14, border_width=1, border_color="#2f4869")
+        estado.grid(row=2, column=0, sticky="ew", padx=16, pady=(0, 12))
+        estado_label = ctk.CTkLabel(estado, text=estado_texto, font=("Segoe UI", 14, "bold"), text_color="#dfeeff", justify="left", anchor="w")
+        estado_label.pack(anchor="w", padx=18, pady=12)
+
+        def pdf_actual():
+            nombre = tabs.get().upper()
+            if nombre == "TRIMESTRE":
+                resumen_actual = self._sumar_periodo(quarter_choice["months"])
+                periodo_label = quarter_choice["label"]
+                self.generar_pdf_declaracion_renta(resumen_actual, periodo_label, None)
+            else:
+                resumen_actual = resumen_anual
+                periodo_label = "ANUAL"
+                self.generar_pdf_declaracion_renta(resumen_actual, periodo_label, None)
+
+        pie = ctk.CTkFrame(ventana, fg_color="#0f1d2e", corner_radius=18, border_width=1, border_color="#2f4869")
+        pie.grid(row=3, column=0, sticky="ew", padx=16, pady=(0, 16))
+        pie.grid_columnconfigure(0, weight=1)
+        pie.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            pie, text="📄 Generar PDF",
+            command=pdf_actual,
+            width=260, height=42, corner_radius=10,
+            fg_color="#2b7a78", hover_color="#1f5d5b",
+            font=("Segoe UI", 14, "bold")
+        ).grid(row=0, column=0, padx=(18, 10), pady=14, sticky="ew")
+
+        ctk.CTkButton(
+            pie, text="Cerrar",
+            command=ventana.destroy,
+            width=260, height=42, corner_radius=10,
+            fg_color="#d63031", hover_color="#b71c1c",
+            font=("Segoe UI", 14, "bold")
+        ).grid(row=0, column=1, padx=(10, 18), pady=14, sticky="ew")
+
+    def generar_pdf_declaracion_renta(self, resumen=None, periodo="TRIMESTRE", mes_actual=None):
+        if resumen is None:
+            mes_actual = self.mes_seleccionado.get().upper().strip()
+            if not mes_actual or mes_actual == "------ SELECCIONE FECHA ---------":
+                messagebox.showwarning("Sin mes", "Selecciona un mes para ver la declaración.")
+                return
+            trimestre = self._meses_del_trimestre(mes_actual)
+            resumen = self._sumar_periodo(trimestre)
+
+        carpeta_pdf = getattr(self, "CARPETA_PDF", os.path.join(os.path.dirname(os.path.abspath(__file__)), "liquidaciones_pdf"))
+        os.makedirs(carpeta_pdf, exist_ok=True)
+
+        base_name = "Declaracion_Renta"
+        index = 1
+        path = os.path.join(carpeta_pdf, f"{base_name}{index:02d}.pdf")
+        while os.path.exists(path):
+            index += 1
+            path = os.path.join(carpeta_pdf, f"{base_name}{index:02d}.pdf")
+
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            "TitleBrand",
+            parent=styles["Title"],
+            fontName="Helvetica-Bold",
+            fontSize=18,
+            textColor=colors.HexColor("#0f6cbd"),
+            alignment=1,
+            spaceAfter=6,
+        )
+        subtitle_style = ParagraphStyle(
+            "SubtitleBrand",
+            parent=styles["BodyText"],
+            fontName="Helvetica",
+            fontSize=10,
+            textColor=colors.HexColor("#355d7a"),
+            alignment=1,
+            spaceAfter=12,
+        )
+        label_style = ParagraphStyle(
+            "LabelBrand",
+            parent=styles["BodyText"],
+            fontName="Helvetica-Bold",
+            fontSize=10,
+            textColor=colors.HexColor("#16324b"),
+            spaceAfter=4,
+        )
+
+        elements = []
+
+        logo_path = None
+        posibles = [
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "logo.png"),
+            os.path.join(os.getcwd(), "assets", "logo.png"),
+            os.path.join(os.getcwd(), "logo.png"),
+        ]
+        for p in posibles:
+            candidate = os.path.abspath(p)
+            if os.path.exists(candidate):
+                logo_path = candidate
+                break
+
+        header_table = Table([["", "", ""]], colWidths=[90, 300, 110])
+        header_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#0d1a2a")),
+            ("GRID", (0, 0), (-1, -1), 0.0, colors.HexColor("#0d1a2a")),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ]))
+
+        if logo_path:
+            try:
+                logo_img = RLImage(logo_path, width=54, height=54)
+                header_period = periodo or (mes_actual or "Período actual")
+                header_table = Table([[logo_img, Paragraph("GESTOR PRO", title_style), Paragraph(f"{header_period}", subtitle_style)]], colWidths=[90, 250, 130])
+                header_table.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#0d1a2a")),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("ALIGN", (1, 0), (1, 0), "LEFT"),
+                    ("ALIGN", (2, 0), (2, 0), "RIGHT"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ("TOPPADDING", (0, 0), (-1, -1), 10),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                    ("GRID", (0, 0), (-1, -1), 0.0, colors.HexColor("#0d1a2a")),
+                ]))
+            except Exception:
+                pass
+
+        elements.append(header_table)
+        elements.append(Spacer(1, 15))
+        elements.append(Paragraph("DECLARACIÓN DE RENTA AUTÓNOMO", title_style))
+        period_label = periodo or (mes_actual or "Período actual")
+        elements.append(Paragraph(f"Periodo: {period_label}", subtitle_style))
+        elements.append(Spacer(1, 10))
+
+        total_iva_irpf = float(resumen.get("iva_estimado", 0.0)) + float(resumen.get("irpf_estimado", 0.0))
+        data = [
+            ["CONCEPTO", "IMPORTE"],
+            ["Ingresos", f"{float(resumen.get('base', 0.0)):.2f} €"],
+            ["Materiales", f"{float(resumen.get('material', 0.0)):.2f} €"],
+            ["Combustible", f"{float(resumen.get('combustible', 0.0)):.2f} €"],
+            ["Extras", f"{float(resumen.get('extras', 0.0)):.2f} €"],
+            ["Gastos deducibles", f"{float(resumen.get('gastos_deducibles', 0.0)):.2f} €"],
+            ["Base imponible", f"{float(resumen.get('base_imponible', 0.0)):.2f} €"],
+            ["IVA estimado", f"{float(resumen.get('iva_estimado', 0.0)):.2f} €"],
+            ["IRPF estimado", f"{float(resumen.get('irpf_estimado', 0.0)):.2f} €"],
+            ["IVA + IRPF", f"{total_iva_irpf:.2f} €"],
+            ["Resultado neto", f"{float(resumen.get('resultado_neto', 0.0)):.2f} €"],
+        ]
+
+        table = Table(data, colWidths=[260, 120])
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#16324b")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#f6f9fd"), colors.HexColor("#edf3f9")]),
+            ("GRID", (0, 0), (-1, -1), 0.8, colors.HexColor("#1a3550")),
+            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+            ("ALIGN", (1, 1), (1, -1), "RIGHT"),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+            ("TOPPADDING", (0, 0), (-1, 0), 8),
+            ("BOTTOMPADDING", (0, 1), (-1, -1), 6),
+            ("TOPPADDING", (0, 1), (-1, -1), 6),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 18))
+
+        cuota = float(resumen.get("iva_estimado", 0.0)) + float(resumen.get("irpf_estimado", 0.0))
+        estado = "Sin cuota a pagar" if cuota <= 0 else "Con cuota a pagar"
+        elements.append(Paragraph(f"Estado fiscal: {estado} | Cuota estimada: {cuota:.2f} €", label_style))
+        elements.append(Paragraph(
+            f"Base imponible: {float(resumen.get('base_imponible', 0.0)):.2f} € | IVA + IRPF: {cuota:.2f} € | Resultado neto: {float(resumen.get('resultado_neto', 0.0)):.2f} €",
+            label_style,
+        ))
+
+        try:
+            doc = SimpleDocTemplate(path, pagesize=A4, leftMargin=40, rightMargin=40, topMargin=20, bottomMargin=30)
+            doc.build(elements)
+            messagebox.showinfo("PDF generado", f"Declaración exportada en:\n{path}")
+            return path
+        except Exception as e:
+            messagebox.showerror("Error al generar PDF", f"No se pudo generar el PDF:\n{e}")
+            return None
 
     # ==============================================================
     # OBTENER DATOS + PDF (sin cambios funcionales)

@@ -142,8 +142,9 @@ class GestorPro(ctk.CTk):
         self.contenido = ctk.CTkFrame(self, corner_radius=0, fg_color="#0d1218")
         self.contenido.grid(row=0, column=1, sticky="nsew", padx=(0, 10), pady=10)
         self.frame_actual = None
+        self._after_refs = []
         self.inicio()
-        self.after(1200, self._comprobar_actualizacion_automatica)
+        self._after_refs.append((self, self.after(1200, self._comprobar_actualizacion_automatica)))
 
     def restaurar_interfaz(self):
         """Método de instancia para restaurar la ventana de Gestor PRO limpia"""
@@ -163,9 +164,24 @@ class GestorPro(ctk.CTk):
     def pantalla_completa(self):
         self.state('zoomed')
 
+    def _cancelar_timers(self):
+        for widget, job_id in list(self._after_refs):
+            try:
+                if widget and widget.winfo_exists():
+                    widget.after_cancel(job_id)
+            except Exception:
+                pass
+        self._after_refs.clear()
+
     def limpiar(self):
+        self._cancelar_timers()
         if self.frame_actual is not None:
-            self.frame_actual.destroy()
+            try:
+                if self.frame_actual.winfo_exists():
+                    self.frame_actual.destroy()
+            except Exception:
+                pass
+            self.frame_actual = None
 
     def obtener_saludo(self):
         hora = int(time.strftime("%H"))
@@ -188,22 +204,6 @@ class GestorPro(ctk.CTk):
         background = tk.Canvas(panel, bg="#101d2d", highlightthickness=0, bd=0)
         background.pack(fill="both", expand=True)
 
-        def animar_fondo(offset=0):
-            if not panel.winfo_exists():
-                return
-            w = max(1, background.winfo_width())
-            h = max(1, background.winfo_height())
-            background.delete("all")
-            for i in range(-60, w + 120, 90):
-                x0 = (i + offset) % (w + 120) - 60
-                background.create_rectangle(x0, 0, x0 + 70, h, fill="#142a42", outline="", tags="bg")
-            band_x = (offset * 2) % (w + 220) - 110
-            background.create_rectangle(band_x, h * 0.14, band_x + 320, h * 0.86, fill="#173d64", stipple="gray50", outline="", tags="glow")
-            background.create_rectangle(w * 0.38, h * 0.18, w * 0.62, h * 0.82, outline="#56c0ff", width=1, tags="pulse")
-            background.lower("bg")
-            self.after(40, lambda: animar_fondo((offset + 5) % (w + 200)))
-
-        # Si hay GIF disponible, usa solo ese GIF como fondo (el primero que encuentre en assets/)
         gif_anim_started = False
         try:
             import glob
@@ -228,7 +228,9 @@ class GestorPro(ctk.CTk):
                     gif_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
                     def mostrar_un_gif():
-                        if not panel.winfo_exists() or not hasattr(self, "_gif_frames"):
+                        if not panel.winfo_exists():
+                            return
+                        if not hasattr(self, "_gif_frames") or not self._gif_frames:
                             return
                         idx = self._gif_index % len(self._gif_frames)
                         frame = self._gif_frames[idx].copy()
@@ -242,17 +244,23 @@ class GestorPro(ctk.CTk):
                         gif_label.configure(image=photo)
                         gif_label.image = photo
                         self._gif_index += 1
-                        panel.after(max(20, self._gif_durations[idx] if idx < len(self._gif_durations) else 100), mostrar_un_gif)
+                        siguiente = panel.after(max(20, self._gif_durations[idx] if idx < len(self._gif_durations) else 100), mostrar_un_gif)
+                        self._after_refs.append((panel, siguiente))
 
-                    panel.bind("<Configure>", lambda e: (background.configure(width=e.width, height=e.height), mostrar_un_gif()))
                     mostrar_un_gif()
                     gif_anim_started = True
         except Exception:
             gif_anim_started = False
 
         if not gif_anim_started:
-            panel.bind("<Configure>", lambda e: (background.configure(width=e.width, height=e.height), animar_fondo(0)))
-            animar_fondo(0)
+            # Si no hay GIF, dejamos un fondo simple y estable en lugar de forzar animaciones.
+            w = max(1, panel.winfo_width()) if panel.winfo_exists() else 1
+            h = max(1, panel.winfo_height()) if panel.winfo_exists() else 1
+            background.create_rectangle(0, 0, w, h, fill="#101d2d", outline="")
+            for i in range(-80, max(1, w + 80), 90):
+                background.create_rectangle(i, 0, i + 55, h, fill="#13273b", outline="")
+            background.create_rectangle(w * 0.35, h * 0.18, w * 0.65, h * 0.82, fill="#122843", outline="#3aa0ff", width=1)
+            background.lower("all")
 
         clock_panel = ctk.CTkFrame(self.frame_actual, fg_color="#0b1621", corner_radius=26, border_color="#3a5e7c", border_width=1)
         clock_panel.place(relx=0.96, rely=0.10, anchor="ne")
@@ -266,7 +274,8 @@ class GestorPro(ctk.CTk):
             if lbl_hora.winfo_exists():
                 lbl_hora.configure(text=time.strftime("%H:%M:%S"))
                 lbl_fecha.configure(text=time.strftime("%d/%m/%Y"))
-                self.after(1000, actualizar_reloj_loop)
+                siguiente = self.after(1000, actualizar_reloj_loop)
+                self._after_refs.append((self, siguiente))
 
         actualizar_reloj_loop()
 

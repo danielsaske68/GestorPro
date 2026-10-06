@@ -54,7 +54,7 @@ class VerificadorPagosFrame(ctk.CTkFrame):
         anio_actual = str(_dt.now().year)
 
         ctk.CTkLabel(controles_frame, text="Mes:").grid(row=0, column=2, padx=(8, 4))
-        self.cmb_mes_verif = ctk.CTkComboBox(controles_frame, values=meses_full, width=140)
+        self.cmb_mes_verif = ctk.CTkOptionMenu(controles_frame, values=meses_full, width=140)
         self.cmb_mes_verif.set(mes_actual)
         self.cmb_mes_verif.grid(row=0, column=3, padx=(0, 8))
 
