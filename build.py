@@ -3,7 +3,7 @@ BUILD.PY
 ========
 Compila launcher.py a .exe (carpeta dist/GestorPro/) y coloca junto a él
 todo lo que debe quedar EDITABLE sin recompilar: main.py, modules/, cloud/,
-assets/, data/, Homeserve/, datos_lector/, liquidaciones_pdf/, version.json.
+assets/, data/, Homeserve/, PDFs/, version.json.
 
 USO:
     python build.py
@@ -65,8 +65,7 @@ CARPETAS_A_COPIAR = [
     "assets",
     "data",
     "Homeserve",
-    "datos_lector",
-    "liquidaciones_pdf",
+    "PDFS",
     "version.json",
 ]
 

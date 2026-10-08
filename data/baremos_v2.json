@@ -27,6 +27,13 @@
             ],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 450.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 4500.0,
+            "precio_actual": 450.0
         }
     },
     {
@@ -67,6 +74,13 @@
                 "cambiar",
                 "grifo"
             ]
+        },
+        "precio_anterior": 115.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1150.0,
+            "precio_actual": 115.0
         }
     },
     {
@@ -96,10 +110,21 @@
         "precio_max": 150,
         "precio_recomendado": 130,
         "aprendizaje": {
-            "usos": 0,
-            "palabras_aprendidas": [],
-            "frases_aprendidas": [],
-            "ultima_fecha": ""
+            "usos": 1,
+            "palabras_aprendidas": [
+                "mecanismos"
+            ],
+            "frases_aprendidas": [
+                "mecanismo de wc"
+            ],
+            "ultima_fecha": "06/10/2026"
+        },
+        "precio_anterior": 130.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1300.0,
+            "precio_actual": 130.0
         }
     },
     {
@@ -137,6 +162,13 @@
                 "latiguillo estandar"
             ],
             "ultima_fecha": "06/10/2026"
+        },
+        "precio_anterior": 700.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 7000.0,
+            "precio_actual": 700.0
         }
     },
     {
@@ -172,6 +204,13 @@
                 "sustitcion de latiguillos"
             ],
             "ultima_fecha": "25/09/2026"
+        },
+        "precio_anterior": 127.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1270.0,
+            "precio_actual": 127.0
         }
     },
     {
@@ -203,6 +242,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 195.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1950.0,
+            "precio_actual": 195.0
         }
     },
     {
@@ -227,6 +273,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 90.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 900.0,
+            "precio_actual": 90.0
         }
     },
     {
@@ -252,6 +305,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 95.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 950.0,
+            "precio_actual": 95.0
         }
     },
     {
@@ -272,6 +332,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1100.0,
+            "precio_actual": 110.0
         }
     },
     {
@@ -290,6 +357,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 125.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1250.0,
+            "precio_actual": 125.0
         }
     },
     {
@@ -309,6 +383,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 170.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1700.0,
+            "precio_actual": 170.0
         }
     },
     {
@@ -334,6 +415,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 850.0,
+            "precio_actual": 85.0
         }
     },
     {
@@ -352,6 +440,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 60.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 600.0,
+            "precio_actual": 60.0
         }
     },
     {
@@ -370,6 +465,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1100.0,
+            "precio_actual": 110.0
         }
     },
     {
@@ -389,6 +491,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 40.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 400.0,
+            "precio_actual": 40.0
         }
     },
     {
@@ -420,10 +529,17 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 35.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 350.0,
+            "precio_actual": 35.0
         }
     },
     {
-        "categoria": "Reparacion tuberias",
+        "categoria": "Tuberías y Desatascos",
         "nombre": "Reparación en tubería de Cobre, Multicapa o PPR hasta 1 metro",
         "alias": [
             "arreglar tuberia",
@@ -434,9 +550,9 @@
             "reparacion de tuberia",
             "soldadura en tubo de cobre"
         ],
-        "precio_min": 150,
-        "precio_max": 210,
-        "precio_recomendado": 180,
+        "precio_min": 150.0,
+        "precio_max": 210.0,
+        "precio_recomendado": 180.0,
         "aprendizaje": {
             "usos": 2,
             "palabras_aprendidas": [
@@ -448,10 +564,17 @@
                 "sustitucion de ppr a multicapa"
             ],
             "ultima_fecha": "22/07/2026"
+        },
+        "precio_anterior": 180.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1800.0,
+            "precio_actual": 180.0
         }
     },
     {
-        "categoria": "Reparacion tuberias",
+        "categoria": "Tuberías y Desatascos",
         "nombre": "Reparación de emergencia en tubería de plomo o hierro antiguo",
         "alias": [
             "tuberia plomo",
@@ -460,9 +583,9 @@
             "fuga antigua",
             "rotura tuberia"
         ],
-        "precio_min": 190,
-        "precio_max": 270,
-        "precio_recomendado": 240,
+        "precio_min": 190.0,
+        "precio_max": 270.0,
+        "precio_recomendado": 240.0,
         "aprendizaje": {
             "usos": 1,
             "palabras_aprendidas": [
@@ -470,6 +593,13 @@
             ],
             "frases_aprendidas": [],
             "ultima_fecha": "21/07/2026"
+        },
+        "precio_anterior": 240.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2400.0,
+            "precio_actual": 240.0
         }
     },
     {
@@ -502,10 +632,17 @@
             ],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 140.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1400.0,
+            "precio_actual": 140.0
         }
     },
     {
-        "categoria": "WC y evacuacion",
+        "categoria": "Cisternas y WC",
         "nombre": "Sustitución de manguetón de evacuación de WC",
         "alias": [
             "manguiton wc",
@@ -517,9 +654,9 @@
             "conexion wc",
             "fuga wc"
         ],
-        "precio_min": 130,
-        "precio_max": 190,
-        "precio_recomendado": 160,
+        "precio_min": 130.0,
+        "precio_max": 190.0,
+        "precio_recomendado": 160.0,
         "aprendizaje": {
             "usos": 13,
             "palabras_aprendidas": [
@@ -532,6 +669,13 @@
                 "sustitucion de mangueton"
             ],
             "ultima_fecha": "25/09/2026"
+        },
+        "precio_anterior": 160.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1600.0,
+            "precio_actual": 160.0
         }
     },
     {
@@ -552,6 +696,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 300.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 3000.0,
+            "precio_actual": 300.0
         }
     },
     {
@@ -574,6 +725,13 @@
             ],
             "frases_aprendidas": [],
             "ultima_fecha": "22/07/2026"
+        },
+        "precio_anterior": 120.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1200.0,
+            "precio_actual": 120.0
         }
     },
     {
@@ -593,6 +751,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 105.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1050.0,
+            "precio_actual": 105.0
         }
     },
     {
@@ -612,10 +777,17 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 75.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 750.0,
+            "precio_actual": 75.0
         }
     },
     {
-        "categoria": "Llaves de paso",
+        "categoria": "Llaves de Paso y Escuadra",
         "nombre": "Extracción de rosca rota de llave de escuadra dentro de pared",
         "alias": [
             "rosca rota",
@@ -623,18 +795,25 @@
             "sacar rosca",
             "rosca atascada"
         ],
-        "precio_min": 90,
-        "precio_max": 130,
-        "precio_recomendado": 110,
+        "precio_min": 90.0,
+        "precio_max": 130.0,
+        "precio_recomendado": 110.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1100.0,
+            "precio_actual": 110.0
         }
     },
     {
-        "categoria": "Desatascos",
+        "categoria": "Tuberías y Desatascos",
         "nombre": "Desatasco con máquina de agua a presión (alta presión / definitivo)",
         "alias": [
             "desatasco maquina",
@@ -646,9 +825,9 @@
             "limpiar tuberia presion",
             "atasco comunidad"
         ],
-        "precio_min": 150,
-        "precio_max": 220,
-        "precio_recomendado": 185,
+        "precio_min": 180.0,
+        "precio_max": 300.0,
+        "precio_recomendado": 230.0,
         "aprendizaje": {
             "usos": 1,
             "palabras_aprendidas": [
@@ -660,6 +839,13 @@
                 "desatasco con maquina"
             ],
             "ultima_fecha": "29/09/2026"
+        },
+        "precio_anterior": 185.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1850.0,
+            "precio_actual": 185.0
         }
     },
     {
@@ -686,10 +872,17 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1100.0,
+            "precio_actual": 110.0
         }
     },
     {
-        "categoria": "Localizacion fugas",
+        "categoria": "Tuberías y Desatascos",
         "nombre": "Localización técnica de fugas ocultas con geófono o gas traza",
         "alias": [
             "buscar fuga",
@@ -699,18 +892,25 @@
             "fuga invisible",
             "detectar fuga"
         ],
-        "precio_min": 180,
-        "precio_max": 300,
-        "precio_recomendado": 240,
+        "precio_min": 180.0,
+        "precio_max": 300.0,
+        "precio_recomendado": 240.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 240.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2400.0,
+            "precio_actual": 240.0
         }
     },
     {
-        "categoria": "Inspeccion tecnica",
+        "categoria": "Tuberías y Desatascos",
         "nombre": "Inspección de tuberías y desagües con cámara de TV",
         "alias": [
             "camara tuberia",
@@ -719,14 +919,21 @@
             "inspeccion desague",
             "revisar tuberia"
         ],
-        "precio_min": 90,
-        "precio_max": 150,
-        "precio_recomendado": 120,
+        "precio_min": 90.0,
+        "precio_max": 150.0,
+        "precio_recomendado": 120.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 120.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1200.0,
+            "precio_actual": 120.0
         }
     },
     {
@@ -747,6 +954,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 850.0,
+            "precio_actual": 85.0
         }
     },
     {
@@ -766,10 +980,17 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 150.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1500.0,
+            "precio_actual": 150.0
         }
     },
     {
-        "categoria": "Suplementos",
+        "categoria": "Suplementos y Horarios",
         "nombre": "Suplemento fines de semana y festivos 24 horas",
         "alias": [
             "fin de semana",
@@ -782,9 +1003,9 @@
             "urgencia festivo",
             "urgencia fin de semana"
         ],
-        "precio_min": 140,
-        "precio_max": 200,
-        "precio_recomendado": 170,
+        "precio_min": 140.0,
+        "precio_max": 200.0,
+        "precio_recomendado": 170.0,
         "aprendizaje": {
             "usos": 2,
             "palabras_aprendidas": [
@@ -795,6 +1016,13 @@
             ],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 170.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1700.0,
+            "precio_actual": 170.0
         }
     },
     {
@@ -815,6 +1043,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 120.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1200.0,
+            "precio_actual": 120.0
         }
     },
     {
@@ -837,6 +1072,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 100.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1000.0,
+            "precio_actual": 100.0
         }
     },
     {
@@ -860,6 +1102,13 @@
             ],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1100.0,
+            "precio_actual": 110.0
         }
     },
     {
@@ -878,6 +1127,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 135.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1350.0,
+            "precio_actual": 135.0
         }
     },
     {
@@ -897,6 +1153,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 135.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1350.0,
+            "precio_actual": 135.0
         }
     },
     {
@@ -918,6 +1181,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 220.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2200.0,
+            "precio_actual": 220.0
         }
     },
     {
@@ -937,6 +1207,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 250.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2500.0,
+            "precio_actual": 250.0
         }
     },
     {
@@ -955,6 +1232,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 300.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 3000.0,
+            "precio_actual": 300.0
         }
     },
     {
@@ -973,6 +1257,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 90.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 900.0,
+            "precio_actual": 90.0
         }
     },
     {
@@ -991,6 +1282,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 160.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1600.0,
+            "precio_actual": 160.0
         }
     },
     {
@@ -1009,6 +1307,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 75.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 750.0,
+            "precio_actual": 75.0
         }
     },
     {
@@ -1028,6 +1333,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 150.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1500.0,
+            "precio_actual": 150.0
         }
     },
     {
@@ -1046,6 +1358,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 130.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1300.0,
+            "precio_actual": 130.0
         }
     },
     {
@@ -1075,6 +1394,13 @@
             ],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1100.0,
+            "precio_actual": 110.0
         }
     },
     {
@@ -1123,6 +1449,13 @@
                 "cambio de instalación antigua de cobre a multicapa hasta punto de consumo"
             ],
             "ultima_fecha": "01/09/2026"
+        },
+        "precio_anterior": 350.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 3500.0,
+            "precio_actual": 350.0
         }
     },
     {
@@ -1143,6 +1476,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 280.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2800.0,
+            "precio_actual": 280.0
         }
     },
     {
@@ -1161,6 +1501,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 450.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 4500.0,
+            "precio_actual": 450.0
         }
     },
     {
@@ -1180,6 +1527,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 400.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 4000.0,
+            "precio_actual": 400.0
         }
     },
     {
@@ -1198,6 +1552,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 250.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2500.0,
+            "precio_actual": 250.0
         }
     },
     {
@@ -1216,6 +1577,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 240.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2400.0,
+            "precio_actual": 240.0
         }
     },
     {
@@ -1234,6 +1602,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 130.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1300.0,
+            "precio_actual": 130.0
         }
     },
     {
@@ -1253,6 +1628,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 300.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 3000.0,
+            "precio_actual": 300.0
         }
     },
     {
@@ -1277,6 +1659,13 @@
             ],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 3000.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 30000.0,
+            "precio_actual": 3000.0
         }
     },
     {
@@ -1296,6 +1685,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 70.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 700.0,
+            "precio_actual": 70.0
         }
     },
     {
@@ -1311,7 +1707,7 @@
         "precio_max": 100,
         "precio_recomendado": 85,
         "aprendizaje": {
-            "usos": 19,
+            "usos": 20,
             "palabras_aprendidas": [
                 "latiguillos"
             ],
@@ -1321,6 +1717,13 @@
                 "sustitucion de latiguillos wc"
             ],
             "ultima_fecha": "06/10/2026"
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 850.0,
+            "precio_actual": 85.0
         }
     },
     {
@@ -1339,6 +1742,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 90.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 900.0,
+            "precio_actual": 90.0
         }
     },
     {
@@ -1357,6 +1767,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 340.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 3400.0,
+            "precio_actual": 340.0
         }
     },
     {
@@ -1375,6 +1792,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 90.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 900.0,
+            "precio_actual": 90.0
         }
     },
     {
@@ -1393,6 +1817,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 850.0,
+            "precio_actual": 85.0
         }
     },
     {
@@ -1411,6 +1842,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 320.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 3200.0,
+            "precio_actual": 320.0
         }
     },
     {
@@ -1429,24 +1867,38 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 140.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1400.0,
+            "precio_actual": 140.0
         }
     },
     {
-        "categoria": "Tratamiento de Agua",
+        "categoria": "Termos y Agua",
         "nombre": "Mantenimiento y cambio de filtros de ósmosis",
         "alias": [
             "cambio filtros osmosis",
             "mantenimiento osmosis",
             "revisar osmosis"
         ],
-        "precio_min": 60,
-        "precio_max": 110,
-        "precio_recomendado": 80,
+        "precio_min": 60.0,
+        "precio_max": 110.0,
+        "precio_recomendado": 80.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 80.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 800.0,
+            "precio_actual": 80.0
         }
     },
     {
@@ -1464,6 +1916,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 380.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 3800.0,
+            "precio_actual": 380.0
         }
     },
     {
@@ -1482,6 +1941,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 130.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1300.0,
+            "precio_actual": 130.0
         }
     },
     {
@@ -1499,6 +1965,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 105.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1050.0,
+            "precio_actual": 105.0
         }
     },
     {
@@ -1516,6 +1989,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 160.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1600.0,
+            "precio_actual": 160.0
         }
     },
     {
@@ -1525,14 +2005,22 @@
             "purgar radiadores",
             "puesta a punto radiadores"
         ],
-        "precio_min": 60,
-        "precio_max": 110,
-        "precio_recomendado": 80,
+        "buscar": [],
+        "precio_min": 70.0,
+        "precio_max": 130.0,
+        "precio_recomendado": 110.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 1100.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 11000.0,
+            "precio_actual": 1100.0
         }
     },
     {
@@ -1542,14 +2030,22 @@
             "llave radiador",
             "detentor radiador"
         ],
-        "precio_min": 50,
-        "precio_max": 90,
-        "precio_recomendado": 70,
+        "buscar": [],
+        "precio_min": 110.0,
+        "precio_max": 150.0,
+        "precio_recomendado": 130.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 1300.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 13000.0,
+            "precio_actual": 1300.0
         }
     },
     {
@@ -1559,31 +2055,46 @@
             "cambiar radiador",
             "colocar radiador"
         ],
-        "precio_min": 90,
-        "precio_max": 160,
-        "precio_recomendado": 120,
+        "buscar": [],
+        "precio_min": 100.0,
+        "precio_max": 160.0,
+        "precio_recomendado": 130.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 1300.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 13000.0,
+            "precio_actual": 1300.0
         }
     },
     {
-        "categoria": "Sanitarios y Duchas",
+        "categoria": "Grifería y Sanitarios",
         "nombre": "Sustitución de columna de ducha o rociador hidromasaje",
         "alias": [
             "columna ducha",
             "cambiar columna ducha"
         ],
-        "precio_min": 85,
-        "precio_max": 150,
-        "precio_recomendado": 115,
+        "precio_min": 85.0,
+        "precio_max": 150.0,
+        "precio_recomendado": 115.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 115.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1150.0,
+            "precio_actual": 115.0
         }
     },
     {
@@ -1601,23 +2112,37 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 175.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1750.0,
+            "precio_actual": 175.0
         }
     },
     {
-        "categoria": "Sanitarios y Duchas",
+        "categoria": "Grifería y Sanitarios",
         "nombre": "Mano de obra fontanería: cambio de bañera por plato de ducha",
         "alias": [
             "cambio bañera por ducha",
             "quitar bañera poner ducha"
         ],
-        "precio_min": 350,
-        "precio_max": 650,
-        "precio_recomendado": 480,
+        "precio_min": 420.0,
+        "precio_max": 750.0,
+        "precio_recomendado": 580.0,
         "aprendizaje": {
             "usos": 0,
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 480.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 4800.0,
+            "precio_actual": 480.0
         }
     },
     {
@@ -1636,6 +2161,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 70.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 700.0,
+            "precio_actual": 70.0
         }
     },
     {
@@ -1653,6 +2185,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 115.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1150.0,
+            "precio_actual": 115.0
         }
     },
     {
@@ -1674,6 +2213,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 80.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 800.0,
+            "precio_actual": 80.0
         }
     },
     {
@@ -1694,6 +2240,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 45.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 450.0,
+            "precio_actual": 45.0
         }
     },
     {
@@ -1713,6 +2266,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 55.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 550.0,
+            "precio_actual": 55.0
         }
     },
     {
@@ -1732,6 +2292,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 50.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 500.0,
+            "precio_actual": 50.0
         }
     },
     {
@@ -1751,6 +2318,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 75.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 750.0,
+            "precio_actual": 75.0
         }
     },
     {
@@ -1770,6 +2344,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 90.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 900.0,
+            "precio_actual": 90.0
         }
     },
     {
@@ -1789,6 +2370,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 75.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 750.0,
+            "precio_actual": 75.0
         }
     },
     {
@@ -1808,6 +2396,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 125.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1250.0,
+            "precio_actual": 125.0
         }
     },
     {
@@ -1827,6 +2422,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 850.0,
+            "precio_actual": 85.0
         }
     },
     {
@@ -1845,6 +2447,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 850.0,
+            "precio_actual": 85.0
         }
     },
     {
@@ -1864,6 +2473,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 180.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1800.0,
+            "precio_actual": 180.0
         }
     },
     {
@@ -1882,6 +2498,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 210.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2100.0,
+            "precio_actual": 210.0
         }
     },
     {
@@ -1901,6 +2524,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 70.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 700.0,
+            "precio_actual": 70.0
         }
     },
     {
@@ -1920,6 +2550,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 95.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 950.0,
+            "precio_actual": 95.0
         }
     },
     {
@@ -1938,6 +2575,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 55.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 550.0,
+            "precio_actual": 55.0
         }
     },
     {
@@ -1956,6 +2600,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 190.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 1900.0,
+            "precio_actual": 190.0
         }
     },
     {
@@ -1974,6 +2625,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 220.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2200.0,
+            "precio_actual": 220.0
         }
     },
     {
@@ -1993,6 +2651,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 80.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 800.0,
+            "precio_actual": 80.0
         }
     },
     {
@@ -2011,6 +2676,13 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 70.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 700.0,
+            "precio_actual": 70.0
         }
     },
     {
@@ -2030,6 +2702,1444 @@
             "palabras_aprendidas": [],
             "frases_aprendidas": [],
             "ultima_fecha": ""
+        },
+        "precio_anterior": 220.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 2200.0,
+            "precio_actual": 220.0
+        }
+    },
+    {
+        "categoria": "Grifería",
+        "nombre": "Desmontaje y cambio de latiguillo de grifo monomando con desmontaje",
+        "alias": [
+            "latiguillos grifo monomando",
+            "flexible grifo cocina",
+            "cambiar latiguillo cocina",
+            "desmontar latiguillo grifo",
+            "manguera grifo monomando",
+            "grifo con latiguillos",
+            "cambio de latiguillos de grifo"
+        ],
+        "buscar": [
+            "latiguillo grifo",
+            "flexible monomando",
+            "manguera grifo"
+        ],
+        "precio_min": 65.0,
+        "precio_max": 110.0,
+        "precio_recomendado": 85.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 850.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 8500.0,
+            "precio_actual": 850.0
+        }
+    },
+    {
+        "categoria": "Calefacción y radiadores",
+        "nombre": "Desmontaje, montaje y purgado de radiador",
+        "alias": [
+            "quitar radiador",
+            "desmontar radiador",
+            "cambiar radiador",
+            "purgar radiador",
+            "poner radiador nuevo",
+            "radiador con purgado",
+            "retirada radiador"
+        ],
+        "buscar": [
+            "radiador",
+            "purgado",
+            "calefaccion",
+            "calefacción"
+        ],
+        "precio_min": 110.0,
+        "precio_max": 220.0,
+        "precio_recomendado": 160.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 1600.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 16000.0,
+            "precio_actual": 1600.0
+        }
+    },
+    {
+        "categoria": "Calefacción y radiadores",
+        "nombre": "Cambio de válvula de radiador y purgado de circuito",
+        "alias": [
+            "válvula radiador",
+            "llave radiador",
+            "detentor radiador",
+            "cambiar valvula radiador",
+            "cambiar válvula radiador",
+            "purgado circuito radiador"
+        ],
+        "buscar": [
+            "valvula radiador",
+            "detentor radiador",
+            "purgado radiador"
+        ],
+        "precio_min": 95.0,
+        "precio_max": 170.0,
+        "precio_recomendado": 130.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 1300.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 13000.0,
+            "precio_actual": 1300.0
+        }
+    },
+    {
+        "categoria": "Fontanería",
+        "nombre": "Desmontaje de WC compacto y retirada de piezas antiguas",
+        "alias": [
+            "quitar wc compacto",
+            "desmontar wc compacto",
+            "retirar wc antiguo",
+            "desmontaje wc ligado",
+            "retirada de inodoro compacto",
+            "quitar cisterna compacta"
+        ],
+        "buscar": [
+            "wc compacto",
+            "cisterna compacta",
+            "retirada inodoro"
+        ],
+        "precio_min": 120.0,
+        "precio_max": 240.0,
+        "precio_recomendado": 175.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 1750.0,
+        "alerta_precio": {
+            "tipo": "baja",
+            "delta": -90.0,
+            "precio_anterior": 17500.0,
+            "precio_actual": 1750.0
+        }
+    },
+    {
+        "categoria": "Desplazamientos y Mínimos",
+        "nombre": "Servicio mínimo de desplazamiento y diagnóstico técnico básico",
+        "alias": [
+            "servicio mínimo de desplazamiento y diagnóstico técnico básico"
+        ],
+        "buscar": [],
+        "precio_min": 30.0,
+        "precio_max": 60.0,
+        "precio_recomendado": 45.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 45.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 45.0,
+            "precio_actual": 45.0
+        }
+    },
+    {
+        "categoria": "Desplazamientos y Mínimos",
+        "nombre": "Desplazamiento + Elaboración de presupuesto detallado para aseguradora / reforma",
+        "alias": [
+            "desplazamiento + elaboración de presupuesto detallado para aseguradora / reforma"
+        ],
+        "buscar": [],
+        "precio_min": 30.0,
+        "precio_max": 60.0,
+        "precio_recomendado": 45.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 45.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 45.0,
+            "precio_actual": 45.0
+        }
+    },
+    {
+        "categoria": "Llaves de Paso y Escuadra",
+        "nombre": "Sustitución de llave de escuadra estándar de 3/8\" o 1/2\"",
+        "alias": [
+            "sustitución de llave de escuadra estándar de 3/8\" o 1/2\""
+        ],
+        "buscar": [],
+        "precio_min": 60.0,
+        "precio_max": 90.0,
+        "precio_recomendado": 75.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 75.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 75.0,
+            "precio_actual": 75.0
+        }
+    },
+    {
+        "categoria": "Llaves de Paso y Escuadra",
+        "nombre": "Sustitución de llave de escuadra / paso de gran caudal 3/4\"",
+        "alias": [
+            "sustitución de llave de escuadra / paso de gran caudal 3/4\""
+        ],
+        "buscar": [],
+        "precio_min": 75.0,
+        "precio_max": 110.0,
+        "precio_recomendado": 90.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 90.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 90.0,
+            "precio_actual": 90.0
+        }
+    },
+    {
+        "categoria": "Llaves de Paso y Escuadra",
+        "nombre": "Sustitución de llave de paso general de vivienda (1/2\" - 3/4\")",
+        "alias": [
+            "sustitución de llave de paso general de vivienda (1/2\" - 3/4\")"
+        ],
+        "buscar": [],
+        "precio_min": 100.0,
+        "precio_max": 200.0,
+        "precio_recomendado": 150.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 150.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 150.0,
+            "precio_actual": 150.0
+        }
+    },
+    {
+        "categoria": "Llaves de Paso y Escuadra",
+        "nombre": "Sustitución de llave de contador de agua / batería comunitaria",
+        "alias": [
+            "sustitución de llave de contador de agua / batería comunitaria"
+        ],
+        "buscar": [],
+        "precio_min": 120.0,
+        "precio_max": 170.0,
+        "precio_recomendado": 140.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 140.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 140.0,
+            "precio_actual": 140.0
+        }
+    },
+    {
+        "categoria": "Latiguillos y Conexiones",
+        "nombre": "Sustitución de latiguillo estándar 3/8\" o 1/2\" (WC, lavabo, bidé)",
+        "alias": [
+            "sustitución de latiguillo estándar 3/8\" o 1/2\" (wc, lavabo, bidé)"
+        ],
+        "buscar": [],
+        "precio_min": 55.0,
+        "precio_max": 85.0,
+        "precio_recomendado": 70.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 70.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 70.0,
+            "precio_actual": 70.0
+        }
+    },
+    {
+        "categoria": "Latiguillos y Conexiones",
+        "nombre": "Sustitución de pareja de latiguillos en grifería (acceso estándar)",
+        "alias": [
+            "sustitución de pareja de latiguillos en grifería (acceso estándar)"
+        ],
+        "buscar": [],
+        "precio_min": 70.0,
+        "precio_max": 100.0,
+        "precio_recomendado": 85.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 85.0,
+            "precio_actual": 85.0
+        }
+    },
+    {
+        "categoria": "Latiguillos y Conexiones",
+        "nombre": "Sustitución de pareja de latiguillos con desmontaje completo de grifo / difícil acceso",
+        "alias": [
+            "sustitución de pareja de latiguillos con desmontaje completo de grifo / difícil acceso"
+        ],
+        "buscar": [],
+        "precio_min": 75.0,
+        "precio_max": 120.0,
+        "precio_recomendado": 95.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 95.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 95.0,
+            "precio_actual": 95.0
+        }
+    },
+    {
+        "categoria": "Latiguillos y Conexiones",
+        "nombre": "Sustitución de pareja de latiguillos / flexibles de gran caudal 3/4\" (Termo / Calentador)",
+        "alias": [
+            "sustitución de pareja de latiguillos / flexibles de gran caudal 3/4\" (termo / calentador)"
+        ],
+        "buscar": [],
+        "precio_min": 75.0,
+        "precio_max": 115.0,
+        "precio_recomendado": 90.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 90.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 90.0,
+            "precio_actual": 90.0
+        }
+    },
+    {
+        "categoria": "Acoplamientos GEBO",
+        "nombre": "Colocación de racor / acoplamiento rápido GEBO en tubería de Cobre o Plomo",
+        "alias": [
+            "colocación de racor / acoplamiento rápido gebo en tubería de cobre o plomo"
+        ],
+        "buscar": [],
+        "precio_min": 85.0,
+        "precio_max": 130.0,
+        "precio_recomendado": 105.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 105.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 105.0,
+            "precio_actual": 105.0
+        }
+    },
+    {
+        "categoria": "Acoplamientos GEBO",
+        "nombre": "Colocación de acoplamiento rápido GEBO en tubería de Hierro o Acero (hasta 1\")",
+        "alias": [
+            "colocación de acoplamiento rápido gebo en tubería de hierro o acero (hasta 1\")"
+        ],
+        "buscar": [],
+        "precio_min": 95.0,
+        "precio_max": 145.0,
+        "precio_recomendado": 120.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 120.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 120.0,
+            "precio_actual": 120.0
+        }
+    },
+    {
+        "categoria": "Acoplamientos GEBO",
+        "nombre": "Instalación de abrazadera / carrete de reparación GEBO de gran diámetro (1 1/4\" - 2\")",
+        "alias": [
+            "instalación de abrazadera / carrete de reparación gebo de gran diámetro (1 1/4\" - 2\")"
+        ],
+        "buscar": [],
+        "precio_min": 130.0,
+        "precio_max": 200.0,
+        "precio_recomendado": 160.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 160.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 160.0,
+            "precio_actual": 160.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Sustitución de mecanismo de carga (boya) en cisterna vista estándar",
+        "alias": [
+            "sustitución de mecanismo de carga (boya) en cisterna vista estándar"
+        ],
+        "buscar": [],
+        "precio_min": 75.0,
+        "precio_max": 130.0,
+        "precio_recomendado": 100.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 100.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 100.0,
+            "precio_actual": 100.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Sustitución de mecanismo de descarga (campana / doble pulsador) en cisterna vista",
+        "alias": [
+            "sustitución de mecanismo de descarga (campana / doble pulsador) en cisterna vista"
+        ],
+        "buscar": [],
+        "precio_min": 80.0,
+        "precio_max": 140.0,
+        "precio_recomendado": 110.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 110.0,
+            "precio_actual": 110.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Sustitución completa de mecanismos de carga y descarga en cisterna vista",
+        "alias": [
+            "sustitución completa de mecanismos de carga y descarga en cisterna vista"
+        ],
+        "buscar": [],
+        "precio_min": 110.0,
+        "precio_max": 160.0,
+        "precio_recomendado": 135.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 135.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 135.0,
+            "precio_actual": 135.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Sustitución de mecanismo de carga (boya) en cisterna aérea / alta con tirador",
+        "alias": [
+            "sustitución de mecanismo de carga (boya) en cisterna aérea / alta con tirador"
+        ],
+        "buscar": [],
+        "precio_min": 65.0,
+        "precio_max": 105.0,
+        "precio_recomendado": 85.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 85.0,
+            "precio_actual": 85.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Sustitución de mecanismo de descarga en cisterna aérea / alta con tirador",
+        "alias": [
+            "sustitución de mecanismo de descarga en cisterna aérea / alta con tirador"
+        ],
+        "buscar": [],
+        "precio_min": 70.0,
+        "precio_max": 115.0,
+        "precio_recomendado": 90.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 90.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 90.0,
+            "precio_actual": 90.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Sustitución solo de mecanismo de CARGA en cisterna empotrada (Geberit, Roca, Grohe)",
+        "alias": [
+            "sustitución solo de mecanismo de carga en cisterna empotrada (geberit, roca, grohe)"
+        ],
+        "buscar": [],
+        "precio_min": 140.0,
+        "precio_max": 220.0,
+        "precio_recomendado": 180.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 180.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 180.0,
+            "precio_actual": 180.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Desmontaje y cambio COMPLETO de mecanismo WC empotrado Geberit / Roca",
+        "alias": [
+            "desmontaje y cambio completo de mecanismo wc empotrado geberit / roca"
+        ],
+        "buscar": [],
+        "precio_min": 220.0,
+        "precio_max": 360.0,
+        "precio_recomendado": 280.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 280.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 280.0,
+            "precio_actual": 280.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Instalar o sustituir inodoro estándar (fijación, conexión y retirada)",
+        "alias": [
+            "instalar o sustituir inodoro estándar (fijación, conexión y retirada)"
+        ],
+        "buscar": [],
+        "precio_min": 150.0,
+        "precio_max": 240.0,
+        "precio_recomendado": 195.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 195.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 195.0,
+            "precio_actual": 195.0
+        }
+    },
+    {
+        "categoria": "Cisternas y WC",
+        "nombre": "Desmontaje de WC compacto / pegado a pared y retirada de piezas",
+        "alias": [
+            "desmontaje de wc compacto / pegado a pared y retirada de piezas"
+        ],
+        "buscar": [],
+        "precio_min": 120.0,
+        "precio_max": 240.0,
+        "precio_recomendado": 175.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 175.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 175.0,
+            "precio_actual": 175.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Purgado y puesta a punto de red de calefacción / radiadores (hasta 8 radiadores)",
+        "alias": [
+            "purgado y puesta a punto de red de calefacción / radiadores (hasta 8 radiadores)"
+        ],
+        "buscar": [],
+        "precio_min": 70.0,
+        "precio_max": 140.0,
+        "precio_recomendado": 110.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 110.0,
+            "precio_actual": 110.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Sustitución de llave / detentor de radiador sin purgado general",
+        "alias": [
+            "sustitución de llave / detentor de radiador sin purgado general"
+        ],
+        "buscar": [],
+        "precio_min": 85.0,
+        "precio_max": 135.0,
+        "precio_recomendado": 110.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 110.0,
+            "precio_actual": 110.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Cambio de llave / detentor de radiador con purgado completo de circuito",
+        "alias": [
+            "cambio de llave / detentor de radiador con purgado completo de circuito"
+        ],
+        "buscar": [],
+        "precio_min": 110.0,
+        "precio_max": 160.0,
+        "precio_recomendado": 135.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 135.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 135.0,
+            "precio_actual": 135.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Desmontaje, montaje y purgado de radiador individual",
+        "alias": [
+            "desmontaje, montaje y purgado de radiador individual"
+        ],
+        "buscar": [],
+        "precio_min": 110.0,
+        "precio_max": 220.0,
+        "precio_recomendado": 160.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 160.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 160.0,
+            "precio_actual": 160.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Instalación de radiador nuevo de agua (tomas existentes)",
+        "alias": [
+            "instalación de radiador nuevo de agua (tomas existentes)"
+        ],
+        "buscar": [],
+        "precio_min": 120.0,
+        "precio_max": 200.0,
+        "precio_recomendado": 160.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 160.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 160.0,
+            "precio_actual": 160.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Anulación o condena de tomas de radiador",
+        "alias": [
+            "anulación o condena de tomas de radiador"
+        ],
+        "buscar": [],
+        "precio_min": 80.0,
+        "precio_max": 140.0,
+        "precio_recomendado": 110.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 110.0,
+            "precio_actual": 110.0
+        }
+    },
+    {
+        "categoria": "Grifería y Sanitarios",
+        "nombre": "Cambiar grifo de lavabo, bidé o fregadero (monomando)",
+        "alias": [
+            "cambiar grifo de lavabo, bidé o fregadero (monomando)"
+        ],
+        "buscar": [],
+        "precio_min": 90.0,
+        "precio_max": 140.0,
+        "precio_recomendado": 115.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 115.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 115.0,
+            "precio_actual": 115.0
+        }
+    },
+    {
+        "categoria": "Grifería y Sanitarios",
+        "nombre": "Sustitución de cartucho cerámico en grifo monomando",
+        "alias": [
+            "sustitución de cartucho cerámico en grifo monomando"
+        ],
+        "buscar": [],
+        "precio_min": 65.0,
+        "precio_max": 95.0,
+        "precio_recomendado": 80.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 80.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 80.0,
+            "precio_actual": 80.0
+        }
+    },
+    {
+        "categoria": "Grifería y Sanitarios",
+        "nombre": "Instalación de mampara de ducha o bañera",
+        "alias": [
+            "instalación de mampara de ducha o bañera"
+        ],
+        "buscar": [],
+        "precio_min": 130.0,
+        "precio_max": 220.0,
+        "precio_recomendado": 175.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 175.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 175.0,
+            "precio_actual": 175.0
+        }
+    },
+    {
+        "categoria": "Grifería y Sanitarios",
+        "nombre": "Sustitución de sifón de lavabo / bidé",
+        "alias": [
+            "sustitución de sifón de lavabo / bidé"
+        ],
+        "buscar": [],
+        "precio_min": 75.0,
+        "precio_max": 115.0,
+        "precio_recomendado": 95.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 95.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 95.0,
+            "precio_actual": 95.0
+        }
+    },
+    {
+        "categoria": "Grifería y Sanitarios",
+        "nombre": "Sustitución de sifón de cocina / fregadero",
+        "alias": [
+            "sustitución de sifón de cocina / fregadero"
+        ],
+        "buscar": [],
+        "precio_min": 85.0,
+        "precio_max": 135.0,
+        "precio_recomendado": 110.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 110.0,
+            "precio_actual": 110.0
+        }
+    },
+    {
+        "categoria": "Grifería y Sanitarios",
+        "nombre": "Sustitución de válvula técnica plato de ducha",
+        "alias": [
+            "sustitución de válvula técnica plato de ducha"
+        ],
+        "buscar": [],
+        "precio_min": 95.0,
+        "precio_max": 160.0,
+        "precio_recomendado": 125.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 125.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 125.0,
+            "precio_actual": 125.0
+        }
+    },
+    {
+        "categoria": "Termos y Agua",
+        "nombre": "Sustitución de termo eléctrico de hasta 50 Litros",
+        "alias": [
+            "sustitución de termo eléctrico de hasta 50 litros"
+        ],
+        "buscar": [],
+        "precio_min": 180.0,
+        "precio_max": 320.0,
+        "precio_recomendado": 250.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 250.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 250.0,
+            "precio_actual": 250.0
+        }
+    },
+    {
+        "categoria": "Termos y Agua",
+        "nombre": "Sustitución de termo eléctrico de 80 Litros",
+        "alias": [
+            "sustitución de termo eléctrico de 80 litros"
+        ],
+        "buscar": [],
+        "precio_min": 220.0,
+        "precio_max": 400.0,
+        "precio_recomendado": 300.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 300.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 300.0,
+            "precio_actual": 300.0
+        }
+    },
+    {
+        "categoria": "Termos y Agua",
+        "nombre": "Sustitución de termo eléctrico de 100L a 150 Litros",
+        "alias": [
+            "sustitución de termo eléctrico de 100l a 150 litros"
+        ],
+        "buscar": [],
+        "precio_min": 300.0,
+        "precio_max": 500.0,
+        "precio_recomendado": 390.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 390.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 390.0,
+            "precio_actual": 390.0
+        }
+    },
+    {
+        "categoria": "Termos y Agua",
+        "nombre": "Sustitución de calentador de agua a gas (atmosférico / estanco)",
+        "alias": [
+            "sustitución de calentador de agua a gas (atmosférico / estanco)"
+        ],
+        "buscar": [],
+        "precio_min": 250.0,
+        "precio_max": 420.0,
+        "precio_recomendado": 320.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 320.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 320.0,
+            "precio_actual": 320.0
+        }
+    },
+    {
+        "categoria": "Termos y Agua",
+        "nombre": "Instalación completa de equipo de ósmosis inversa bajo fregadero",
+        "alias": [
+            "instalación completa de equipo de ósmosis inversa bajo fregadero"
+        ],
+        "buscar": [],
+        "precio_min": 130.0,
+        "precio_max": 200.0,
+        "precio_recomendado": 160.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 160.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 160.0,
+            "precio_actual": 160.0
+        }
+    },
+    {
+        "categoria": "Tuberías y Desatascos",
+        "nombre": "Desatasco doméstico simple con muelle mecánico o guaya portátil",
+        "alias": [
+            "desatasco doméstico simple con muelle mecánico o guaya portátil"
+        ],
+        "buscar": [],
+        "precio_min": 95.0,
+        "precio_max": 130.0,
+        "precio_recomendado": 110.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 110.0,
+            "precio_actual": 110.0
+        }
+    },
+    {
+        "categoria": "Suplementos y Horarios",
+        "nombre": "Suplemento de urgencia diaria (Lunes a Viernes 8:00 - 20:00)",
+        "alias": [
+            "suplemento de urgencia diaria (lunes a viernes 8:00 - 20:00)"
+        ],
+        "buscar": [],
+        "precio_min": 70.0,
+        "precio_max": 100.0,
+        "precio_recomendado": 85.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 85.0,
+            "precio_actual": 85.0
+        }
+    },
+    {
+        "categoria": "Suplementos y Horarios",
+        "nombre": "Suplemento de urgencia nocturna (20:00 - 8:00)",
+        "alias": [
+            "suplemento de urgencia nocturna (20:00 - 8:00)"
+        ],
+        "buscar": [],
+        "precio_min": 120.0,
+        "precio_max": 180.0,
+        "precio_recomendado": 150.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 150.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 150.0,
+            "precio_actual": 150.0
+        }
+    },
+    {
+        "categoria": "Dificultades y Imprevistos Técnicos",
+        "nombre": "Extra por extracción de rosca/llave partida dentro de pared",
+        "alias": [
+            "extra por extracción de rosca/llave partida dentro de pared"
+        ],
+        "buscar": [],
+        "precio_min": 40.0,
+        "precio_max": 80.0,
+        "precio_recomendado": 60.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 60.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 60.0,
+            "precio_actual": 60.0
+        }
+    },
+    {
+        "categoria": "Dificultades y Imprevistos Técnicos",
+        "nombre": "Extra por corte, desoxido o desbloqueo de tuerca/grifo gripado con soplete o radial",
+        "alias": [
+            "extra por corte, desoxido o desbloqueo de tuerca/grifo gripado con soplete o radial"
+        ],
+        "buscar": [],
+        "precio_min": 30.0,
+        "precio_max": 60.0,
+        "precio_recomendado": 45.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 45.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 45.0,
+            "precio_actual": 45.0
+        }
+    },
+    {
+        "categoria": "Dificultades y Imprevistos Técnicos",
+        "nombre": "Extra por desmontaje de mueble lavabo / encimera para acceder a grifería o desagüe",
+        "alias": [
+            "extra por desmontaje de mueble lavabo / encimera para acceder a grifería o desagüe"
+        ],
+        "buscar": [],
+        "precio_min": 45.0,
+        "precio_max": 90.0,
+        "precio_recomendado": 65.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 65.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 65.0,
+            "precio_actual": 65.0
+        }
+    },
+    {
+        "categoria": "Dificultades y Imprevistos Técnicos",
+        "nombre": "Extra por picado puntual de azulejo/pared para sustitución de llave de paso o tubería empotrada",
+        "alias": [
+            "extra por picado puntual de azulejo/pared para sustitución de llave de paso o tubería empotrada"
+        ],
+        "buscar": [],
+        "precio_min": 50.0,
+        "precio_max": 95.0,
+        "precio_recomendado": 70.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 70.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 70.0,
+            "precio_actual": 70.0
+        }
+    },
+    {
+        "categoria": "Dificultades y Imprevistos Técnicos",
+        "nombre": "Extra por sustitución de tornillos/fijaciones podridas u oxidadas en inodoro/bidé",
+        "alias": [
+            "extra por sustitución de tornillos/fijaciones podridas u oxidadas en inodoro/bidé"
+        ],
+        "buscar": [],
+        "precio_min": 25.0,
+        "precio_max": 50.0,
+        "precio_recomendado": 35.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 35.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 35.0,
+            "precio_actual": 35.0
+        }
+    },
+    {
+        "categoria": "Dificultades y Imprevistos Técnicos",
+        "nombre": "Extra por limpieza/descalcificación manual de toma atascada por cal tras sustituir llave",
+        "alias": [
+            "extra por limpieza/descalcificación manual de toma atascada por cal tras sustituir llave"
+        ],
+        "buscar": [],
+        "precio_min": 30.0,
+        "precio_max": 55.0,
+        "precio_recomendado": 40.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 40.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 40.0,
+            "precio_actual": 40.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Mantenimiento / revisión de caldera de gas (limpieza de quemador, análisis de combustión y prueba de presión)",
+        "alias": [
+            "mantenimiento / revisión de caldera de gas (limpieza de quemador, análisis de combustión y prueba de presión)"
+        ],
+        "buscar": [],
+        "precio_min": 90.0,
+        "precio_max": 150.0,
+        "precio_recomendado": 120.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 120.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 120.0,
+            "precio_actual": 120.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Limpieza técnica y desfangado de circuito cerrado de calefacción (eliminación de lodos/cal con bomba externa)",
+        "alias": [
+            "limpieza técnica y desfangado de circuito cerrado de calefacción (eliminación de lodos/cal con bomba externa)"
+        ],
+        "buscar": [],
+        "precio_min": 180.0,
+        "precio_max": 350.0,
+        "precio_recomendado": 250.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 250.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 250.0,
+            "precio_actual": 250.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Sustitución de vaso de expansión o válvula de seguridad de calefacción (3 bar)",
+        "alias": [
+            "sustitución de vaso de expansión o válvula de seguridad de calefacción (3 bar)"
+        ],
+        "buscar": [],
+        "precio_min": 85.0,
+        "precio_max": 145.0,
+        "precio_recomendado": 115.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 115.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 115.0,
+            "precio_actual": 115.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Sustitución / instalación de termostato ambiente digital o WiFi (programable)",
+        "alias": [
+            "sustitución / instalación de termostato ambiente digital o wifi (programable)"
+        ],
+        "buscar": [],
+        "precio_min": 65.0,
+        "precio_max": 110.0,
+        "precio_recomendado": 85.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 85.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 85.0,
+            "precio_actual": 85.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Sustitución de bomba circuladora de calefacción",
+        "alias": [
+            "sustitución de bomba circuladora de calefacción"
+        ],
+        "buscar": [],
+        "precio_min": 110.0,
+        "precio_max": 190.0,
+        "precio_recomendado": 150.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 150.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 150.0,
+            "precio_actual": 150.0
+        }
+    },
+    {
+        "categoria": "Calefacción y Radiadores",
+        "nombre": "Equilibrado hidráulico de radiadores y regulación de detentores en vivienda",
+        "alias": [
+            "equilibrado hidráulico de radiadores y regulación de detentores en vivienda"
+        ],
+        "buscar": [],
+        "precio_min": 80.0,
+        "precio_max": 140.0,
+        "precio_recomendado": 110.0,
+        "aprendizaje": {
+            "usos": 0,
+            "palabras_aprendidas": [],
+            "frases_aprendidas": [],
+            "ultima_fecha": ""
+        },
+        "precio_anterior": 110.0,
+        "alerta_precio": {
+            "tipo": "normal",
+            "delta": 0,
+            "precio_anterior": 110.0,
+            "precio_actual": 110.0
         }
     }
 ]

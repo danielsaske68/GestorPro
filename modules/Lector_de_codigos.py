@@ -18,10 +18,12 @@ BASE_URL = "https://www.clientes.homeserve.es/cgi-bin/fccgi.exe?w3exec="
 THEME_COLOR = "#0056b3" 
 
 
-# --- NUEVO: DEFINIR CARPETA DE DATOS ---
-CARPETA_DATOS = "datos_lector"
-if not os.path.exists(CARPETA_DATOS):
-    os.makedirs(CARPETA_DATOS)
+# --- DEFINIR CARPETA DE DATOS CENTRALIZADA ---
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PDFS_DIR = os.path.join(BASE_DIR, "PDFS")
+os.makedirs(PDFS_DIR, exist_ok=True)
+CARPETA_DATOS = os.path.join(PDFS_DIR, "lector")
+os.makedirs(CARPETA_DATOS, exist_ok=True)
 
 
 # =========================================================

@@ -1,0 +1,58 @@
+{
+  "2026": {
+    "303": {
+      "07": true,
+      "09": true,
+      "28": true,
+      "29": true,
+      "71": true
+    },
+    "100": {
+      "0435": true,
+      "0460": false,
+      "0500": true,
+      "0510": false,
+      "0545": true,
+      "0546": true,
+      "0609": true,
+      "0610": true,
+      "0700": true
+    },
+    "130": {
+      "01": true,
+      "02": true,
+      "03": true,
+      "04": true,
+      "05": false,
+      "A ingresar": true
+    },
+    "1er Trimestre": {
+      "303": {
+        "07": true,
+        "09": true,
+        "28": true,
+        "29": true,
+        "71": true
+      },
+      "130": {
+        "01": false,
+        "02": false,
+        "03": false,
+        "04": false,
+        "05": false,
+        "A ingresar": false
+      },
+      "100": {
+        "0435": false,
+        "0460": false,
+        "0500": false,
+        "0510": false,
+        "0545": false,
+        "0546": false,
+        "0609": false,
+        "0610": false,
+        "0700": false
+      }
+    }
+  }
+}

@@ -33,9 +33,11 @@ def ruta_app(carpeta, archivo=None):
             archivo
         )
     return ruta
-CARPETA_PRESUPUESTOS = ruta_app(
-    "presupuestos_pdf"
-)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PDFS_DIR = os.path.join(BASE_DIR, "PDFS")
+os.makedirs(PDFS_DIR, exist_ok=True)
+CARPETA_PRESUPUESTOS = os.path.join(PDFS_DIR, "presupuestos")
+os.makedirs(CARPETA_PRESUPUESTOS, exist_ok=True)
 ARCHIVO_BAREMOS = ruta_app(
     "data",
     "baremos_v2.json"
@@ -2250,48 +2252,77 @@ class AppPresupuestos(ctk.CTkFrame):
         ventana.minsize(1200, 700)
         ventana.state("zoomed")
         ventana.grab_set()
+        ventana.configure(fg_color="#0a1117")
 
         ventana.grid_columnconfigure(0, weight=1)
         ventana.grid_rowconfigure(1, weight=1)
         ventana.grid_rowconfigure(2, weight=0)
 
+        style = ttk.Style()
+        try:
+            style.theme_use("clam")
+        except Exception:
+            pass
+        style.configure("Elegant.Treeview",
+            background="#0d1720",
+            foreground="#edf2f7",
+            fieldbackground="#0d1720",
+            rowheight=34,
+            borderwidth=0,
+            relief="flat")
+        style.map("Elegant.Treeview",
+            background=[("selected", "#2f6fed")],
+            foreground=[("selected", "#ffffff")])
+        style.configure("Elegant.Treeview.Heading",
+            background="#1e2d3a",
+            foreground="#f3f7ff",
+            relief="flat",
+            padding=(12, 10),
+            font=("Segoe UI", 12, "bold"))
+        style.map("Elegant.Treeview.Heading",
+            background=[("active", "#243a4d")])
+
         # ==============================
         # BARRA SUPERIOR
         # ==============================
 
-        barra = ctk.CTkFrame(ventana)
-        barra.grid(row=0,column=0,padx=10,pady=10,sticky="ew")
-
-        barra.grid_columnconfigure(1,weight=1)
+        barra = ctk.CTkFrame(
+            ventana,
+            fg_color="#111c27",
+            corner_radius=18,
+            border_width=1,
+            border_color="#2a3f55"
+        )
+        barra.grid(row=0, column=0, padx=10, pady=(12, 8), sticky="ew")
+        barra.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
             barra,
-            text="🔍 Buscar:"
-        ).grid(row=0,column=0,padx=10)
+            text="🔎 Buscar",
+            font=("Segoe UI", 14, "bold"),
+            text_color="#f2f8ff"
+        ).grid(row=0, column=0, padx=(14, 8), pady=12)
 
         buscar = ctk.CTkEntry(
             barra,
-            placeholder_text="Nombre, alias, categoría..."
+            placeholder_text="Nombre, alias, categoría...",
+            width=500,
+            height=38,
+            fg_color="#0d1720",
+            border_color="#3b82f6",
+            border_width=2,
+            text_color="#f3f7ff",
+            font=("Segoe UI", 13)
         )
-
-        buscar.grid(
-            row=0,
-            column=1,
-            sticky="ew",
-            padx=10
-        )
+        buscar.grid(row=0, column=1, sticky="ew", padx=(0, 12), pady=12)
 
         contador = ctk.CTkLabel(
             barra,
-            text=""
+            text="",
+            font=("Segoe UI", 12, "bold"),
+            text_color="#9ec5ff"
         )
-
-        contador.grid(
-            row=0,
-            column=2,
-            padx=10
-        )
-
+        contador.grid(row=0, column=2, padx=(0, 14), pady=12)
 
         # ==============================
         # TABLA
@@ -2306,65 +2337,49 @@ class AppPresupuestos(ctk.CTkFrame):
             "usos"
         )
 
-
-        frame_tabla=tk.Frame(
-            ventana
+        frame_tabla = ctk.CTkFrame(
+            ventana,
+            fg_color="#0d1720",
+            corner_radius=18,
+            border_width=1,
+            border_color="#223547"
         )
-
         frame_tabla.grid(
             row=1,
             column=0,
             padx=10,
-            pady=(5, 8),
+            pady=(4, 10),
             sticky="nsew"
         )
         frame_tabla.grid_rowconfigure(0, weight=1)
         frame_tabla.grid_columnconfigure(0, weight=1)
 
-
-        tree=ttk.Treeview(
+        tree = ttk.Treeview(
             frame_tabla,
             columns=columnas,
-            show="headings"
+            show="headings",
+            selectmode="browse",
+            style="Elegant.Treeview"
         )
 
-
         for col in columnas:
-
             tree.heading(
                 col,
                 text=col.capitalize(),
-                command=lambda c=col:self.ordenar_baremos(tree,c,False)
+                command=lambda c=col:self.ordenar_baremos(tree, c, False)
             )
 
+        tree.column("categoria", width=150, anchor="w")
+        tree.column("nombre", width=430, anchor="w")
+        tree.column("min", width=90, anchor="center")
+        tree.column("max", width=90, anchor="center")
+        tree.column("recomendado", width=120, anchor="center")
+        tree.column("usos", width=80, anchor="center")
 
-        tree.column("categoria",width=150)
-        tree.column("nombre",width=400)
-        tree.column("min",width=90)
-        tree.column("max",width=90)
-        tree.column("recomendado",width=120)
-        tree.column("usos",width=80)
-
-
-        scroll=ttk.Scrollbar(
-            frame_tabla,
-            command=tree.yview
-        )
-
-        tree.configure(
-            yscrollcommand=scroll.set
-        )
-
-        tree.pack(
-            side="left",
-            fill="both",
-            expand=True
-        )
-
-        scroll.pack(
-            side="right",
-            fill="y"
-        )
+        scroll = ttk.Scrollbar(frame_tabla, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scroll.set)
+        tree.pack(side="left", fill="both", expand=True, padx=(12, 0), pady=12)
+        scroll.pack(side="right", fill="y", padx=(0, 12), pady=12)
 
 
         # ==============================
@@ -2519,7 +2534,12 @@ class AppPresupuestos(ctk.CTkFrame):
         inspector=ctk.CTkTextbox(
             ventana,
             height=220,
-            font=("Consolas",13)
+            font=("Segoe UI", 15, "bold"),
+            fg_color="#0e1720",
+            text_color="#eaf5ff",
+            border_color="#314d67",
+            border_width=1,
+            corner_radius=12
         )
 
         inspector.grid(
@@ -2554,37 +2574,37 @@ class AppPresupuestos(ctk.CTkFrame):
             texto=f"""
 
 NOMBRE COMPLETO
--------------------------
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 {item.get('nombre','')}
 
 
 CATEGORÍA
--------------------------
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 {item.get('categoria','')}
 
 
 ALIAS
--------------------------
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 {', '.join(item.get('alias',[]))}
 
 
 PALABRAS BUSQUEDA
--------------------------
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 {', '.join(item.get('buscar',[]))}
 
 
 PALABRAS APRENDIDAS
--------------------------
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 {', '.join(item.get('aprendizaje',{}).get('palabras_aprendidas',[]))}
 
 
 FECHA APRENDIZAJE
--------------------------
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 {item.get('aprendizaje',{}).get('ultima_fecha','')}
 
 
 USOS
--------------------------
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 {item.get('aprendizaje',{}).get('usos',0)}
 
 """
@@ -2636,45 +2656,52 @@ USOS
         # ==============================
         # BOTONES
         # ==============================
-        botones=ctk.CTkFrame(
-            ventana
+        botones = ctk.CTkFrame(
+            ventana,
+            fg_color="#101a24",
+            corner_radius=16,
+            border_width=1,
+            border_color="#243547"
         )
-        botones.grid(
-            row=3,
-            column=0,
-            pady=(4, 10)
-        )
+        botones.grid(row=3, column=0, pady=(2, 12), padx=10, sticky="ew")
 
         ctk.CTkButton(
             botones,
             text="➕ Nuevo baremo",
-            height=34,
-            font=("Arial", 12, "bold"),
+            height=42,
+            font=("Segoe UI", 13, "bold"),
+            fg_color="#1d4ed8",
+            hover_color="#1e3a8a",
             command=lambda:self.editor_baremo(ventana, None, cargar_tabla)
-        ).pack(side="left",padx=5)
+        ).pack(side="left", padx=(10, 6), pady=10)
 
         ctk.CTkButton(
             botones,
             text="✏ Editar",
-            height=34,
-            font=("Arial", 12, "bold"),
+            height=42,
+            font=("Segoe UI", 13, "bold"),
+            fg_color="#0f766e",
+            hover_color="#115e59",
             command=lambda:self.editar_desde_tabla(tree, datos_filtrados, ventana, cargar_tabla)
-        ).pack(side="left",padx=5)
+        ).pack(side="left", padx=6, pady=10)
 
         ctk.CTkButton(
             botones,
             text="🗑 Eliminar",
-            height=34,
-            font=("Arial", 12, "bold"),
-            fg_color="#aa2222",
-            command=lambda:self.eliminar_baremo(tree,datos_filtrados)
-        ).pack(side="left",padx=5)
+            height=42,
+            font=("Segoe UI", 13, "bold"),
+            fg_color="#b91c1c",
+            hover_color="#991b1b",
+            command=lambda:self.eliminar_baremo(tree, datos_filtrados)
+        ).pack(side="left", padx=6, pady=10)
 
         ctk.CTkButton(
             botones,
             text="📋 Duplicar",
-            height=34,
-            font=("Arial", 12, "bold"),
+            height=42,
+            font=("Segoe UI", 13, "bold"),
+            fg_color="#7c3aed",
+            hover_color="#5b21b6",
             command=lambda: (
                 self.duplicar_baremo(datos_filtrados[tree.index(tree.selection()[0])]),
                 cargar_tabla(self.baremos),
@@ -2682,15 +2709,17 @@ USOS
                 ventana.lift(),
                 ventana.focus_force()
             )
-        ).pack(side="left", padx=5)
+        ).pack(side="left", padx=6, pady=10)
 
         ctk.CTkButton(
             botones,
             text="❌ Cerrar",
-            height=34,
-            font=("Arial", 12, "bold"),
+            height=42,
+            font=("Segoe UI", 13, "bold"),
+            fg_color="#374151",
+            hover_color="#1f2937",
             command=ventana.destroy
-        ).pack(side="left",padx=5)
+        ).pack(side="left", padx=(6, 10), pady=10)
 
     def editar_desde_tabla(self, tree, datos, gestor, actualizar):
         seleccion = tree.selection()
@@ -4074,17 +4103,12 @@ Precio recomendado:
             ventana.geometry(f"{ancho}x{alto}")
 
     def abrir_carpeta_pdf(self):
-        """Crea la carpeta 'presupuestos_pdf' en la raíz del proyecto si no existe y la abre."""
-        # 1. Obtener la ruta del directorio raíz (donde se ejecuta la app)
-        # Usamos os.getcwd() para asegurar que apunte a la carpeta base del ejecutable/script
-        ruta_raiz = os.getcwd() 
-        carpeta_pdf = os.path.join(ruta_raiz, "presupuestos_pdf")
+        """Abre la carpeta compartida de PDFs del módulo de presupuestos."""
+        ruta_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        carpeta_pdf = os.path.join(ruta_raiz, "PDFS", "presupuestos")
 
-        # 2. Si la carpeta no existe, la crea automáticamente
-        if not os.path.exists(carpeta_pdf):
-            os.makedirs(carpeta_pdf, exist_ok=True)
+        os.makedirs(carpeta_pdf, exist_ok=True)
 
-        # 3. Abrir la carpeta en el explorador de archivos
         try:
             if os.name == 'nt':  # Windows
                 os.startfile(carpeta_pdf)

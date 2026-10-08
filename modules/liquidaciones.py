@@ -1,4 +1,4 @@
-import tkinter as tk
+﻿import tkinter as tk
 from tkinter import messagebox
 import customtkinter as ctk
 from tkcalendar import DateEntry
@@ -7,7 +7,10 @@ import sys
 import json
 import subprocess
 import locale
+import re
 from datetime import datetime
+
+from modules.modelos_aeat import get_model_config, get_current_year, SUPPORTED_YEARS
 
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image as RLImage
@@ -33,13 +36,63 @@ COLOR_TEXT      = "#edf4ff"
 COLOR_MUTED     = "#9bb7d3"
 
 
+class ReadOnlyDropdown:
+    def __init__(self, master, values, command=None, width=200, height=34, fg_color="#1d2f44", button_color=COLOR_BLUE, text_color="#edf4ff", border_color=COLOR_BORDER, placeholder=None):
+        self.values = list(values)
+        self.command = command
+        self.placeholder = placeholder
+        self.current = self.placeholder if self.placeholder is not None else (self.values[0] if self.values else "")
+
+        self.frame = ctk.CTkFrame(master, width=width, height=height, corner_radius=10, fg_color=fg_color, border_width=1, border_color=border_color)
+        self.frame.grid_columnconfigure(0, weight=1)
+        self.frame.grid_columnconfigure(1, weight=0)
+
+        self.label = ctk.CTkLabel(self.frame, text=self.current, text_color=text_color, font=("Segoe UI", 12, "bold"), anchor="w", justify="left")
+        self.label.grid(row=0, column=0, sticky="ew", padx=(12, 8), pady=6)
+
+        self.btn = ctk.CTkButton(self.frame, text="▾", width=28, height=20, corner_radius=8, fg_color=button_color, hover_color=button_color, text_color="#edf4ff", font=("Segoe UI", 12, "bold"), border_width=0)
+        self.btn.grid(row=0, column=1, sticky="e", padx=(0, 8), pady=6)
+
+        self.menu = tk.Menu(self.frame, tearoff=0, bg="#0d1b2a", fg="#edf4ff", activebackground="#1d3047", activeforeground="#edf4ff", bd=0, font=("Segoe UI", 11))
+        for item in self.values:
+            self.menu.add_command(label=item, command=lambda v=item: self.set(v))
+
+        def abrir(event=None):
+            self.menu.post(self.frame.winfo_rootx(), self.frame.winfo_rooty() + self.frame.winfo_height())
+
+        self.frame.bind("<Button-1>", abrir)
+        self.label.bind("<Button-1>", abrir)
+        self.btn.bind("<Button-1>", abrir)
+        self.frame.bind("<Enter>", lambda event: self.frame.configure(border_color="#5c7ca2"))
+        self.frame.bind("<Leave>", lambda event: self.frame.configure(border_color=border_color))
+
+    def set(self, value):
+        self.current = str(value)
+        self.label.configure(text=self.current)
+        if self.command is not None:
+            self.command(self.current)
+
+    def get(self):
+        return self.current
+
+    def configure(self, *args, **kwargs):
+        pass
+
+    def grid(self, *args, **kwargs):
+        self.frame.grid(*args, **kwargs)
+
+    def grid_remove(self):
+        self.frame.grid_remove()
+
+
 class LiquidacionesFrame(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent, fg_color=COLOR_BG)
-        self.CARPETA_PDF = "liquidaciones_pdf"
-        self.CARPETA_DATA = os.path.join(self.CARPETA_PDF, "data")
-        os.makedirs(self.CARPETA_PDF, exist_ok=True)
-        os.makedirs(self.CARPETA_DATA, exist_ok=True)
+        self.BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.PDFS_DIR = os.path.join(self.BASE_DIR, "PDFS")
+        self.anio_actual = str(get_current_year())
+        os.makedirs(self.PDFS_DIR, exist_ok=True)
+        self._actualizar_ruta_exportacion(self.anio_actual)
         self.pack(fill="both", expand=True)
 
         self._cargando = False           # evita autosave durante load
@@ -57,32 +110,43 @@ class LiquidacionesFrame(ctk.CTkFrame):
         self.header.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            self.header, text="💰  LIQUIDACIÓN MENSUAL",
+            self.header, text="💰 LIQUIDACIÓN MENSUAL",
             font=("Segoe UI", 28, "bold"), text_color="#4ea3ff",
-        ).grid(row=0, column=0, pady=(18, 6))
+        ).grid(row=0, column=0, pady=(18, 10))
 
-        self.mes_seleccionado = ctk.CTkComboBox(
-            self.header,
-            values=["------ Seleccione Fecha ---------", "ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
+        selector_row = ctk.CTkFrame(self.header, fg_color="transparent")
+        selector_row.grid(row=1, column=0, pady=(0, 18))
+        selector_row.grid_columnconfigure(0, weight=0)
+        selector_row.grid_columnconfigure(1, weight=0)
+
+        self.mes_seleccionado = ReadOnlyDropdown(
+            selector_row,
+            values=["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
                     "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"],
-            width=200, height=34, corner_radius=10,
-            button_color=COLOR_BLUE, button_hover_color=COLOR_BLUE_HOV,
-            border_color=COLOR_BORDER,
-            fg_color="#1d2f44",
-            text_color="#edf4ff",
             command=self._on_cambio_mes,
-            state="readonly",
+            width=220,
+            height=34,
+            fg_color="#1d2f44",
+            button_color=COLOR_BLUE,
+            text_color="#edf4ff",
+            border_color=COLOR_BORDER,
+            placeholder="SELECCIONA UN MES",
         )
-        self.mes_seleccionado.set("------ Seleccione Fecha ---------")
-        self.mes_seleccionado.configure(state="readonly")
-        try:
-            self.mes_seleccionado._entry.configure(state="readonly")
-            self.mes_seleccionado._entry.bind("<Key>", lambda event: "break")
-            self.mes_seleccionado._entry.bind("<<Paste>>", lambda event: "break")
-            self.mes_seleccionado._entry.bind("<<Cut>>", lambda event: "break")
-        except Exception:
-            pass
-        self.mes_seleccionado.grid(row=1, column=0, pady=(0, 18))
+        self.mes_seleccionado.grid(row=0, column=0, padx=(0, 8))
+
+        self.anio_seleccionado = ReadOnlyDropdown(
+            selector_row,
+            values=SUPPORTED_YEARS,
+            command=self._on_cambio_anio,
+            width=120,
+            height=34,
+            fg_color="#1d2f44",
+            button_color=COLOR_BLUE,
+            text_color="#edf4ff",
+            border_color=COLOR_BORDER,
+        )
+        self.anio_seleccionado.set(self.anio_actual)
+        self.anio_seleccionado.grid(row=0, column=1)
 
         # ================= BODY (3 columnas) =================
         self.body = ctk.CTkFrame(self, fg_color="transparent")
@@ -105,7 +169,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
         card_datos.grid(row=0, column=0, sticky="ew", pady=(0, 8))
 
         ctk.CTkLabel(
-            card_datos, text="  📋  DATOS PRINCIPALES",
+            card_datos, text="📊 DATOS PRINCIPALES",
             font=("Segoe UI", 15, "bold"), text_color="#4ea3ff", anchor="w",
         ).pack(fill="x", padx=12, pady=(10, 6))
 
@@ -129,7 +193,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
         )
         recibo_box.pack(fill="x", padx=10, pady=(0, 12))
         self.lbl_recibo = ctk.CTkLabel(
-            recibo_box, text="🧾   RECIBO: 0.00",
+            recibo_box, text="💸 RECIBO: 0.00",
             font=("Segoe UI", 18, "bold"), text_color="#4ea3ff",
         )
         self.lbl_recibo.pack(pady=14)
@@ -144,7 +208,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
         card_fijos.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            card_fijos, text="  🏠  GASTOS FIJOS",
+            card_fijos, text="  💸  GASTOS FIJOS",
             font=("Segoe UI", 14, "bold"), text_color="#4ea3ff", anchor="w",
         ).grid(row=0, column=0, sticky="ew", padx=12, pady=(10, 6))
 
@@ -156,7 +220,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
         self.cont_fijos = scroll_fijos  # las filas se crean aquí dentro
 
         self._btn_azul(
-            card_fijos, "＋  Añadir gasto fijo",
+            card_fijos, "➕ Añadir gasto fijo",
             lambda: self.ventana_nuevo_registro("fijo")
         ).grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
 
@@ -168,22 +232,22 @@ class LiquidacionesFrame(ctk.CTkFrame):
             self.col2.grid_rowconfigure(r, weight=1, uniform="v")
 
         self.cont_mat = self._card_scroll(
-            self.col2, "  📦  MATERIAL", "＋  Añadir material",
+            self.col2, "🧱 MATERIAL", "➕ Añadir material",
             lambda: self.ventana_nuevo_registro("material"), row=0,
         )
         self.cont_comb = self._card_scroll(
-            self.col2, "  ⛽  COMBUSTIBLE", "＋  Añadir combustible",
+            self.col2, "⛽ COMBUSTIBLE", "➕ Añadir combustible",
             lambda: self.ventana_nuevo_registro("combustible"), row=1,
         )
         self.cont_ajustes = self._card_scroll(
-            self.col2, "  🔧  AJUSTES MES ANTERIOR", "＋  Añadir ajuste",
+            self.col2, "🔧 AJUSTES MES ANTERIOR", "➕ Añadir ajustes",
             lambda: self.ventana_nuevo_registro("ajuste"), row=2,
         )
 
         # ---------- COLUMNA 3: EXTRAS ----------
         self.col3 = ctk.CTkScrollableFrame(
             self.body,
-            label_text="  ⭐  EXTRAS",
+            label_text="  ✨  EXTRAS",
             label_font=("Segoe UI", 15, "bold"),
             label_text_color="#4ea3ff",
             label_fg_color="#1b2530",
@@ -192,9 +256,9 @@ class LiquidacionesFrame(ctk.CTkFrame):
         )
         self.col3.grid(row=0, column=2, sticky="nsew", padx=(6, 0))
 
-        self._btn_azul(self.col3, "＋  TF / Bizum",
+        self._btn_azul(self.col3, "➕ TF / Bizum",
                        lambda: self.add_extra("Bizum")).pack(fill="x", padx=6, pady=(6, 4))
-        self._btn_azul(self.col3, "＋  Efectivo",
+        self._btn_azul(self.col3, "➕ Efectivo",
                        lambda: self.add_extra("Efectivo")).pack(fill="x", padx=6, pady=(6, 4))
         self.cont_ext = self._contenedor_rows(self.col3)
 
@@ -207,13 +271,13 @@ class LiquidacionesFrame(ctk.CTkFrame):
         self.footer.grid_columnconfigure(0, weight=1)
 
         self.lbl_mio = ctk.CTkLabel(
-            self.footer, text="💰  MIO: 0.00 €",
+            self.footer, text="💰 MIO: 0.00 €",
             font=("Segoe UI", 28, "bold"), text_color=COLOR_GREEN,
         )
         self.lbl_mio.grid(row=0, column=0, sticky="w", padx=20, pady=18)
 
         ctk.CTkButton(
-            self.footer, text="�  DECLARACIÓN TRIMESTRAL / ANUAL",
+            self.footer, text="📄 DECLARACIÓN TRIMESTRAL / ANUAL",
             command=self.mostrar_resumen_renta,
             width=280, height=44, corner_radius=10,
             fg_color=COLOR_BLUE, hover_color=COLOR_BLUE_HOV,
@@ -221,15 +285,15 @@ class LiquidacionesFrame(ctk.CTkFrame):
         ).grid(row=0, column=1, padx=(10, 8), pady=18)
 
         ctk.CTkButton(
-            self.footer, text="📄  GENERAR PDF", command=self.generar_pdf,
+            self.footer, text="📄 GENERAR PDF", command=self.generar_pdf,
             width=170, height=44, corner_radius=10,
             fg_color=COLOR_BLUE, hover_color=COLOR_BLUE_HOV,
             font=("Segoe UI", 13, "bold"),
         ).grid(row=0, column=2, padx=(10, 8), pady=18)
 
         ctk.CTkButton(
-            self.footer, text="📁  IR A CARPETA", command=self.abrir_carpeta,
-            width=160, height=44, corner_radius=10,
+            self.footer, text="📂 ABRIR LIQUIDACIONES", command=self.abrir_carpeta_declaracion,
+            width=200, height=44, corner_radius=10,
             fg_color=COLOR_GRAY_BTN, hover_color=COLOR_GRAY_HOV,
             font=("Segoe UI", 13, "bold"),
         ).grid(row=0, column=3, padx=(0, 20), pady=18)
@@ -497,7 +561,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
                              border_color=COLOR_BORDER)
             e.pack(side="left", fill="x", expand=True, padx=6, pady=6)
             e.bind("<KeyRelease>", self._on_edit)
-            ctk.CTkButton(f, text="✕", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
+            ctk.CTkButton(f, text="✖", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
                           width=30, corner_radius=8,
                           command=lambda: [f.destroy(), self._on_edit()]
                           ).pack(side="right", padx=6, pady=6)
@@ -519,7 +583,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
                  font=("Segoe UI", 11), justify="left", width=80)
         e.bind("<KeyRelease>", self._on_edit)
 
-        del_btn = ctk.CTkButton(f, text="✕", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
+        del_btn = ctk.CTkButton(f, text="✖", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
                     width=22, height=22, corner_radius=6)
 
         # usar grid dentro de la celda: entrada expandible a la izquierda, botón a la derecha
@@ -589,7 +653,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
                          fg_color="#151515", border_color=COLOR_BORDER)
         e.insert(0, valor); e.pack(side="left", padx=4, pady=6)
         e.bind("<KeyRelease>", self._on_edit)
-        ctk.CTkButton(f, text="✕", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
+        ctk.CTkButton(f, text="✖", fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
                       width=32, corner_radius=8,
                       command=lambda: [f.destroy(), self._on_edit()]
                       ).pack(side="right", padx=6, pady=6)
@@ -618,7 +682,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
             try: de.set_date(fecha)
             except Exception: pass
         de.pack(side="left", padx=4)
-        ctk.CTkButton(fila, text="✕", width=30, fg_color=COLOR_RED,
+        ctk.CTkButton(fila, text="✖", width=30, fg_color=COLOR_RED,
                       hover_color=COLOR_RED_HOV,
                       command=lambda: [f.destroy(), self._on_edit()]).pack(side="right")
         c["n"].bind("<KeyRelease>", lambda e: [self.calc_extra(t, c), self._autosave()])
@@ -657,7 +721,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
         e_v.insert(0, importe)
         e_v.pack(side="left", padx=4, pady=6)
         e_v.bind("<KeyRelease>", self._on_edit)
-        ctk.CTkButton(f, text="✕", width=32, corner_radius=8,
+        ctk.CTkButton(f, text="✖", width=32, corner_radius=8,
                       fg_color=COLOR_RED, hover_color=COLOR_RED_HOV,
                       command=lambda: [f.destroy(), self._on_edit()]
                       ).pack(side="right", padx=6, pady=6)
@@ -678,8 +742,8 @@ class LiquidacionesFrame(ctk.CTkFrame):
             mat = s(self.cont_mat, 0); comb = s(self.cont_comb, 0) / 2
             rec = tr - (bs * 0.21 + (bs - (mat + comb)) * 0.20)
             ex = sum(self.limpiar(w.c["res"]) for w in self.cont_ext.winfo_children() if hasattr(w, "c"))
-            self.lbl_recibo.configure(text=f"🧾   RECIBO: {rec:.2f}")
-            self.lbl_mio.configure(text=f"💰  MIO: {rec - f + ex + a:.2f} €")
+            self.lbl_recibo.configure(text=f"💸 RECIBO: {rec:.2f}")
+            self.lbl_mio.configure(text=f"💰 MIO: {rec - f + ex + a:.2f} €")
         except: pass
 
     def numero(self, w):
@@ -695,14 +759,25 @@ class LiquidacionesFrame(ctk.CTkFrame):
         return os.path.join(self.CARPETA_DATA, f"{mes.upper()}.json")
 
     def _on_cambio_mes(self, nuevo_mes):
+        placeholder = self.mes_seleccionado.placeholder.upper() if self.mes_seleccionado.placeholder else ""
+        nuevo_mes = str(nuevo_mes or "").strip()
 
-        if nuevo_mes == "------ Seleccione Fecha ---------":
+        if not nuevo_mes or nuevo_mes.upper() == placeholder:
             return
 
         if self._mes_actual and self._mes_actual != nuevo_mes:
             self._guardar_mes(self._mes_actual)
 
         self._cargar_mes(nuevo_mes)
+
+    def _on_cambio_anio(self, nuevo_anio):
+        if not nuevo_anio:
+            return
+        if self._mes_actual:
+            self._guardar_mes(self._mes_actual)
+        self._actualizar_ruta_exportacion(nuevo_anio)
+        if self._mes_actual:
+            self._cargar_mes(self._mes_actual)
 
     def _autosave(self):
         if self._cargando or not self._mes_actual: return
@@ -925,32 +1000,314 @@ class LiquidacionesFrame(ctk.CTkFrame):
             total["iva_extras"] += extras_iva
 
         total["base"] = total["base"] + total["extras"]
-        total["gastos_deducibles"] = total["material"] + (total["combustible"] * 0.5)
+        total["combustible"] = total["combustible"] * 0.5
+        total["gastos_deducibles"] = total["material"] + total["combustible"]
         total["base_imponible"] = max(0.0, total["base"] - total["gastos_deducibles"])
         total["iva_estimado"] = total["iva_facturas"] + total["iva_extras"]
         total["irpf_estimado"] = total["base_imponible"] * 0.20
         total["resultado_neto"] = total["base"] - total["gastos_deducibles"] - total["irpf_estimado"]
         return total
 
+    def _casillas_periodo(self, meses, nombre_periodo, exercise_year=None):
+        resumen = self._sumar_periodo(meses)
+        iva_cob = resumen["base"] * 0.21
+        iva_ded = resumen["gastos_deducibles"] * 0.21
+        rendimiento = max(0.0, resumen["base"] - resumen["gastos_deducibles"])
+        irpf = max(0.0, rendimiento * 0.20)
+        year = str(exercise_year or get_current_year())
+
+        modelo_303 = get_model_config(year, "303")
+        modelo_130 = get_model_config(year, "130")
+
+        def valor_casilla_303(code):
+            map_values = {
+                "07": resumen["base"],
+                "09": iva_cob,
+                "28": resumen["gastos_deducibles"],
+                "29": iva_ded,
+                "71": iva_cob - iva_ded,
+            }
+            return map_values.get(str(code), 0.0)
+
+        def valor_casilla_130(code):
+            map_values = {
+                "01": resumen["base"],
+                "02": resumen["gastos_deducibles"],
+                "03": rendimiento,
+                "04": irpf,
+                "05": 0.0,
+                "A ingresar": irpf,
+            }
+            return map_values.get(str(code), 0.0)
+
+        return {
+            "periodo": nombre_periodo,
+            "modelo_303": [
+                (f"Casilla {item['code']}", item['label'], valor_casilla_303(item['code']))
+                for item in modelo_303
+            ],
+            "modelo_130": [
+                (f"Casilla {item['code']}", item['label'], valor_casilla_130(item['code']))
+                for item in modelo_130
+            ],
+        }
+
+    def _casillas_modelo_100(self, resumen_obj, exercise_year=None):
+        year = str(exercise_year or get_current_year())
+        modelo_100 = get_model_config(year, "100")
+
+        base_general = max(0.0, resumen_obj["base_imponible"])
+        base_ahorro = 0.0
+        base_liquidable_general = base_general
+        base_liquidable_ahorro = 0.0
+        cuota_estatal = max(0.0, resumen_obj["irpf_estimado"] * 0.60)
+        cuota_autonomica = max(0.0, resumen_obj["irpf_estimado"] * 0.40)
+        cuota_total = cuota_estatal + cuota_autonomica
+        pagos_cuenta = max(0.0, resumen_obj["iva_estimado"] + resumen_obj["irpf_estimado"])
+        resultado = pagos_cuenta - cuota_total
+
+        def valor_casilla(code):
+            map_values = {
+                "0435": base_general,
+                "0460": base_ahorro,
+                "0500": base_liquidable_general,
+                "0510": base_liquidable_ahorro,
+                "0545": cuota_estatal,
+                "0546": cuota_autonomica,
+                "0609": pagos_cuenta,
+                "0610": resultado,
+                "0700": resultado,
+            }
+            return map_values.get(str(code), 0.0)
+
+        return {
+            "periodo": "ANUAL",
+            "modelo_100": [
+                (f"Casilla {item['code']}", item['label'], valor_casilla(item['code']))
+                for item in modelo_100
+            ],
+            "texto": (
+                "Este bloque corresponde al Modelo 100 anual. Los valores son un resumen anual de la renta y no deben mezclarse con los resultados del 303/130 trimestral."
+            ),
+        }
+
+    def _estado_declaracion(self, resumen_obj):
+        iva = max(0.0, resumen_obj["base"] * 0.21 - resumen_obj["gastos_deducibles"] * 0.21)
+        irpf = max(0.0, (max(0.0, resumen_obj["base"] - resumen_obj["gastos_deducibles"])) * 0.20)
+
+        if resumen_obj["base"] * 0.21 - resumen_obj["gastos_deducibles"] * 0.21 > 0:
+            estado_303 = "A ingresar"
+        elif resumen_obj["base"] * 0.21 - resumen_obj["gastos_deducibles"] * 0.21 < 0:
+            estado_303 = "A compensar / devolver"
+        else:
+            estado_303 = "Sin cuota"
+
+        estado_130 = "A ingresar" if irpf > 0 else "Sin cuota"
+        return {
+            "iva": iva,
+            "irpf": irpf,
+            "estado_303": estado_303,
+            "estado_130": estado_130,
+            "texto": (
+                "Este resumen prepara 303 y 130. El modelo 100 es anual y se rellena en la Declaración de la Renta, "
+                "no en el trimestre."
+            ),
+        }
+
+    def _generar_nombre_archivo_declaracion(self, periodo_label: str, year: str, extension: str = "pdf"):
+        year = str(year).strip()
+        etiqueta = str(periodo_label).strip().upper()
+
+        if "ANUAL" in etiqueta:
+            base_name = f"anual_{year}"
+        elif "TRIMESTRE" in etiqueta or "1ER" in etiqueta or "2º" in etiqueta or "2O" in etiqueta or "3ER" in etiqueta or "4º" in etiqueta or "4O" in etiqueta:
+            match = re.search(r"(\d)", etiqueta)
+            trimestre = match.group(1) if match else "1"
+            base_name = f"trimestre_{trimestre}_{year}"
+        else:
+            base_name = f"declaracion_{year}"
+
+        candidate = os.path.join(self.CARPETA_DECLARACION, f"{base_name}.{extension}")
+        index = 1
+        while os.path.exists(candidate):
+            candidate = os.path.join(self.CARPETA_DECLARACION, f"{base_name}_{index}.{extension}")
+            index += 1
+        return candidate
+
+    def _resolver_periodo_export(self, periodo_label: str | None = None):
+        label = str(periodo_label or "ANUAL").strip().upper()
+        if "ANUAL" in label:
+            return "ANUAL", self._meses_del_anio()
+
+        mapping = {
+            "1ER TRIMESTRE": ["ENERO", "FEBRERO", "MARZO"],
+            "TRIMESTRE 1": ["ENERO", "FEBRERO", "MARZO"],
+            "2º TRIMESTRE": ["ABRIL", "MAYO", "JUNIO"],
+            "2O TRIMESTRE": ["ABRIL", "MAYO", "JUNIO"],
+            "TRIMESTRE 2": ["ABRIL", "MAYO", "JUNIO"],
+            "3ER TRIMESTRE": ["JULIO", "AGOSTO", "SEPTIEMBRE"],
+            "TRIMESTRE 3": ["JULIO", "AGOSTO", "SEPTIEMBRE"],
+            "4º TRIMESTRE": ["OCTUBRE", "NOVIEMBRE", "DICIEMBRE"],
+            "4O TRIMESTRE": ["OCTUBRE", "NOVIEMBRE", "DICIEMBRE"],
+            "TRIMESTRE 4": ["OCTUBRE", "NOVIEMBRE", "DICIEMBRE"],
+        }
+        return label, mapping.get(label, self._meses_del_anio())
+
+    def _exportar_archivo_renta(self, year: str, periodo_label: str | None = None, months: list[str] | None = None):
+        os.makedirs(self.CARPETA_DECLARACION, exist_ok=True)
+        periodo = str(periodo_label or "ANUAL").strip() or "ANUAL"
+        if "ANUAL" in periodo.upper():
+            selected_periodo = "ANUAL"
+            selected_months = self._meses_del_anio()
+            resumen = self._sumar_periodo(selected_months)
+            casillas = self._casillas_modelo_100(resumen, year)["modelo_100"]
+            modelos = [("100", casillas)]
+        else:
+            selected_periodo = periodo.upper()
+            selected_months = months or self._resolver_periodo_export(periodo)[1]
+            resumen = self._sumar_periodo(selected_months)
+            periodo_data = self._casillas_periodo(selected_months, selected_periodo, year)
+            modelos = [("303", periodo_data["modelo_303"]), ("130", periodo_data["modelo_130"])]
+
+        rows = []
+        for model_name, casillas in modelos:
+            for casilla, texto, valor in casillas:
+                rows.append({
+                    "modelo": model_name,
+                    "casilla": str(casilla).replace("Casilla ", ""),
+                    "etiqueta": texto,
+                    "valor": float(valor or 0.0),
+                })
+
+        json_path = self._generar_nombre_archivo_declaracion(selected_periodo, year, "json")
+        txt_path = self._generar_nombre_archivo_declaracion(selected_periodo, year, "txt")
+
+        with open(json_path, "w", encoding="utf-8") as fh:
+            json.dump({"year": year, "periodo": selected_periodo, "casillas": rows}, fh, ensure_ascii=False, indent=2)
+
+        with open(txt_path, "w", encoding="utf-8") as fh:
+            fh.write(f"DECLARACION RENTA - EJERCICIO {year} - {selected_periodo.upper()}\n")
+            fh.write("========================================\n")
+            for row in rows:
+                fh.write(f"Modelo {row['modelo']} | Casilla {row['casilla']} | {row['etiqueta']} | {row['valor']:.2f} €\n")
+
+        return json_path, txt_path
+
+    def exportar_periodo_actual(self, year: str | None = None, tab_name: str | None = None, periodo_label: str | None = None):
+        year_value = str(year or get_current_year())
+        if (tab_name or "").upper() == "ANUAL":
+            periodo = "ANUAL"
+            meses = self._meses_del_anio()
+        else:
+            periodo = str(periodo_label or "1ER TRIMESTRE").strip() or "1ER TRIMESTRE"
+            _, meses = self._resolver_periodo_export(periodo)
+
+        json_path, txt_path = self._exportar_archivo_renta(year_value, periodo_label=periodo, months=meses)
+        messagebox.showinfo("Archivo generado", f"Se ha creado la declaración para {periodo.upper()}:\n\nJSON: {json_path}\nTXT: {txt_path}")
+        return json_path, txt_path
+
+    def _get_current_quarter_label(self, month_number=None):
+        current_month = int(month_number if month_number is not None else datetime.now().month)
+        mapping = {
+            1: "1er Trimestre",
+            2: "1er Trimestre",
+            3: "1er Trimestre",
+            4: "2º Trimestre",
+            5: "2º Trimestre",
+            6: "2º Trimestre",
+            7: "3er Trimestre",
+            8: "3er Trimestre",
+            9: "3er Trimestre",
+            10: "4º Trimestre",
+            11: "4º Trimestre",
+            12: "4º Trimestre",
+        }
+        return mapping.get(current_month, "1er Trimestre")
+
+    def _get_quarter_label_for_month(self, month_name=None):
+        monthly_map = {
+            "ENERO": "1er Trimestre",
+            "FEBRERO": "1er Trimestre",
+            "MARZO": "1er Trimestre",
+            "ABRIL": "2º Trimestre",
+            "MAYO": "2º Trimestre",
+            "JUNIO": "2º Trimestre",
+            "JULIO": "3er Trimestre",
+            "AGOSTO": "3er Trimestre",
+            "SEPTIEMBRE": "3er Trimestre",
+            "OCTUBRE": "4º Trimestre",
+            "NOVIEMBRE": "4º Trimestre",
+            "DICIEMBRE": "4º Trimestre",
+        }
+        month_key = str(month_name or "").upper().strip()
+        if month_key in monthly_map:
+            return monthly_map[month_key]
+        return self._get_current_quarter_label(datetime.now().month)
+
+    def _get_quarter_months_for_label(self, label):
+        mapping = {
+            "1er Trimestre": ["ENERO", "FEBRERO", "MARZO"],
+            "2º Trimestre": ["ABRIL", "MAYO", "JUNIO"],
+            "3er Trimestre": ["JULIO", "AGOSTO", "SEPTIEMBRE"],
+            "4º Trimestre": ["OCTUBRE", "NOVIEMBRE", "DICIEMBRE"],
+        }
+        return mapping.get(label, ["ENERO", "FEBRERO", "MARZO"])
+
+    def _ruta_recordatorios(self):
+        return os.path.join(self.CARPETA_DATA, "recordatorios_renta.json")
+
+    def _cargar_recordatorios(self):
+        path = self._ruta_recordatorios()
+        if not os.path.exists(path):
+            return {}
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+
+    def _guardar_recordatorios(self, data):
+        path = self._ruta_recordatorios()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, ensure_ascii=False, indent=2)
+
+    def _obtener_estado_recordatorio(self, year_key: str, tipo: str):
+        data = self._cargar_recordatorios()
+        bucket = data.setdefault(str(year_key), {})
+        estado = bucket.setdefault(tipo, {})
+        estado.setdefault("status", "active")
+        return estado
+
+    def _guardar_estado_recordatorio(self, year_key: str, tipo: str, status: str):
+        data = self._cargar_recordatorios()
+        bucket = data.setdefault(str(year_key), {})
+        bucket[tipo] = {"status": status}
+        self._guardar_recordatorios(data)
+        return bucket[tipo]
+
     def mostrar_resumen_renta(self):
         mes_actual = self.mes_seleccionado.get().upper().strip()
-        if not mes_actual or mes_actual == "------ SELECCIONE FECHA ---------":
-            mes_actual = "MARZO"
+        placeholder = self.mes_seleccionado.placeholder.upper() if self.mes_seleccionado.placeholder else ""
+        if not mes_actual or mes_actual == placeholder:
+            mes_actual = datetime.now().strftime("%B").upper()
 
-        trimestre_default = ["ENERO", "FEBRERO", "MARZO"]
-        selected_quarter = "1er Trimestre"
+        selected_year = str(get_current_year())
+        selected_quarter = self._get_quarter_label_for_month(mes_actual)
         quarter_choice = {
             "label": selected_quarter,
-            "months": trimestre_default[:],
+            "months": self._get_quarter_months_for_label(selected_quarter),
         }
-        resumen_trim = self._sumar_periodo(trimestre_default)
+        resumen_trim = self._sumar_periodo(quarter_choice["months"])
         resumen_anual = self._sumar_periodo(self._meses_del_anio())
 
         ventana = ctk.CTkToplevel(self)
         ventana.title("Resumen de renta autónomo")
         ventana.configure(fg_color="#081722")
-        ventana.minsize(1180, 760)
-        ventana.geometry("1500x900")
+        ventana.minsize(1500, 900)
+        ventana.geometry("1700x1000")
+        ventana.resizable(True, True)
         ventana.grab_set()
         ventana.focus_force()
         ventana.protocol("WM_DELETE_WINDOW", ventana.destroy)
@@ -968,21 +1325,133 @@ class LiquidacionesFrame(ctk.CTkFrame):
         ventana.grid_columnconfigure(0, weight=1)
         ventana.grid_rowconfigure(1, weight=1)
 
-        header = ctk.CTkFrame(ventana, fg_color="#0f1d2e", corner_radius=18, border_width=1, border_color="#2f4869")
+        header = ctk.CTkFrame(ventana, fg_color="#0d1b2a", corner_radius=20, border_width=1, border_color="#2f4869")
         header.grid(row=0, column=0, sticky="ew", padx=16, pady=(16, 12))
         header.grid_columnconfigure(0, weight=1)
+        header.grid_columnconfigure(1, weight=0)
+        header.grid_columnconfigure(2, weight=0)
 
-        ctk.CTkLabel(header, text="📊 RESUMEN DE RENTA AUTÓNOMO",
-                     font=("Segoe UI", 30, "bold"), text_color="#5bc0ff",
-                     anchor="w").grid(row=0, column=0, sticky="w", padx=18, pady=(18, 4))
-        ctk.CTkLabel(header, text="Periodo activo: Declaración trimestral y anual",
+        title_wrap = ctk.CTkFrame(header, fg_color="transparent")
+        title_wrap.grid(row=0, column=0, sticky="w", padx=18, pady=(18, 0))
+        ctk.CTkLabel(title_wrap, text="📊",
+                     font=("Segoe UI", 28, "bold"), text_color="#5bc0ff").pack(side="left")
+        ctk.CTkLabel(title_wrap, text="RESUMEN DE RENTA AUTÓNOMO",
+                     font=("Segoe UI", 28, "bold"), text_color="#5bc0ff",
+                     anchor="w").pack(side="left", padx=(10, 0))
+        ctk.CTkLabel(header, text="Periodo activo: 303/130 trimestrales · 100 anual · 390 en cierre de IVA",
                      font=("Segoe UI", 12), text_color="#bfd2ea").grid(row=1, column=0, sticky="w", padx=18, pady=(0, 18))
 
-        tabs = ctk.CTkTabview(ventana, width=1380, height=640)
-        tabs.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 12))
-        tabs.add("TRIMESTRE")
-        tabs.add("ANUAL")
-        tabs.set("TRIMESTRE")
+        class DropdownField:
+            def __init__(self, master, values, width, height, fg_color, button_color, text_color, border_color="#2f4869", command=None):
+                self.values = list(values)
+                self.command = command
+                self.current = self.values[0] if self.values else ""
+                self.frame = ctk.CTkFrame(master, width=width, height=height, corner_radius=10, fg_color=fg_color, border_width=1, border_color=border_color)
+                self.frame.grid_columnconfigure(0, weight=1)
+                self.frame.grid_columnconfigure(1, weight=0)
+                self.label = ctk.CTkLabel(self.frame, text=self.current, text_color=text_color, font=("Segoe UI", 12, "bold"), anchor="w", justify="left")
+                self.label.grid(row=0, column=0, sticky="ew", padx=(12, 6), pady=6)
+                self.arrow = ctk.CTkButton(self.frame, text="▾", width=26, height=20, corner_radius=8, fg_color=button_color, hover_color=button_color, text_color="#edf4ff", font=("Segoe UI", 12, "bold"), border_width=0)
+                self.arrow.grid(row=0, column=1, sticky="e", padx=(0, 8), pady=6)
+                self.menu = tk.Menu(self.frame, tearoff=0, bg="#0d1b2a", fg="#edf4ff", activebackground="#1d3047", activeforeground="#edf4ff", bd=0, font=("Segoe UI", 11))
+                for item in self.values:
+                    self.menu.add_command(label=item, command=lambda v=item: self.set(v, trigger=True))
+                self._open_menu = lambda event=None: self.menu.post(self.frame.winfo_rootx(), self.frame.winfo_rooty() + self.frame.winfo_height())
+                self.frame.bind("<Button-1>", self._open_menu)
+                self.label.bind("<Button-1>", self._open_menu)
+                self.arrow.bind("<Button-1>", self._open_menu)
+                self.frame.bind("<Enter>", lambda event: self.frame.configure(border_color="#5c7ca2"))
+                self.frame.bind("<Leave>", lambda event: self.frame.configure(border_color=border_color))
+
+            def set(self, value, trigger=False):
+                self.current = str(value)
+                self.label.configure(text=self.current)
+                if trigger and self.command is not None:
+                    self.command(self.current)
+
+            def configure(self, command=None, **kwargs):
+                if command is not None:
+                    self.command = command
+
+            def grid(self, *args, **kwargs):
+                self.frame.grid(*args, **kwargs)
+
+            def grid_remove(self):
+                self.frame.grid_remove()
+
+            def get(self):
+                return self.current
+
+        selector_trimestre = DropdownField(
+            header,
+            values=["1er Trimestre", "2º Trimestre", "3er Trimestre", "4º Trimestre"],
+            width=200,
+            height=34,
+            fg_color="#122438",
+            button_color="#0f6cbd",
+            text_color="#edf4ff",
+            border_color="#2f4869",
+        )
+        selector_trimestre.set(selected_quarter, trigger=False)
+        selector_trimestre.grid(row=0, column=1, sticky="e", padx=(0, 10), pady=(18, 6))
+
+        def sync_header_for_active_tab():
+            current_tab = active_tab.upper()
+            if current_tab == "ANUAL":
+                selector_trimestre.grid_remove()
+            else:
+                selector_trimestre.grid()
+                selector_trimestre.set(selected_quarter, trigger=False)
+
+        selector_anio = DropdownField(
+            header,
+            values=SUPPORTED_YEARS,
+            width=120,
+            height=34,
+            fg_color="#112437",
+            button_color="#0f6cbd",
+            text_color="#edf4ff",
+            border_color="#2f4869",
+        )
+        selector_anio.set(selected_year, trigger=False)
+        selector_anio.grid(row=0, column=2, sticky="e", padx=(0, 18), pady=(18, 6))
+
+        active_tab = "TRIMESTRE"
+        tabs_container = ctk.CTkFrame(ventana, fg_color="#0d1b2a", corner_radius=18, border_width=1, border_color="#2f4869")
+        tabs_container.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 12))
+        tabs_container.grid_columnconfigure(0, weight=1)
+        tabs_container.grid_rowconfigure(1, weight=1)
+
+        tab_selector = ctk.CTkSegmentedButton(
+            tabs_container,
+            values=["TRIMESTRE", "ANUAL"],
+            width=260,
+            height=32,
+            corner_radius=10,
+            fg_color="#16293d",
+            selected_color="#0f6cbd",
+            unselected_color="#1d3047",
+            border_width=0,
+            font=("Segoe UI", 12, "bold"),
+            command=lambda value: on_tab_changed(value),
+            dynamic_resizing=False,
+        )
+        tab_selector.grid(row=0, column=0, sticky="n", pady=(12, 10))
+        tab_selector.set("TRIMESTRE")
+
+        content_area = ctk.CTkFrame(tabs_container, fg_color="#0a1622", corner_radius=16, border_width=1, border_color="#2f4869")
+        content_area.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+        content_area.grid_columnconfigure(0, weight=1)
+        content_area.grid_rowconfigure(0, weight=1)
+
+        tabs = {
+            "TRIMESTRE": ctk.CTkFrame(content_area, fg_color="#0d1726"),
+            "ANUAL": ctk.CTkFrame(content_area, fg_color="#0d1726"),
+        }
+        for name in ["TRIMESTRE", "ANUAL"]:
+            tabs[name].grid(row=0, column=0, sticky="nsew", padx=6, pady=6)
+            if name != "TRIMESTRE":
+                tabs[name].grid_remove()
 
         estado_label = None
 
@@ -994,183 +1463,399 @@ class LiquidacionesFrame(ctk.CTkFrame):
                 estado_label.configure(
                     text=(
                         f"Estado fiscal: {estado} | Cuota estimada: {total:.2f} €\n"
-                        f"Base imponible: {resumen_obj['base_imponible']:.2f} € | IVA + IRPF: {total:.2f} € | Resultado neto: {resumen_obj['resultado_neto']:.2f} €"
+                        f"Bs - IRPF/IVA: {resumen_obj['base_imponible']:.2f} € | IVA + IRPF: {total:.2f} € | Resultado neto: {resumen_obj['resultado_neto']:.2f} €"
                     )
                 )
 
-        def render_tab(tab_name, resumen_obj):
-            frame = tabs.tab(tab_name)
+        def render_tab(tab_name, resumen_obj, exercise_year=None):
+            nonlocal selected_year
+            year_value = str(exercise_year or selected_year)
+            frame = tabs[str(tab_name).upper()]
             for child in frame.winfo_children():
                 child.destroy()
             update_estado(resumen_obj)
 
-            frame.grid_columnconfigure(0, weight=3)
-            frame.grid_columnconfigure(1, weight=1)
+            frame.grid_columnconfigure(0, weight=2)
+            frame.grid_columnconfigure(1, weight=3)
+            frame.grid_columnconfigure(2, weight=5)
             frame.grid_rowconfigure(0, weight=1)
-            frame.configure(fg_color="#0d1726")
+            frame.configure(fg_color="#0a1622")
+
+            def actualizar_trimestre_desde_selector(valor=None):
+                nonlocal selected_quarter
+                opt = str(valor or selected_quarter or "1er Trimestre").strip()
+                selected_quarter = opt
+                quarter_choice["label"] = opt
+                quarter_choice["months"] = self._get_quarter_months_for_label(opt)
+                resumen_actual = self._sumar_periodo(quarter_choice["months"])
+                selector_trimestre.set(opt, trigger=False)
+                render_tab("TRIMESTRE", resumen_actual)
+                actualizar_recordatorio_ui()
+                sync_header_for_active_tab()
 
             if tab_name == "TRIMESTRE":
-                selector_box = ctk.CTkFrame(frame, fg_color="#0f1d2e", corner_radius=16, border_width=1, border_color="#2f4869")
-                selector_box.grid(row=0, column=0, columnspan=2, sticky="ew", padx=12, pady=(12, 6))
-                selector_box.grid_columnconfigure(1, weight=1)
-                ctk.CTkLabel(selector_box, text="Elegir trimestre", font=("Segoe UI", 14, "bold"), text_color="#5bc0ff").grid(row=0, column=0, padx=(16, 8), pady=12, sticky="w")
-                opciones = ["1er Trimestre", "2º Trimestre", "3er Trimestre", "4º Trimestre"]
-                combo = ctk.CTkOptionMenu(
-                    selector_box,
-                    values=opciones,
-                    width=260,
-                    height=36,
-                    font=("Segoe UI", 12, "bold"),
-                    command=None,
-                )
-                combo.grid(row=0, column=1, sticky="ew", padx=(0, 16), pady=12)
-                combo.set(selected_quarter)
+                try:
+                    selector_trimestre.configure(command=actualizar_trimestre_desde_selector)
+                except Exception:
+                    pass
 
-                def actualizar_trimestre(valor=None):
-                    nonlocal selected_quarter
-                    opt = combo.get() if valor is None else valor
-                    mapping = {
-                        "1er Trimestre": ["ENERO", "FEBRERO", "MARZO"],
-                        "2º Trimestre": ["ABRIL", "MAYO", "JUNIO"],
-                        "3er Trimestre": ["JULIO", "AGOSTO", "SEPTIEMBRE"],
-                        "4º Trimestre": ["OCTUBRE", "NOVIEMBRE", "DICIEMBRE"],
-                    }
-                    selected_quarter = opt
-                    quarter_choice["label"] = opt
-                    quarter_choice["months"] = mapping.get(opt, ["ENERO", "FEBRERO", "MARZO"])
-                    resumen_actual = self._sumar_periodo(quarter_choice["months"])
-                    render_tab("TRIMESTRE", resumen_actual)
-
-                combo.configure(command=actualizar_trimestre)
-
-            left = ctk.CTkFrame(frame, fg_color="#122233", corner_radius=18, border_width=1, border_color="#2f4869")
-            left.grid(row=1 if tab_name == "TRIMESTRE" else 0, column=0, sticky="nsew", padx=(12, 10), pady=(6 if tab_name == "TRIMESTRE" else 12), rowspan=1)
+            left = ctk.CTkFrame(frame, fg_color="#101f2d", corner_radius=18, border_width=1, border_color="#2f4869")
+            left.grid(row=0, column=0, sticky="nsew", padx=(12, 8), pady=(10, 12))
+            left.grid_propagate(False)
+            left.configure(width=300)
             left.grid_columnconfigure(0, weight=1)
             left.grid_rowconfigure(0, weight=1)
 
-            right = ctk.CTkFrame(frame, fg_color="#122233", corner_radius=18, border_width=1, border_color="#2f4869")
-            right.grid(row=1 if tab_name == "TRIMESTRE" else 0, column=1, sticky="nsew", padx=(0, 12), pady=(6 if tab_name == "TRIMESTRE" else 12), rowspan=1)
-            right.grid_columnconfigure(0, weight=1)
+            middle = ctk.CTkFrame(frame, fg_color="#101f2d", corner_radius=18, border_width=1, border_color="#2f4869")
+            middle.grid(row=0, column=1, sticky="nsew", padx=8, pady=(10, 12))
+            middle.grid_propagate(False)
+            middle.configure(width=340)
+            middle.grid_columnconfigure(0, weight=1)
+            middle.grid_rowconfigure(0, weight=1)
 
-            contenido = ctk.CTkScrollableFrame(left, fg_color="#122233", width=760, height=420)
-            contenido.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
-            contenido.grid_columnconfigure(0, weight=1)
+            right = ctk.CTkFrame(frame, fg_color="#101f2d", corner_radius=18, border_width=1, border_color="#2f4869")
+            right.grid(row=0, column=2, sticky="nsew", padx=(8, 12), pady=(10, 12))
+            right.grid_propagate(False)
+            right.configure(width=560)
+            right.grid_columnconfigure(0, weight=1)
+            right.grid_rowconfigure(0, weight=1)
+
+            resumen_scroll = ctk.CTkScrollableFrame(left, fg_color="#0e1a2a", corner_radius=14, border_width=1, border_color="#2f4869")
+            resumen_scroll.grid(row=0, column=0, sticky="nsew", padx=12, pady=12)
+            resumen_scroll.grid_columnconfigure(0, weight=1)
+            resumen_scroll.grid_rowconfigure(0, weight=1)
+            resumen_scroll.configure(width=360)
+
+            chart_panel = ctk.CTkFrame(middle, fg_color="#0d1726", corner_radius=14, border_width=1, border_color="#2f4869")
+            chart_panel.grid(row=0, column=0, sticky="nsew", padx=12, pady=12)
+            chart_panel.grid_columnconfigure(0, weight=1)
+            chart_panel.grid_rowconfigure(0, weight=1)
+
+            modelos_scroll = ctk.CTkScrollableFrame(right, fg_color="#0e1a2a", corner_radius=14, border_width=1, border_color="#2f4869")
+            modelos_scroll.grid(row=0, column=0, sticky="nsew", padx=12, pady=12)
+            modelos_scroll.grid_columnconfigure(0, weight=1)
+            modelos_scroll.grid_rowconfigure(0, weight=1)
+            modelos_scroll.configure(width=600)
 
             total_iva_irpf = resumen_obj["iva_estimado"] + resumen_obj["irpf_estimado"]
             datos = [
-                ("Ingresos", resumen_obj["base"], "#7cc8ff"),
-                ("Materiales", resumen_obj["material"], "#7cc8ff"),
-                ("Combustible", resumen_obj["combustible"], "#7cc8ff"),
-                ("Extras netos", resumen_obj["extras"], "#7cc8ff"),
-                ("Gastos deducibles", resumen_obj["gastos_deducibles"], "#f6c65b"),
-                ("Base imponible", resumen_obj["base_imponible"], "#77f7a6"),
-                ("IVA estimado", resumen_obj["iva_estimado"], "#f6c65b"),
-                ("IRPF estimado", resumen_obj["irpf_estimado"], "#f6c65b"),
-                ("IVA + IRPF", total_iva_irpf, "#f6c65b"),
-                ("Resultado neto", resumen_obj["resultado_neto"], "#77f7a6"),
+                ("Base imponible", resumen_obj["base"], "#dfeeff"),
+                ("Gastos deducibles", resumen_obj["gastos_deducibles"], "#bfd3eb"),
+                ("Bs - IRPF/IVA", resumen_obj["base_imponible"], "#a9d8c7"),
+                ("IVA estimado", resumen_obj["iva_estimado"], "#cbd7e8"),
+                ("IRPF estimado", resumen_obj["irpf_estimado"], "#cbd7e8"),
+                ("IVA + IRPF", total_iva_irpf, "#cbd7e8"),
+                ("Resultado neto", resumen_obj["resultado_neto"], "#a9d8c7"),
             ]
 
             for i, (label, valor, color_text) in enumerate(datos):
-                fila = ctk.CTkFrame(contenido, fg_color="#132638", corner_radius=10, border_width=1, border_color="#2a466b")
+                fila = ctk.CTkFrame(resumen_scroll, fg_color="#132638", corner_radius=12, border_width=1, border_color="#2a466b")
                 fila.grid(row=i, column=0, sticky="ew", padx=10, pady=(10 if i == 0 else 6, 6))
-                ctk.CTkLabel(fila, text=label, font=("Segoe UI", 15), text_color="#dfeeff", anchor="w").pack(side="left", padx=16, pady=10, expand=True)
-                ctk.CTkLabel(fila, text=f"{valor:.2f} €", font=("Segoe UI", 15, "bold"), text_color=color_text, anchor="e").pack(side="right", padx=16, pady=10)
+                ctk.CTkLabel(fila, text=label, font=("Segoe UI", 14, "bold"), text_color="#dfeeff", anchor="w").pack(side="left", padx=16, pady=12, expand=True)
+                ctk.CTkLabel(fila, text=f"{valor:.2f} €", font=("Segoe UI", 14, "bold"), text_color=color_text, anchor="e").pack(side="right", padx=16, pady=12)
 
-            ctk.CTkLabel(right, text="Distribución fiscal", font=("Segoe UI", 22, "bold"), text_color="#5bc0ff").pack(pady=(18, 10))
-            cam = tk.Canvas(right, width=220, height=220, bg="#122233", highlightthickness=0)
-            cam.pack(padx=10, pady=(0, 8))
+            if tab_name == "TRIMESTRE":
+                casillas = self._casillas_periodo(quarter_choice["months"], tab_name, year_value)
+                modelo_box = ctk.CTkFrame(modelos_scroll, fg_color="#0d1726", corner_radius=14, border_width=1, border_color="#2f4869")
+                modelo_box.pack(fill="x", padx=10, pady=(10, 8))
+                ctk.CTkLabel(modelo_box, text="Modelo 303 - IVA trimestral", font=("Segoe UI", 15, "bold"), text_color="#dfeeff").pack(anchor="w", padx=12, pady=(12, 8))
+                for casilla, texto, valor in casillas["modelo_303"]:
+                    fila_casilla = ctk.CTkFrame(modelo_box, fg_color="#132638", corner_radius=10, border_width=1, border_color="#2a466b")
+                    fila_casilla.pack(fill="x", padx=12, pady=4)
+                    ctk.CTkLabel(fila_casilla, text=f"{casilla} - {texto}", font=("Segoe UI", 11, "bold"), text_color="#dfeeff", anchor="w", justify="left", wraplength=240).pack(side="left", padx=10, pady=9, expand=True)
+                    ctk.CTkLabel(fila_casilla, text=f"{valor:.2f} €", font=("Segoe UI", 11, "bold"), text_color="#7cc8ff", anchor="e").pack(side="right", padx=10, pady=9)
 
-            cx, cy, r = 110, 110, 82
+                modelo_130_box = ctk.CTkFrame(modelos_scroll, fg_color="#0d1726", corner_radius=14, border_width=1, border_color="#2f4869")
+                modelo_130_box.pack(fill="x", padx=10, pady=(0, 8))
+                ctk.CTkLabel(modelo_130_box, text="Modelo 130 - IRPF trimestral", font=("Segoe UI", 15, "bold"), text_color="#dfeeff").pack(anchor="w", padx=12, pady=(12, 8))
+                for casilla, texto, valor in casillas["modelo_130"]:
+                    fila_casilla = ctk.CTkFrame(modelo_130_box, fg_color="#132638", corner_radius=10, border_width=1, border_color="#2a466b")
+                    fila_casilla.pack(fill="x", padx=12, pady=4)
+                    ctk.CTkLabel(fila_casilla, text=f"{casilla} - {texto}", font=("Segoe UI", 11, "bold"), text_color="#dfeeff", anchor="w", justify="left", wraplength=240).pack(side="left", padx=10, pady=9, expand=True)
+                    ctk.CTkLabel(fila_casilla, text=f"{valor:.2f} €", font=("Segoe UI", 11, "bold"), text_color="#7cc8ff", anchor="e").pack(side="right", padx=10, pady=9)
+
+                estado = self._estado_declaracion(resumen_obj)
+                validacion = ctk.CTkFrame(modelos_scroll, fg_color="#0d1726", corner_radius=14, border_width=1, border_color="#2f4869")
+                validacion.pack(fill="x", padx=10, pady=(0, 10))
+                ctk.CTkLabel(validacion, text="Validación de modelos", font=("Segoe UI", 14, "bold"), text_color="#dfeeff").pack(anchor="w", padx=12, pady=(12, 4))
+                ctk.CTkLabel(
+                    validacion,
+                    text=(
+                        f"303: {estado['estado_303']} · {estado['iva']:.2f} €\n"
+                        f"130: {estado['estado_130']} · {estado['irpf']:.2f} €\n\n"
+                        "Obligaciones trimestrales: 303 + 130.\n"
+                        "Cierre anual de IVA (si aplica): 390.\n"
+                        "La declaración anual de IRPF corresponde al Modelo 100."
+                    ),
+                    justify="left",
+                    text_color="#dfeeff",
+                    font=("Segoe UI", 11, "bold"),
+                    wraplength=440,
+                    anchor="w",
+                ).pack(anchor="w", padx=12, pady=(0, 12))
+            else:
+                casillas = self._casillas_modelo_100(resumen_obj, year_value)
+                modelo_box = ctk.CTkFrame(modelos_scroll, fg_color="#0d1726", corner_radius=14, border_width=1, border_color="#2f4869")
+                modelo_box.pack(fill="x", padx=10, pady=(10, 8))
+                ctk.CTkLabel(modelo_box, text="Modelo 100 anual - Declaración de la renta", font=("Segoe UI", 15, "bold"), text_color="#dfeeff").pack(anchor="w", padx=12, pady=(12, 8))
+                for casilla, texto, valor in casillas["modelo_100"]:
+                    fila_casilla = ctk.CTkFrame(modelo_box, fg_color="#132638", corner_radius=10, border_width=1, border_color="#2a466b")
+                    fila_casilla.pack(fill="x", padx=12, pady=4)
+                    ctk.CTkLabel(fila_casilla, text=f"{casilla} - {texto}", font=("Segoe UI", 11, "bold"), text_color="#dfeeff", anchor="w", justify="left", wraplength=240).pack(side="left", padx=10, pady=9, expand=True)
+                    ctk.CTkLabel(fila_casilla, text=f"{valor:.2f} €", font=("Segoe UI", 11, "bold"), text_color="#7cc8ff", anchor="e").pack(side="right", padx=10, pady=9)
+
+                validacion = ctk.CTkFrame(modelos_scroll, fg_color="#0d1726", corner_radius=14, border_width=1, border_color="#2f4869")
+                validacion.pack(fill="x", padx=10, pady=(0, 10))
+                ctk.CTkLabel(validacion, text="Modelo 100 anual", font=("Segoe UI", 14, "bold"), text_color="#dfeeff").pack(anchor="w", padx=12, pady=(12, 4))
+                ctk.CTkLabel(
+                    validacion,
+                    text=(
+                        "La declaración anual del IRPF se gestiona con el Modelo 100.\n"
+                        "El 303 y el 130 son trimestrales y no deben mezclarse con la renta anual.\n\n"
+                        "Resumen correcto: 303/130 por trimestre; 390 en cierre anual de IVA si procede; 100 para la renta anual."
+                    ),
+                    justify="left",
+                    text_color="#dfeeff",
+                    font=("Segoe UI", 11, "bold"),
+                    wraplength=440,
+                    anchor="w",
+                ).pack(anchor="w", padx=12, pady=(0, 12))
+
+            cam = tk.Canvas(chart_panel, width=260, height=260, bg="#101f2d", highlightthickness=0)
+            cam.grid(row=0, column=0, padx=10, pady=(18, 10), sticky="n")
+            cx, cy, r = 130, 130, 90
             cam.create_oval(cx - r, cy - r, cx + r, cy + r, outline="#2f4869", width=2, fill="#0d1726")
-            cam.create_oval(cx - r + 18, cy - r + 18, cx + r - 18, cy + r - 18, outline="#1c3350", width=1, fill="#122233")
+            cam.create_oval(cx - r + 18, cy - r + 18, cx + r - 18, cy + r - 18, outline="#1c3350", width=1, fill="#101f2d")
             valor_base = max(0.0, resumen_obj["base_imponible"])
             valor_gasto = max(0.0, resumen_obj["gastos_deducibles"])
             total = max(valor_base + valor_gasto, 1.0)
             ang = 360 * (valor_base / total)
-            cam.create_arc(cx - r, cy - r, cx + r, cy + r, start=90, extent=-ang, style="pieslice", fill="#2dd881", outline="#2dd881")
-            cam.create_arc(cx - r, cy - r, cx + r, cy + r, start=90 - ang, extent=-(360 - ang), style="pieslice", fill="#4ea3ff", outline="#4ea3ff")
-            cam.create_oval(cx - 46, cy - 46, cx + 46, cy + 46, fill="#0d1726", outline="#2f4869", width=2)
-            cam.create_text(cx, cy - 6, text=f"{valor_base:.0f}€", fill="#edf4ff", font=("Segoe UI", 20, "bold"))
-            cam.create_text(cx, cy + 18, text="Base", fill="#9bb7d3", font=("Segoe UI", 10, "bold"))
+            cam.create_arc(cx - r, cy - r, cx + r, cy + r, start=90, extent=-ang, style="pieslice", fill="#7ccfc1", outline="#7ccfc1")
+            cam.create_arc(cx - r, cy - r, cx + r, cy + r, start=90 - ang, extent=-(360 - ang), style="pieslice", fill="#7ea7c9", outline="#7ea7c9")
+            cam.create_oval(cx - 42, cy - 42, cx + 42, cy + 42, fill="#101f2d", outline="#2f4869", width=2)
+            cam.create_text(cx, cy - 8, text=f"{valor_base:.0f}€", fill="#edf4ff", font=("Segoe UI", 22, "bold"))
+            cam.create_text(cx, cy + 22, text="Base", fill="#9bb7d3", font=("Segoe UI", 10, "bold"))
 
-            info = ctk.CTkFrame(right, fg_color="#0d1726", corner_radius=12, border_width=1, border_color="#2f4869")
-            info.pack(fill="x", padx=14, pady=(0, 14))
-            total_iva_irpf = resumen_obj["iva_estimado"] + resumen_obj["irpf_estimado"]
-            ctk.CTkLabel(
-                info,
-                text=(
-                    f"Base: {resumen_obj['base_imponible']:.2f} €\n"
-                    f"IVA + IRPF: {total_iva_irpf:.2f} €\n"
-                    f"Resultado: {resumen_obj['resultado_neto']:.2f} €"
-                ),
-                font=("Segoe UI", 13, "bold"), text_color="#edf4ff", justify="left",
-            ).pack(anchor="w", padx=14, pady=12)
+        def on_tab_changed(value=None):
+            nonlocal active_tab
+            current = str(value if value is not None else active_tab).upper()
+            active_tab = current if current in {"TRIMESTRE", "ANUAL"} else "TRIMESTRE"
+            for tab_name, frame in tabs.items():
+                if tab_name == active_tab:
+                    frame.grid()
+                else:
+                    frame.grid_remove()
 
-        render_tab("TRIMESTRE", resumen_trim)
-        render_tab("ANUAL", resumen_anual)
+            if active_tab == "TRIMESTRE":
+                render_tab("TRIMESTRE", self._sumar_periodo(quarter_choice["months"]), selected_year)
+            else:
+                render_tab("ANUAL", self._sumar_periodo(self._meses_del_anio()), selected_year)
+            sync_header_for_active_tab()
+
+        tab_selector.configure(command=lambda value: on_tab_changed(value))
+        on_tab_changed("TRIMESTRE")
+        recordatorio_frame = ctk.CTkFrame(ventana, fg_color="#0d1b2a", corner_radius=16, border_width=1, border_color="#2f4869")
+        recordatorio_frame.grid(row=2, column=0, sticky="ew", padx=16, pady=(0, 12))
+        recordatorio_frame.grid_columnconfigure(0, weight=1)
+        recordatorio_frame.grid_columnconfigure(1, weight=1)
+        recordatorio_frame.grid_columnconfigure(2, weight=1)
+        recordatorio_frame.grid_rowconfigure(1, weight=1)
+
+        def actualizar_recordatorio_ui():
+            trimestre_status = self._obtener_estado_recordatorio(selected_year, "trimestrale").get("status", "active")
+            anual_status = self._obtener_estado_recordatorio(selected_year, "anual").get("status", "active")
+
+            def estado_label_text(status):
+                if status == "done":
+                    return "✅ Hecho"
+                if status == "disabled":
+                    return "🔒 Desactivado"
+                return "⏳ Pendiente"
+
+            trimestre_label = estado_label_text(trimestre_status)
+            anual_label = estado_label_text(anual_status)
+
+            for child in recordatorio_frame.winfo_children():
+                child.destroy()
+
+            ctk.CTkLabel(recordatorio_frame, text="Recordatorios de declaración", font=("Segoe UI", 15, "bold"), text_color="#5bc0ff", anchor="w").grid(row=0, column=0, columnspan=3, sticky="ew", padx=14, pady=(12, 8))
+
+            paneles = []
+            for idx in range(3):
+                panel = ctk.CTkFrame(recordatorio_frame, fg_color="#122233", corner_radius=12, border_width=1, border_color="#2f4869")
+                panel.grid(row=1, column=idx, sticky="nsew", padx=(14 if idx == 0 else 8, 8 if idx < 2 else 14), pady=(0, 8))
+                panel.grid_propagate(False)
+                panel.configure(height=110)
+                paneles.append(panel)
+
+            def crear_caja(parent, title, status_text, key):
+                parent.grid_columnconfigure(0, weight=1)
+                ctk.CTkLabel(parent, text=title, font=("Segoe UI", 12, "bold"), text_color="#edf4ff", anchor="w").grid(row=0, column=0, sticky="ew", padx=12, pady=(10, 4))
+                ctk.CTkLabel(parent, text=status_text, font=("Segoe UI", 10), text_color="#bfd2ea", anchor="w").grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 8))
+
+                botones = ctk.CTkFrame(parent, fg_color="transparent")
+                botones.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 8))
+                for column in range(3):
+                    botones.grid_columnconfigure(column, weight=1)
+
+                ctk.CTkButton(botones, text="✅ Hecho", command=lambda k=key: (self._guardar_estado_recordatorio(selected_year, k, "done"), actualizar_recordatorio_ui()), width=60, height=26, fg_color="#2a4058", hover_color="#334f72", border_color="#5c7ca2", border_width=1, text_color="#edf4ff", font=("Segoe UI", 10, "bold")).grid(row=0, column=0, padx=(0, 4), sticky="ew")
+                ctk.CTkButton(botones, text="🔒 Desactivar", command=lambda k=key: (self._guardar_estado_recordatorio(selected_year, k, "disabled"), actualizar_recordatorio_ui()), width=72, height=26, fg_color="#3d4450", hover_color="#495967", border_color="#667788", border_width=1, text_color="#edf4ff", font=("Segoe UI", 10, "bold")).grid(row=0, column=1, padx=4, sticky="ew")
+                ctk.CTkButton(botones, text="🔄 Reactivar", command=lambda k=key: (self._guardar_estado_recordatorio(selected_year, k, "active"), actualizar_recordatorio_ui()), width=72, height=26, fg_color="#2a4058", hover_color="#334f72", border_color="#5c7ca2", border_width=1, text_color="#edf4ff", font=("Segoe UI", 10, "bold")).grid(row=0, column=2, padx=(4, 0), sticky="ew")
+
+            crear_caja(paneles[0], "Trimestral", trimestre_label, "trimestral")
+            crear_caja(paneles[1], "Anual", anual_label, "anual")
+
+            ctk.CTkLabel(paneles[2], text="Sigue el control del año", font=("Segoe UI", 11), text_color="#bfd2ea", justify="left", wraplength=220).pack(anchor="w", padx=12, pady=(12, 6))
+            ctk.CTkLabel(paneles[2], text=f"Periodo actual: {selected_quarter} · {selected_year}", font=("Segoe UI", 11, "bold"), text_color="#5bc0ff", justify="left", wraplength=220).pack(anchor="w", padx=12, pady=(0, 10))
+
+        def on_year_changed(value):
+            nonlocal selected_year
+            selected_year = str(value)
+            render_tab("TRIMESTRE", self._sumar_periodo(quarter_choice["months"]), selected_year)
+            render_tab("ANUAL", self._sumar_periodo(self._meses_del_anio()), selected_year)
+            actualizar_recordatorio_ui()
+            sync_header_for_active_tab()
+
+        selector_anio.configure(command=on_year_changed)
+
+        actualizar_recordatorio_ui()
+        render_tab("TRIMESTRE", resumen_trim, selected_year)
+        render_tab("ANUAL", resumen_anual, selected_year)
+        sync_header_for_active_tab()
 
         total_trim = resumen_trim["iva_estimado"] + resumen_trim["irpf_estimado"]
         estado_trim = "Sin cuota a pagar" if total_trim <= 0 else "Con cuota a pagar"
         estado_texto = (
             f"Estado fiscal: {estado_trim} | Total a pagar: {total_trim:.2f} €\n"
-            f"Base anual: {resumen_anual['base_imponible']:.2f} € | IVA anual: {resumen_anual['iva_estimado']:.2f} € | IRPF anual: {resumen_anual['irpf_estimado']:.2f} €"
+            f"Bs - IRPF/IVA: {resumen_trim['base_imponible']:.2f} € | IVA: {resumen_trim['iva_estimado']:.2f} € | IRPF: {resumen_trim['irpf_estimado']:.2f} €"
         )
 
         estado = ctk.CTkFrame(ventana, fg_color="#0f1d2e", corner_radius=14, border_width=1, border_color="#2f4869")
-        estado.grid(row=2, column=0, sticky="ew", padx=16, pady=(0, 12))
+        estado.grid(row=3, column=0, sticky="ew", padx=16, pady=(0, 12))
         estado_label = ctk.CTkLabel(estado, text=estado_texto, font=("Segoe UI", 14, "bold"), text_color="#dfeeff", justify="left", anchor="w")
         estado_label.pack(anchor="w", padx=18, pady=12)
 
         def pdf_actual():
-            nombre = tabs.get().upper()
+            nombre = active_tab.upper()
             if nombre == "TRIMESTRE":
                 resumen_actual = self._sumar_periodo(quarter_choice["months"])
                 periodo_label = quarter_choice["label"]
-                self.generar_pdf_declaracion_renta(resumen_actual, periodo_label, None)
+                self.generar_pdf_declaracion_renta(resumen_actual, periodo_label, None, selected_year)
             else:
                 resumen_actual = resumen_anual
                 periodo_label = "ANUAL"
-                self.generar_pdf_declaracion_renta(resumen_actual, periodo_label, None)
+                self.generar_pdf_declaracion_renta(resumen_actual, periodo_label, None, selected_year)
 
         pie = ctk.CTkFrame(ventana, fg_color="#0f1d2e", corner_radius=18, border_width=1, border_color="#2f4869")
-        pie.grid(row=3, column=0, sticky="ew", padx=16, pady=(0, 16))
+        pie.grid(row=4, column=0, sticky="ew", padx=16, pady=(0, 16))
         pie.grid_columnconfigure(0, weight=1)
         pie.grid_columnconfigure(1, weight=1)
+        pie.grid_columnconfigure(2, weight=1)
+        pie.grid_columnconfigure(3, weight=1)
 
         ctk.CTkButton(
             pie, text="📄 Generar PDF",
             command=pdf_actual,
-            width=260, height=42, corner_radius=10,
-            fg_color="#2b7a78", hover_color="#1f5d5b",
-            font=("Segoe UI", 14, "bold")
+            width=220, height=42, corner_radius=10,
+            fg_color="#233a52", hover_color="#2c4867", border_color="#4f6985", border_width=1,
+            text_color="#edf4ff", font=("Segoe UI", 14, "bold")
         ).grid(row=0, column=0, padx=(18, 10), pady=14, sticky="ew")
+
+        ctk.CTkButton(
+            pie, text="📦 Exportar archivo",
+            command=lambda: self.exportar_periodo_actual(
+                year=selected_year,
+                tab_name=active_tab,
+                periodo_label=(quarter_choice["label"] if active_tab.upper() == "TRIMESTRE" else "ANUAL")
+            ),
+            width=220, height=42, corner_radius=10,
+            fg_color="#233a52", hover_color="#2c4867", border_color="#4f6985", border_width=1,
+            text_color="#edf4ff", font=("Segoe UI", 14, "bold")
+        ).grid(row=0, column=1, padx=(10, 10), pady=14, sticky="ew")
+
+        ctk.CTkButton(
+            pie, text="📁 Abrir liquidaciones",
+            command=self.abrir_carpeta_declaracion,
+            width=220, height=42, corner_radius=10,
+            fg_color="#233a52", hover_color="#2c4867", border_color="#4f6985", border_width=1,
+            text_color="#edf4ff", font=("Segoe UI", 14, "bold")
+        ).grid(row=0, column=2, padx=(10, 10), pady=14, sticky="ew")
 
         ctk.CTkButton(
             pie, text="Cerrar",
             command=ventana.destroy,
-            width=260, height=42, corner_radius=10,
-            fg_color="#d63031", hover_color="#b71c1c",
-            font=("Segoe UI", 14, "bold")
-        ).grid(row=0, column=1, padx=(10, 18), pady=14, sticky="ew")
+            width=220, height=42, corner_radius=10,
+            fg_color="#4a3b42", hover_color="#5d4951", border_color="#7d6470", border_width=1,
+            text_color="#f3edf2", font=("Segoe UI", 14, "bold")
+        ).grid(row=0, column=3, padx=(10, 18), pady=14, sticky="ew")
 
-    def generar_pdf_declaracion_renta(self, resumen=None, periodo="TRIMESTRE", mes_actual=None):
+    def _actualizar_ruta_exportacion(self, year=None):
+        year_value = str(year or self.anio_actual or get_current_year()).strip() or str(get_current_year())
+        self.anio_actual = year_value
+        self.CARPETA_PDF = os.path.join(self.BASE_DIR, "PDFS", "liquidaciones", year_value)
+        self.CARPETA_DATA = os.path.join(self.CARPETA_PDF, "data")
+        self.CARPETA_DECLARACION = os.path.join(self.CARPETA_PDF, "declaraciones")
+        os.makedirs(os.path.join(self.BASE_DIR, "PDFS"), exist_ok=True)
+        os.makedirs(os.path.join(self.BASE_DIR, "PDFS", "liquidaciones"), exist_ok=True)
+        os.makedirs(self.CARPETA_PDF, exist_ok=True)
+        os.makedirs(self.CARPETA_DATA, exist_ok=True)
+        os.makedirs(self.CARPETA_DECLARACION, exist_ok=True)
+        return self.CARPETA_PDF
+
+    def generar_pdf_declaracion_renta(self, resumen=None, periodo="TRIMESTRE", mes_actual=None, year=None):
         if resumen is None:
             mes_actual = self.mes_seleccionado.get().upper().strip()
-            if not mes_actual or mes_actual == "------ SELECCIONE FECHA ---------":
+            placeholder = self.mes_seleccionado.placeholder.upper() if self.mes_seleccionado.placeholder else ""
+            if not mes_actual or mes_actual == placeholder:
                 messagebox.showwarning("Sin mes", "Selecciona un mes para ver la declaración.")
                 return
             trimestre = self._meses_del_trimestre(mes_actual)
             resumen = self._sumar_periodo(trimestre)
 
-        carpeta_pdf = getattr(self, "CARPETA_PDF", os.path.join(os.path.dirname(os.path.abspath(__file__)), "liquidaciones_pdf"))
-        os.makedirs(carpeta_pdf, exist_ok=True)
+        os.makedirs(self.CARPETA_DECLARACION, exist_ok=True)
 
-        base_name = "Declaracion_Renta"
-        index = 1
-        path = os.path.join(carpeta_pdf, f"{base_name}{index:02d}.pdf")
-        while os.path.exists(path):
-            index += 1
-            path = os.path.join(carpeta_pdf, f"{base_name}{index:02d}.pdf")
+        year_for_export = str(year or get_current_year())
+        periodo_label = str(periodo or (mes_actual or "TRIMESTRE")).strip()
+        is_anual = isinstance(periodo, str) and "ANUAL" in periodo.upper()
+
+        if is_anual:
+            nome_periodo = "ANUAL"
+            file_name = self._generar_nombre_archivo_declaracion(nome_periodo, year_for_export, "pdf")
+            modelo_data = self._casillas_modelo_100(resumen, year_for_export)
+            casillas = modelo_data["modelo_100"]
+            titulo_pdf = "MODELO 100 - DECLARACION ANUAL DE LA RENTA"
+            descripcion = (
+                "Para la renta anual revisa en este orden: base imponible, cuotas, pagos a cuenta, "
+                "casilla 0545 y 0546, y resultado final en 0610/0700."
+            )
+            pasos = [
+                "1. Comprueba la base imponible general y la base liquidable del ejercicio.",
+                "2. Revisa las casillas 0435, 0460, 0500 y 0510 para comprobar la base anual.",
+                "3. Valida la cuota estatal y autonómica en 0545 y 0546.",
+                "4. Comprueba el resultado final en 0610 y la cuota a pagar o devolver en 0700.",
+            ]
+            modelo_cabecera = "Modelo 100"
+        else:
+            if not periodo_label or periodo_label == "TRIMESTRE":
+                periodo_label = self._get_current_quarter_label()
+            nome_periodo = periodo_label
+            file_name = self._generar_nombre_archivo_declaracion(nome_periodo, year_for_export, "pdf")
+            months = self._resolver_periodo_export(nome_periodo)[1]
+            periodo_data = self._casillas_periodo(months, nome_periodo, year_for_export)
+            casillas = periodo_data["modelo_303"] + periodo_data["modelo_130"]
+            titulo_pdf = "MODELOS 303 Y 130 - DECLARACION TRIMESTRAL"
+            descripcion = (
+                "Para el trimestre revisa el IVA del 303 y el IRPF del 130, comprobando tanto la base "
+                "como la retencion y el resultado final a ingresar o devolver."
+            )
+            pasos = [
+                "1. Calcula la base imponible y la cuota de IVA del 303 en las casillas 07, 09, 28, 29 y 71.",
+                "2. Comprueba la base, rendimiento neto y cuota de IRPF en 01, 02, 03, 04 y 05 del 130.",
+                "3. Verifica si corresponde ingreso o devolucion segun la cuota final del trimestre.",
+                "4. Presenta el resultado final del trimestre con la declaracion independiente del ano.",
+            ]
+            modelo_cabecera = "Modelos 303 + 130"
+        path = file_name
 
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
@@ -1228,7 +1913,7 @@ class LiquidacionesFrame(ctk.CTkFrame):
         if logo_path:
             try:
                 logo_img = RLImage(logo_path, width=54, height=54)
-                header_period = periodo or (mes_actual or "Período actual")
+                header_period = periodo_label or (mes_actual or "Periodo actual")
                 header_table = Table([[logo_img, Paragraph("GESTOR PRO", title_style), Paragraph(f"{header_period}", subtitle_style)]], colWidths=[90, 250, 130])
                 header_table.setStyle(TableStyle([
                     ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#0d1a2a")),
@@ -1245,62 +1930,72 @@ class LiquidacionesFrame(ctk.CTkFrame):
                 pass
 
         elements.append(header_table)
-        elements.append(Spacer(1, 15))
-        elements.append(Paragraph("DECLARACIÓN DE RENTA AUTÓNOMO", title_style))
-        period_label = periodo or (mes_actual or "Período actual")
-        elements.append(Paragraph(f"Periodo: {period_label}", subtitle_style))
-        elements.append(Spacer(1, 10))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(titulo_pdf, title_style))
+        elements.append(Paragraph(f"Periodo: {periodo_label or nome_periodo} | Ejercicio {year_for_export}", subtitle_style))
+        elements.append(Paragraph(f"Documento: {modelo_cabecera}", label_style))
+        elements.append(Spacer(1, 8))
 
-        total_iva_irpf = float(resumen.get("iva_estimado", 0.0)) + float(resumen.get("irpf_estimado", 0.0))
-        data = [
-            ["CONCEPTO", "IMPORTE"],
-            ["Ingresos", f"{float(resumen.get('base', 0.0)):.2f} €"],
-            ["Materiales", f"{float(resumen.get('material', 0.0)):.2f} €"],
-            ["Combustible", f"{float(resumen.get('combustible', 0.0)):.2f} €"],
-            ["Extras", f"{float(resumen.get('extras', 0.0)):.2f} €"],
-            ["Gastos deducibles", f"{float(resumen.get('gastos_deducibles', 0.0)):.2f} €"],
-            ["Base imponible", f"{float(resumen.get('base_imponible', 0.0)):.2f} €"],
-            ["IVA estimado", f"{float(resumen.get('iva_estimado', 0.0)):.2f} €"],
-            ["IRPF estimado", f"{float(resumen.get('irpf_estimado', 0.0)):.2f} €"],
-            ["IVA + IRPF", f"{total_iva_irpf:.2f} €"],
-            ["Resultado neto", f"{float(resumen.get('resultado_neto', 0.0)):.2f} €"],
-        ]
+        step_rows = [[Paragraph("PASO A PASO", ParagraphStyle("StepTitle", parent=styles["BodyText"], fontName="Helvetica-Bold", textColor=colors.HexColor("#0f6cbd")))] ]
+        for step in pasos:
+            step_rows.append([Paragraph(step)])
 
-        table = Table(data, colWidths=[260, 120])
-        table.setStyle(TableStyle([
+        steps_table = Table(step_rows, colWidths=[460])
+        steps_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e8f2ff")),
+            ("GRID", (0, 0), (-1, -1), 0.7, colors.HexColor("#cfe2ff")),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(steps_table)
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(descripcion, label_style))
+        elements.append(Spacer(1, 8))
+
+        row_data = [["CASILLA", "CONCEPTO", "IMPORTE"]]
+        for casilla, etiqueta, valor in casillas:
+            row_data.append([
+                str(casilla).replace("Casilla ", ""),
+                str(etiqueta),
+                f"{float(valor or 0.0):.2f}",
+            ])
+
+        casillas_table = Table(row_data, colWidths=[80, 260, 100])
+        casillas_table.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#16324b")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#f6f9fd"), colors.HexColor("#edf3f9")]),
-            ("GRID", (0, 0), (-1, -1), 0.8, colors.HexColor("#1a3550")),
-            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-            ("ALIGN", (1, 1), (1, -1), "RIGHT"),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#f8fbff"), colors.HexColor("#eef5fd")]),
+            ("GRID", (0, 0), (-1, -1), 0.7, colors.HexColor("#244b73")),
+            ("ALIGN", (0, 1), (-1, -1), "LEFT"),
+            ("ALIGN", (2, 1), (2, -1), "RIGHT"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
             ("TOPPADDING", (0, 0), (-1, 0), 8),
-            ("BOTTOMPADDING", (0, 1), (-1, -1), 6),
-            ("TOPPADDING", (0, 1), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 1), (-1, -1), 5),
+            ("TOPPADDING", (0, 1), (-1, -1), 5),
         ]))
-        elements.append(table)
-        elements.append(Spacer(1, 18))
+        elements.append(casillas_table)
+        elements.append(Spacer(1, 12))
 
-        cuota = float(resumen.get("iva_estimado", 0.0)) + float(resumen.get("irpf_estimado", 0.0))
-        estado = "Sin cuota a pagar" if cuota <= 0 else "Con cuota a pagar"
-        elements.append(Paragraph(f"Estado fiscal: {estado} | Cuota estimada: {cuota:.2f} €", label_style))
-        elements.append(Paragraph(
-            f"Base imponible: {float(resumen.get('base_imponible', 0.0)):.2f} € | IVA + IRPF: {cuota:.2f} € | Resultado neto: {float(resumen.get('resultado_neto', 0.0)):.2f} €",
-            label_style,
-        ))
+        if is_anual:
+            cuota_total = float(resumen.get("irpf_estimado", 0.0))
+            elements.append(Paragraph(f"Cuota estimada anual: {cuota_total:.2f} €", label_style))
+        else:
+            cuota = float(resumen.get("iva_estimado", 0.0)) + float(resumen.get("irpf_estimado", 0.0))
+            elements.append(Paragraph(f"Cuota estimada trimestre: {cuota:.2f} €", label_style))
 
         try:
-            doc = SimpleDocTemplate(path, pagesize=A4, leftMargin=40, rightMargin=40, topMargin=20, bottomMargin=30)
+            doc = SimpleDocTemplate(path, pagesize=A4, leftMargin=35, rightMargin=35, topMargin=20, bottomMargin=25)
             doc.build(elements)
             messagebox.showinfo("PDF generado", f"Declaración exportada en:\n{path}")
             return path
         except Exception as e:
             messagebox.showerror("Error al generar PDF", f"No se pudo generar el PDF:\n{e}")
-            return None
-
-    # ==============================================================
+            return None    # ==============================================================
     # OBTENER DATOS + PDF (sin cambios funcionales)
     # ==============================================================
     def obtener_datos(self):
@@ -1367,6 +2062,16 @@ class LiquidacionesFrame(ctk.CTkFrame):
         elif os.uname().sysname == 'Darwin': subprocess.call(["open", path])
         else: subprocess.call(["xdg-open", path])
 
+    def abrir_carpeta_declaracion(self):
+        path = os.path.realpath(self._actualizar_ruta_exportacion(self.anio_actual))
+        os.makedirs(path, exist_ok=True)
+        if os.name == 'nt':
+            os.startfile(path)
+        elif sys.platform == 'darwin':
+            subprocess.call(["open", path])
+        else:
+            subprocess.call(["xdg-open", path])
+
     def generar_pdf(self):
         try:
             datos = self.obtener_datos()
@@ -1406,11 +2111,11 @@ class LiquidacionesFrame(ctk.CTkFrame):
                     break
 
             # --- 3. CONFIGURACIÓN DE CARPETA Y DOCUMENTO ---
-            carpeta_pdf = getattr(self, 'CARPETA_PDF', os.path.join(base_dir, "liquidaciones_pdf"))
+            carpeta_pdf = self._actualizar_ruta_exportacion(self.anio_actual)
             os.makedirs(carpeta_pdf, exist_ok=True)
 
             mes = self.mes_seleccionado.get().upper()
-            filename = os.path.join(carpeta_pdf, f"Liquidacion_{mes}.pdf")
+            filename = os.path.join(carpeta_pdf, f"Liquidacion_{mes}_{self.anio_actual}.pdf")
 
             elements = []
             styles = getSampleStyleSheet()

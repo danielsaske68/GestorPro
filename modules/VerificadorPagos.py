@@ -19,7 +19,9 @@ def ruta_app(carpeta, archivo=None):
     return ruta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CARPETA_RESULTADOS = ruta_app("resultados_pagos")
+PDFS_DIR = os.path.join(BASE_DIR, "PDFS")
+os.makedirs(PDFS_DIR, exist_ok=True)
+CARPETA_RESULTADOS = os.path.join(PDFS_DIR, "resultados_pagos")
 os.makedirs(CARPETA_RESULTADOS, exist_ok=True)
 
 class VerificadorPagosFrame(ctk.CTkFrame):

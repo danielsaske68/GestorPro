@@ -124,7 +124,7 @@ class GestorPro(ctk.CTk):
         menu_style = dict(height=52, corner_radius=14, fg_color="#2f6ea6", hover_color="#245d93", font=("Arial", 15, "bold"), text_color="#ffffff", border_width=1, border_color="#6db3ff")
         ctk.CTkButton(self.menu, text="🏠 Inicio", command=self.inicio, **menu_style).pack(fill="x", padx=12, pady=5)
         ctk.CTkButton(self.menu, text="💰 Liquidaciones", command=self.abrir_liquidaciones, **menu_style).pack(fill="x", padx=12, pady=5)
-        ctk.CTkButton(self.menu, text="🛠 Lector de códigos", command=self.abrir_lector_codigos, **menu_style).pack(fill="x", padx=12, pady=5)
+        ctk.CTkButton(self.menu, text="🛠️ Lector de códigos", command=self.abrir_lector_codigos, **menu_style).pack(fill="x", padx=12, pady=5)
         ctk.CTkButton(self.menu, text="📝 Presupuestos", command=self.abrir_presupuestos, **menu_style).pack(fill="x", padx=12, pady=5)
         ctk.CTkButton(self.menu, text="📑 Verificador de Pagos", command=self.abrir_verificador_pagos, **menu_style).pack(fill="x", padx=12, pady=5)
 
@@ -497,25 +497,19 @@ class GestorPro(ctk.CTk):
     def ejecutar_homeserve(self):
         ventana = ctk.CTkToplevel(self)
         ventana.title("HomeServe")
-        ventana.geometry("340x580")
+        ventana.geometry("360x610")
         ventana.resizable(False, False)
         ventana.grab_set()
         ventana.configure(fg_color="#101820")
+        ventana.minsize(330, 560)
 
-        header = ctk.CTkFrame(ventana, fg_color="#121b29", corner_radius=18, border_color="#2d435d", border_width=1)
+        ventana.bind("<Escape>", lambda event: ventana.destroy())
+
+        header = ctk.CTkFrame(ventana, fg_color="#121b29", corner_radius=20, border_color="#2d435d", border_width=1)
         header.pack(fill="x", padx=12, pady=(12, 10))
 
-        ctk.CTkLabel(header, text="HomeServe", font=("Arial", 22, "bold"), text_color="#4ea3ff").pack(pady=(16, 6))
+        ctk.CTkLabel(header, text="HomeServe", font=("Arial", 24, "bold"), text_color="#4ea3ff").pack(pady=(16, 4))
         ctk.CTkLabel(header, text="¿Qué deseas hacer?", font=("Arial", 13), text_color="#dfeaff").pack(pady=(0, 16))
-
-        panel = ctk.CTkFrame(ventana, fg_color="#171f2a", corner_radius=16, border_color="#2d435d", border_width=1)
-        panel.pack(fill="both", expand=True, padx=12, pady=(0, 12))
-
-        btn_style = dict(height=40, corner_radius=10, fg_color="#0f6cbd", hover_color="#0d5ea8", font=("Arial", 12, "bold"))
-        ctk.CTkButton(panel, text="▶ Iniciar sesión", command=lambda: None, **btn_style).pack(fill="x", padx=16, pady=(18, 10))
-        ctk.CTkButton(panel, text="🧭 Ejecutar bot", command=lambda: None, **btn_style).pack(fill="x", padx=16, pady=10)
-        ctk.CTkButton(panel, text="📋 Ver servicios", command=lambda: None, **btn_style).pack(fill="x", padx=16, pady=10)
-        ctk.CTkButton(panel, text="🛑 Detener", command=lambda: None, fg_color="#c2410c", hover_color="#9a3609", height=40, corner_radius=10, font=("Arial", 12, "bold")).pack(fill="x", padx=16, pady=(10, 18))
 
         app_main = self
 
@@ -551,23 +545,24 @@ class GestorPro(ctk.CTk):
                 app_main.restaurar_interfaz()
 
         def ingresar_servicios():
-            """Abre una subventana para escribir/pegar servicios y guardarlos en servicios.txt"""
+            """Abre una subventana para editar, guardar o borrar servicios del archivo de trabajo."""
             BASE_HOME = os.path.join(BASE_DIR, "Homeserve")
             ruta_servicios = os.path.join(BASE_HOME, "servicios.txt")
-            
+
             v_servicios = ctk.CTkToplevel(ventana)
             v_servicios.title("Ingresar Servicios")
-            v_servicios.geometry("320x420")
+            v_servicios.geometry("340x470")
             v_servicios.resizable(False, False)
             v_servicios.grab_set()
+            v_servicios.configure(fg_color="#0e1a26")
+            v_servicios.bind("<Escape>", lambda event: v_servicios.destroy())
 
-            ctk.CTkLabel(v_servicios, text="Lista de Servicios", font=("Arial", 16, "bold")).pack(pady=(12, 2))
-            ctk.CTkLabel(v_servicios, text="Ingresa un servicio por línea:", font=("Arial", 11), text_color="gray70").pack(pady=(0, 8))
+            ctk.CTkLabel(v_servicios, text="Lista de Servicios", font=("Arial", 18, "bold"), text_color="#4ea3ff").pack(pady=(14, 2))
+            ctk.CTkLabel(v_servicios, text="Edita, borra o guarda cada servicio por línea:", font=("Arial", 11), text_color="gray70").pack(pady=(0, 9))
 
-            txt_servicios = ctk.CTkTextbox(v_servicios, width=280, height=270, font=("Consolas", 12))
+            txt_servicios = ctk.CTkTextbox(v_servicios, width=300, height=270, font=("Consolas", 12), fg_color="#101820", text_color="#edf4ff", border_color="#2d435d")
             txt_servicios.pack(padx=15, pady=5)
 
-            # Si el archivo existe, cargamos su contenido
             if os.path.exists(ruta_servicios):
                 try:
                     with open(ruta_servicios, "r", encoding="utf-8") as f:
@@ -579,18 +574,55 @@ class GestorPro(ctk.CTk):
             def guardar():
                 texto_raw = txt_servicios.get("1.0", "end-1c")
                 lineas = [linea.strip() for linea in texto_raw.splitlines() if linea.strip()]
-                
+
                 try:
                     os.makedirs(BASE_HOME, exist_ok=True)
                     with open(ruta_servicios, "w", encoding="utf-8") as f:
                         f.write("\n".join(lineas) + ("\n" if lineas else ""))
-                    
+
                     messagebox.showinfo("Éxito", f"Se han guardado {len(lineas)} servicio(s) correctamente.")
-                    v_servicios.destroy()
                 except Exception as e:
                     messagebox.showerror("Error", f"No se pudo guardar el archivo: {e}")
 
-            ctk.CTkButton(v_servicios, text="💾 Guardar Servicios", command=guardar, height=35, fg_color="#2b8a3e", hover_color="#237032").pack(pady=12)
+            def eliminar_linea():
+                try:
+                    posicion = txt_servicios.index("insert")
+                    fila, _ = posicion.split('.')
+                    fila_actual = int(fila)
+                    lineas = txt_servicios.get("1.0", "end").splitlines()
+                    if not lineas:
+                        return
+                    if fila_actual <= len(lineas):
+                        lineas.pop(fila_actual - 1)
+                        txt_servicios.delete("1.0", "end")
+                        if lineas:
+                            txt_servicios.insert("1.0", "\n".join(lineas))
+                        else:
+                            txt_servicios.delete("1.0", "end")
+                    else:
+                        messagebox.showwarning("Sin línea", "Selecciona una línea válida para borrar.")
+                except Exception:
+                    messagebox.showwarning("Sin línea", "Selecciona una línea válida para borrar.")
+
+            def limpiar_todo():
+                if messagebox.askyesno("Limpiar todo", "¿Quieres borrar todos los servicios y dejar la lista vacía?"):
+                    txt_servicios.delete("1.0", "end")
+                    try:
+                        with open(ruta_servicios, "w", encoding="utf-8") as f:
+                            f.write("")
+                        messagebox.showinfo("Listo", "La lista quedó limpia.")
+                    except Exception as e:
+                        messagebox.showerror("Error", f"No se pudo limpiar el archivo: {e}")
+
+            botones = ctk.CTkFrame(v_servicios, fg_color="transparent")
+            botones.pack(fill="x", padx=15, pady=(0, 12))
+            botones.grid_columnconfigure(0, weight=1)
+            botones.grid_columnconfigure(1, weight=1)
+
+            ctk.CTkButton(botones, text="💾 Guardar", command=guardar, height=34, fg_color="#2b8a3e", hover_color="#237032").grid(row=0, column=0, sticky="ew", padx=(0, 6))
+            ctk.CTkButton(botones, text="🗑 Borrar línea", command=eliminar_linea, height=34, fg_color="#9c3b2d", hover_color="#7d2d23").grid(row=0, column=1, sticky="ew", padx=(6, 0))
+            ctk.CTkButton(v_servicios, text="🧹 Limpiar todo", command=limpiar_todo, height=34, fg_color="#5c6b7c", hover_color="#465567").pack(fill="x", padx=15, pady=(0, 12))
+            ctk.CTkButton(v_servicios, text="Cerrar", command=v_servicios.destroy, height=34, fg_color="gray20", hover_color="gray30").pack(fill="x", padx=15, pady=(0, 10))
 
         def ejecutar_bot():
             ventana.withdraw()
@@ -655,9 +687,9 @@ class GestorPro(ctk.CTk):
         # --- SEPARADOR VISUAL Y ACCIONES DE CONTROL ---
         ctk.CTkFrame(ventana, height=2, fg_color="gray30").pack(fill="x", padx=25, pady=10)
 
-        ctk.CTkButton(ventana, text="⏸ Pausar BOT", command=pausar_bot, height=35, fg_color="gray30", hover_color="gray40").pack(fill="x", padx=25, pady=4)
-        ctk.CTkButton(ventana, text="▶ Continuar BOT", command=continuar_bot, height=35, fg_color="gray30", hover_color="gray40").pack(fill="x", padx=25, pady=4)
-        ctk.CTkButton(ventana, text="⛔ Detener BOT", command=detener_bot, height=35, fg_color="#c92a2a", hover_color="#a61e1e").pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="⏸ Pausar BOT  (F8)", command=pausar_bot, height=35, fg_color="gray30", hover_color="gray40").pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="▶ Continuar BOT  (F9)", command=continuar_bot, height=35, fg_color="gray30", hover_color="gray40").pack(fill="x", padx=25, pady=4)
+        ctk.CTkButton(ventana, text="⛔ Detener BOT  (F10)", command=detener_bot, height=35, fg_color="#c92a2a", hover_color="#a61e1e").pack(fill="x", padx=25, pady=4)
 
         ctk.CTkButton(ventana, text="Cancelar", fg_color="gray20", hover_color="gray30", command=ventana.destroy, height=35).pack(fill="x", padx=25, pady=(15, 10))
 
